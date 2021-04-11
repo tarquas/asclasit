@@ -99,7 +99,7 @@ test('Iter_.throw: break with exception', () => {
     } finally {
       yield 'end';
     }
-  } 
+  }
 
   const wrapped = new Iter(myGen());
   expect(wrapped.next()).toEqual({done: false, value: 9});

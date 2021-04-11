@@ -4,7 +4,7 @@
   "description": "ASync CLASses and ITerators",
   "main": "index.js",
   "scripts": {
-    "diff": "git diff -- . '!package-lock.json'",
+    "diff": "gitdiff () { git diff $* -- . ':!package-lock.json'; }; gitdiff",
     "test": "jest"
   },
   "repository": {
