@@ -21,7 +21,7 @@ test('$: make array iterator wrapper', () => {
 });
 
 test('$: make string characters iterator wrapper', () => {
-  const wrapped = $('Hello');
+  const wrapped = $(new String('Hello'));
   expect(wrapped instanceof $.Iter).toBe(true);
   expect(Array.from(wrapped)).toEqual('Hello'.split(''));
 });
@@ -35,7 +35,7 @@ test('$: make range iterator wrapper', () => {
 test('$: make async iterator wrapper', async () => {
   const wrapped = $('01', async function*() {yield 'a'; yield 'b';} (), ['c', 'd']);
   expect(wrapped instanceof $.AsIt).toBe(true);
-  expect(await asItArray(wrapped)).toEqual(['0', '1', 'a', 'b', 'c', 'd']);
+  expect(await asItArray(wrapped)).toEqual(['01', 'a', 'b', 'c', 'd']);
 });
 
 test('Iter_.iter: duplicate iter', () => {

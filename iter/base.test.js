@@ -22,6 +22,11 @@ test('Iter.getGen: not an iterator', () => {
   expect(gen).toBe(null);
 });
 
+test('Iter.getGen: not iterator object', () => {
+  const gen = Iter.getGen('123');
+  expect(gen).toBe(null);
+});
+
 test('Iter.getIter: from generator', () => {
   const iter = Iter.getIter(function* () {});
   expect(typeof iter.next).toBe('function');
@@ -32,9 +37,14 @@ test('Iter.getIter: bound iterator', () => {
   expect(typeof iter.next).toBe('function');
 });
 
+test('Iter.getIter: not iterator object', () => {
+  const iter = Iter.getIter('456');
+  expect(iter).toBe(null);
+});
+
 test('Iter.getIter: not an iterator', () => {
-  const gen = Iter.getIter({});
-  expect(gen).toBe(null);
+  const iter = Iter.getIter({});
+  expect(iter).toBe(null);
 });
 
 test('Iter.chainWrap: wrap generator to chain method', () => {

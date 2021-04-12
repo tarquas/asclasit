@@ -6,8 +6,9 @@ const Iter = function(iter) {
 
 const {prototype: Iter_} = Iter;
 
-Iter.getGen = function getGen(itrb, ...args) {
+Iter.getGen = function getGen(itrb, strOk, ...args) {
   if (typeof itrb === 'function') return itrb.bind(this, ...args);
+  if (!strOk && typeof itrb !== 'object') return null;
 
   const gen = itrb[Symbol.iterator];
   if (typeof gen === 'function') return gen.bind(itrb);
@@ -15,8 +16,9 @@ Iter.getGen = function getGen(itrb, ...args) {
   return null;
 };
 
-Iter.getIter = function getIter(itrb, ...args) {
-  if (typeof itrb === 'function') return itrb.call(this, ...args);
+Iter.getIter = function getIter(itrb, strOk, ...args) {
+  if (typeof itrb === 'function') itrb = itrb.call(this, ...args);
+  if (!strOk && typeof itrb !== 'object') return null;
 
   const gen = itrb[Symbol.iterator];
   if (typeof gen === 'function') return gen.call(itrb);

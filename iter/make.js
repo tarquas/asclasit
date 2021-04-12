@@ -1,12 +1,13 @@
 const Iter = require('./base');
 const {make_} = Iter;
 
-function* from(arg) {
-  const iter = Iter.getIter(arg);
+function* from(arg, strOk) {
+  const iter = Iter.getIter(arg, strOk);
   if (iter) yield* iter; else yield arg;
 }
 
 make_(from);
+Iter._from = from;
 
 make_(function* concat(...args) {
   for (const arg of args) {

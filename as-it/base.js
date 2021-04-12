@@ -6,8 +6,9 @@ const AsIt = function(iter) {
 
 const {prototype: AsIt_} = AsIt;
 
-AsIt.getGen = function getGen(itrb, ...args) {
+AsIt.getGen = function getGen(itrb, strOk, ...args) {
   if (typeof itrb === 'function') return itrb.bind(this, ...args);
+  if (!strOk && typeof itrb !== 'object') return null;
 
   const agen = itrb[Symbol.asyncIterator];
   if (typeof agen === 'function') return agen.bind(itrb);
@@ -18,8 +19,9 @@ AsIt.getGen = function getGen(itrb, ...args) {
   return null;
 };
 
-AsIt.getIter = function getIter(itrb, ...args) {
-  if (typeof itrb === 'function') return itrb.call(this, ...args);
+AsIt.getIter = function getIter(itrb, strOk, ...args) {
+  if (typeof itrb === 'function') itrb = itrb.call(this, ...args);
+  if (!strOk && typeof itrb !== 'object') return null;
 
   const agen = itrb[Symbol.asyncIterator];
   if (typeof agen === 'function') return agen.call(itrb);

@@ -31,6 +31,11 @@ test('AsIt.getGen: get bound async generator', () => {
   expect(typeof gen().next).toBe('function');
 });
 
+test('AsIt.getGen: not iterator object', () => {
+  const gen = AsIt.getGen('123');
+  expect(gen).toBe(null);
+});
+
 test('AsIt.getGen: not an iterator', () => {
   const gen = AsIt.getGen({});
   expect(gen).toBe(null);
@@ -46,9 +51,14 @@ test('AsIt.getIter: bound iterator', () => {
   expect(typeof iter.next).toBe('function');
 });
 
+test('AsIt.getIter: not iterator object', () => {
+  const iter = AsIt.getIter('345');
+  expect(iter).toBe(null);
+});
+
 test('AsIt.getIter: not an iterator', () => {
-  const gen = AsIt.getIter({});
-  expect(gen).toBe(null);
+  const iter = AsIt.getIter({});
+  expect(iter).toBe(null);
 });
 
 test('AsIt.chainWrap: wrap generator to chain method', async () => {
