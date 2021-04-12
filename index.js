@@ -1,4 +1,5 @@
 const Iter = require('./iter');
+const AsIt = require('./as-it');
 
 function makeEnum(...args) {  //TODO: >> Obj
   const obj = Object.create(null);
@@ -7,7 +8,7 @@ function makeEnum(...args) {  //TODO: >> Obj
   return obj;
 }
 
-const types = makeEnum('unknown', 'number', 'Iter', 'AIter');
+const types = makeEnum('unknown', 'number', 'Iter', 'AsIt');
 
 function guessType(args) {
   let guess = types.unknown;
@@ -17,7 +18,7 @@ function guessType(args) {
     let type;
 
     if (arg[Symbol.asyncIterator]) {
-      type = types.AIter;
+      type = types.AsIt;
     } else if (arg[Symbol.iterator]) {
       type = types.Iter;
     } else if (typeof arg === 'number') {
@@ -37,7 +38,7 @@ const guessActions = {
   [types.unknown]() { throw new UnknownArgsError(); },
   [types.number](...args) { return Iter.range(...args); },
   [types.Iter](...args) { return Iter.concat(...args); },
-  [types.AIter](...args) { throw new NotImplementedError(); },
+  [types.AsIt](...args) { return AsIt.concat(...args); },
 };
 
 const $ = function $(...args) {
@@ -48,5 +49,22 @@ const $ = function $(...args) {
   return res;
 };
 
-Object.assign($, {Iter, UnknownArgsError, NotImplementedError});
+Iter.value_(function iter(it) {
+  return new Iter(it);
+});
+
+Iter.value_(function asIt(iter) {
+  return new AsIt(iter);
+});
+
+AsIt.value_(function asIt(it) {
+  return new AsIt(it);
+});
+
+AsIt.value_(async function iter() {
+  const arr = await this.array();
+  return Iter.from(arr);
+});
+
+Object.assign($, {Iter, AsIt, UnknownArgsError, NotImplementedError});
 module.exports = $;

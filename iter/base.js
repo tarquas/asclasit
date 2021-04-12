@@ -6,16 +6,22 @@ const Iter = function(iter) {
 
 const {prototype: Iter_} = Iter;
 
-Iter.getGen = function getGen(itrb) {
-  if (typeof itrb[Symbol.iterator] !== 'function') return null;
-  const iter = itrb[Symbol.iterator];
-  return iter.bind(itrb);
+Iter.getGen = function getGen(itrb, ...args) {
+  if (typeof itrb === 'function') return itrb.bind(this, ...args);
+
+  const gen = itrb[Symbol.iterator];
+  if (typeof gen === 'function') return gen.bind(itrb);
+
+  return null;
 };
 
-Iter.getIter = function getIter(itrb) {
-  if (typeof itrb[Symbol.iterator] !== 'function') return null;
-  const iter = itrb[Symbol.iterator]();
-  return iter;
+Iter.getIter = function getIter(itrb, ...args) {
+  if (typeof itrb === 'function') return itrb.call(this, ...args);
+
+  const gen = itrb[Symbol.iterator];
+  if (typeof gen === 'function') return gen.call(itrb);
+
+  return null;
 };
 
 Iter.makeWrap = (gen) => function makeWrap(...args) {

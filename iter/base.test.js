@@ -5,6 +5,12 @@ test('new Iter: wrap to iterator', () => {
   expect(typeof wrapped[Iter.wrapped].next).toBe('function');
 });
 
+test('Iter.getGen: is generator', () => {
+  const gen = Iter.getGen(function* () {});
+  expect(typeof gen).toBe('function');
+  expect(typeof gen().next).toBe('function');
+});
+
 test('Iter.getGen: get bound generator', () => {
   const gen = Iter.getGen([]);
   expect(typeof gen).toBe('function');
@@ -16,7 +22,12 @@ test('Iter.getGen: not an iterator', () => {
   expect(gen).toBe(null);
 });
 
-test('Iter.getIter: get iterator', () => {
+test('Iter.getIter: from generator', () => {
+  const iter = Iter.getIter(function* () {});
+  expect(typeof iter.next).toBe('function');
+});
+
+test('Iter.getIter: bound iterator', () => {
   const iter = Iter.getIter([]);
   expect(typeof iter.next).toBe('function');
 });
