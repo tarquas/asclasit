@@ -2,6 +2,7 @@ const wrapped = Symbol('$.AsIt.wrap');
 
 const AsIt = function(iter) {
   this[wrapped] = iter;
+  this.cur = 0;
 };
 
 const {prototype: AsIt_} = AsIt;
@@ -42,6 +43,7 @@ AsIt.chainWrap = (gen) => function chainWrap(...args) {
   const prev = this[wrapped];
   const iter = gen.call(this, prev, ...args);
   this[wrapped] = iter;
+  this.cur = 0;
   return this;
 };
 
@@ -68,9 +70,34 @@ AsIt_[Symbol.asyncIterator] = function asyncIterator() {
   return cur;
 };
 
-value_((iter, value) => iter.next(value), 'next');
 value_((iter, err) => iter.throw(err), 'throw');
 value_((iter, value) => iter.return(value), 'return');
+
+async function next(iter, value) {
+  const item = await iter.next(value);
+  if (item.done) this.cur = null; else this.cur++;
+  return item;
+};
+
+value_(next);
+
+value_(async function read(iter, value) {
+  const item = await next.call(this, iter, value);
+  return item.value;
+});
+
+value_(async function skip(iter, count, value) {
+  let last;
+
+  while (count--) {
+    const item = await iter.next(value);
+    last = item.value;
+    if (item.done) { this.cur = null; break; }
+    this.cur++;
+  }
+
+  return last;
+});
 
 Object.assign(AsIt, {wrapped, make_, chain_, value_});
 

@@ -1,4 +1,4 @@
-const $ = require('./index');
+const $ = require('./base');
 
 async function asItArray(iter) {
   const res = [];

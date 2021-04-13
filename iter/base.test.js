@@ -128,3 +128,29 @@ test('Iter_.throw: break with exception', () => {
   expect(wrapped.throw(new Error('enough'))).toEqual({done: false, value: 'broken with enough'});
   expect(Array.from(wrapped)).toEqual(['end']);
 });
+
+test('Iter_.read: read value', () => {
+  const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const wrapped = new Iter(myGen());
+  expect(wrapped.read(true)).toEqual(6);
+  expect(wrapped.cur).toEqual(1);
+  expect(wrapped.read(true)).toEqual(4);
+  expect(wrapped.cur).toEqual(2);
+  expect(Array.from(wrapped)).toEqual([3, 2, 1, 0]);
+});
+
+test('Iter_.skip: skip values', () => {
+  const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const wrapped = new Iter(myGen());
+  expect(wrapped.skip(2, true)).toEqual(4);
+  expect(wrapped.cur).toEqual(2);
+  expect(Array.from(wrapped)).toEqual([3, 2, 1, 0]);
+});
+
+test('Iter_.skip: skip beyond', () => {
+  const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const wrapped = new Iter(myGen());
+  expect(wrapped.skip(10, true)).toEqual(undefined);
+  expect(wrapped.cur).toEqual(null);
+  expect(Array.from(wrapped)).toEqual([]);
+});

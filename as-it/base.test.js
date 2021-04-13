@@ -142,3 +142,29 @@ test('AsIt_.throw: break with exception', async () => {
   expect(await wrapped.throw(new Error('enough'))).toEqual({done: false, value: 'broken with enough'});
   expect(await asItArray(wrapped)).toEqual(['end']);
 });
+
+test('AsIt_.read: read value', async () => {
+  const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const wrapped = new AsIt(myGen());
+  expect(await wrapped.read(true)).toEqual(6);
+  expect(wrapped.cur).toEqual(1);
+  expect(await wrapped.read(true)).toEqual(4);
+  expect(wrapped.cur).toEqual(2);
+  expect(await asItArray(wrapped)).toEqual([3, 2, 1, 0]);
+});
+
+test('AsIt_.skip: skip values', async () => {
+  const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const wrapped = new AsIt(myGen());
+  expect(await wrapped.skip(2, true)).toEqual(4);
+  expect(wrapped.cur).toEqual(2);
+  expect(await asItArray(wrapped)).toEqual([3, 2, 1, 0]);
+});
+
+test('AsIt_.skip: skip beyond', async () => {
+  const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const wrapped = new AsIt(myGen());
+  expect(await wrapped.skip(10, true)).toEqual(undefined);
+  expect(wrapped.cur).toEqual(null);
+  expect(await asItArray(wrapped)).toEqual([]);
+});

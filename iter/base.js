@@ -2,6 +2,7 @@ const wrapped = Symbol('$.Iter.wrap');
 
 const Iter = function(iter) {
   this[wrapped] = iter;
+  this.cur = 0;
 };
 
 const {prototype: Iter_} = Iter;
@@ -36,6 +37,7 @@ Iter.chainWrap = (gen) => function chainWrap(...args) {
   const prev = this[wrapped];
   const iter = gen.call(this, prev, ...args);
   this[wrapped] = iter;
+  this.cur = 0;
   return this;
 };
 
@@ -62,9 +64,34 @@ Iter_[Symbol.iterator] = function iterator() {
   return cur;
 };
 
-value_((iter, value) => iter.next(value), 'next');
 value_((iter, err) => iter.throw(err), 'throw');
 value_((iter, value) => iter.return(value), 'return');
+
+function next(iter, value) {
+  const item = iter.next(value);
+  if (item.done) this.cur = null; else this.cur++;
+  return item;
+};
+
+value_(next);
+
+value_(function read(iter, value) {
+  const item = next.call(this, iter, value);
+  return item.value;
+});
+
+value_(function skip(iter, count, value) {
+  let last;
+
+  while (count--) {
+    const item = iter.next(value);
+    last = item.value;
+    if (item.done) { this.cur = null; break; }
+    this.cur++;
+  }
+
+  return last;
+});
 
 Object.assign(Iter, {wrapped, make_, chain_, value_});
 
