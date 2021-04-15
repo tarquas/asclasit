@@ -1,6 +1,3 @@
-const Iter = require('./iter');
-const AsIt = require('./as-it');
-
 function makeEnum(...args) {  //TODO: >> Obj
   const obj = Object.create(null);
   let idx = 0;
@@ -36,9 +33,9 @@ class NotImplementedError extends Error { message = 'method not yet implemented'
 
 const guessActions = {
   [types.unknown]() { throw new UnknownArgsError(); },
-  [types.number](...args) { return Iter.range(...args); },
-  [types.Iter](...args) { return Iter.concat(...args); },
-  [types.AsIt](...args) { return AsIt.concat(...args); },
+  [types.number](...args) { return $.Iter.range(...args); },
+  [types.Iter](...args) { return $.Iter.concat(...args); },
+  [types.AsIt](...args) { return $.AsIt.concat(...args); },
 };
 
 const $ = function $(...args) {
@@ -49,26 +46,9 @@ const $ = function $(...args) {
   return res;
 };
 
-Iter.value_(function iter(it) {
-  return new Iter(it);
-});
-
-Iter.value_(function asIt(iter) {
-  return new AsIt(iter);
-});
-
-AsIt.value_(function asIt(it) {
-  return new AsIt(it);
-});
-
-AsIt.value_(async function iter() {
-  const arr = await this.array();
-  return Iter.from(arr);
-});
-
 const func_ = function func_(func, name) {
   $[name || func.name] = func;
 };
 
-Object.assign($, {func_, Iter, AsIt, UnknownArgsError, NotImplementedError});
+Object.assign($, {func_, UnknownArgsError, NotImplementedError});
 module.exports = $;

@@ -65,6 +65,10 @@ const value_ = function value_(func, name) {
   AsIt_[name || func.name] = AsIt.valueWrap(func);
 };
 
+const short_ = function short_(func, name) {
+  AsIt_[name || func.name] = func;
+};
+
 AsIt_[Symbol.asyncIterator] = function asyncIterator() {
   const cur = this[wrapped];
   return cur;
@@ -99,6 +103,6 @@ value_(async function skip(iter, count, value) {
   return last;
 });
 
-Object.assign(AsIt, {wrapped, make_, chain_, value_});
+Object.assign(AsIt, {wrapped, make_, chain_, value_, short_});
 
 module.exports = AsIt;

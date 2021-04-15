@@ -18,18 +18,21 @@ function* chunkByCount(iter, count) {
 function* chunkByCountFunc(iter, count, func) {
   let buf = [];
   let idx = 0;
+  let desc = {buf, it: iter, iter: this};
 
   for (const item of iter) {
-    const newChunk = func.call(this, item, {buf, idx, it: iter, iter: this});
+    const newChunk = func.call(this, item, idx, desc);
 
     if (newChunk) {
       if (buf.length) yield buf;
       buf = [];
+      desc = {buf, it: iter, iter: this};
     }
 
     if (buf.push(item) === count) {
       yield buf;
       buf = [];
+      desc = {buf, it: iter, iter: this};
     }
 
     idx++;

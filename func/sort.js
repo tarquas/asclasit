@@ -16,10 +16,10 @@ func_(function safeNumSort(a, b) {
   return (+a || 0) - (+b || 0);
 });
 
-func_(function sortKey_(key) {
+func_(function sort_(key) {
   if (key == null) key = 0;
 
-  return function _sortKey(A, B) {
+  return function _sort(A, B) {
     const a = A[key];
     const b = B[key];
     if (a > b) return 1;
@@ -28,6 +28,6 @@ func_(function sortKey_(key) {
   };
 });
 
-func_($.sortKey_(), 'sortKey');
+func_($.sort_(), 'sortKey');
 
 module.exports = $;

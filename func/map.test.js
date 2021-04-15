@@ -49,3 +49,33 @@ test('$.abound: map bound context async', async () => {
   expect(promises[0] instanceof Promise).toBe(true);
   expect(await Promise.all(promises)).toEqual([{a: 2}, {a: 2}]);
 });
+
+const deep = [
+  {a1: {b1: 1, b2: 2}, a2: {b1: 3, b2: 4}},
+  {a1: {b1: 5, b2: 6}, a2: {b1: 7, b2: 8}},
+  {a1: 4, a2: 6},
+  null,
+];
+
+test('$.in_: level 1 object inwalk', () => {
+  expect(deep.map($.in_('a1'))).toEqual([deep[0].a1, deep[1].a1, 4, null]);
+});
+
+test('$.in_: object inwalk', () => {
+  expect(deep.map($.in_('a1', 'b1'))).toEqual([deep[0].a1.b1, deep[1].a1.b1, undefined, null]);
+});
+
+test('$.key_: entry key by function', () => {
+  const values = [7, 3, -4, 8, 'a', null, true];
+  const mapped = values.map($.key_(v => v + 1));
+  expect(mapped).toEqual([[8, 7], [4, 3], [-3, -4], [9, 8], ['a1', 'a'], [1, null], [2, true]]);
+});
+
+test('$.keyin_: entry key by object inwalk', () => {
+  const mapped = deep.map($.keyin_('a1', 'b1'));
+  expect(mapped).toEqual([[1, deep[0]], [5, deep[1]], [, deep[2]], [null, deep[3]]]);
+});
+
+test('$.inKey: first element (index 0)', () => {
+  expect([['a', 1], ['b', 2], null].map($.inKey)).toEqual(['a', 'b', null]);
+});

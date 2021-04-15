@@ -59,6 +59,10 @@ const value_ = function value_(func, name) {
   Iter_[name || func.name] = Iter.valueWrap(func);
 };
 
+const short_ = function short_(func, name) {
+  Iter_[name || func.name] = func;
+};
+
 Iter_[Symbol.iterator] = function iterator() {
   const cur = this[wrapped];
   return cur;
@@ -93,6 +97,6 @@ value_(function skip(iter, count, value) {
   return last;
 });
 
-Object.assign(Iter, {wrapped, make_, chain_, value_});
+Object.assign(Iter, {wrapped, make_, chain_, value_, short_});
 
 module.exports = Iter;
