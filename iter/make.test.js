@@ -4,8 +4,8 @@ test('Iter.concat: concatenate iterators', () => {
   const i1 = ['a1', 'a2'];
   const i2 = function* () { yield 'a4'; yield 'a5'; } ();
   const i3 = new Iter(['a6', 'a7'][Symbol.iterator]());
-  const concat = Iter.concat(i1, 3, i2, i3);
-  expect(Array.from(concat)).toEqual(['a1', 'a2', 3, 'a4', 'a5', 'a6', 'a7']);
+  const concat = Iter.concat(i1, 3, {a: 1}, i2, i3);
+  expect(Array.from(concat)).toEqual(['a1', 'a2', 3, ['a', 1], 'a4', 'a5', 'a6', 'a7']);
 });
 
 test('Iter.range: 1 arg (x): [0 ... +1 ... x)', () => {

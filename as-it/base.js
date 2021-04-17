@@ -54,19 +54,26 @@ AsIt.valueWrap = (func) => function valueWrap(...args) {
 };
 
 const make_ = function make_(gen, name) {
-  AsIt[name || gen.name] = AsIt.makeWrap(gen);
+  const wrap = AsIt.makeWrap(gen);
+  wrap.raw = gen;
+  AsIt[name || gen.name] = wrap;
 };
 
 const chain_ = function chain_(gen, name) {
-  AsIt_[name || gen.name] = AsIt.chainWrap(gen);
+  const n = name || gen.name;
+  AsIt[n] = gen;
+  AsIt_[n] = AsIt.chainWrap(gen);
 };
 
 const value_ = function value_(func, name) {
-  AsIt_[name || func.name] = AsIt.valueWrap(func);
+  const n = name || func.name;
+  AsIt[n] = func;
+  AsIt_[n] = AsIt.valueWrap(func);
 };
 
 const short_ = function short_(func, name) {
-  AsIt_[name || func.name] = func;
+  const n = name || func.name;
+  AsIt_[n] = func;
 };
 
 AsIt_[Symbol.asyncIterator] = function asyncIterator() {

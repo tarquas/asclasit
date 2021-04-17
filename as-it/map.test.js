@@ -24,6 +24,8 @@ test('AsIt_.map: map iterator: several functions', async () => {
   expect(await asItArray(wrapped)).toEqual([-8, -0, -16, -6, -2]);
 });
 
+//mapTo
+
 test('AsIt_.mapAt: map by inwalk', async () => {
   const wrapped = new AsIt(AsIt.getIter([[{a: [4]}, 1], [{a: [8]}, 2], [, 4], null]));
   wrapped.mapAt([0, 'a', 0], async key => key ? key.toString() : 'def');

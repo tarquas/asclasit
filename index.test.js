@@ -38,32 +38,53 @@ test('$: make async iterator wrapper', async () => {
   expect(await asItArray(wrapped)).toEqual(['01', 'a', 'b', 'c', 'd']);
 });
 
-test('Iter_.iter: duplicate iter', () => {
+test('$: make object entries iterator', () => {
+  const wrapped = $({a: 1, b: 2, c: 3}, {d: 4});
+  expect(wrapped instanceof $.Iter).toBe(true);
+  expect(Array.from(wrapped)).toEqual([['a', 1], ['b', 2], ['c', 3], ['d', 4]]);
+});
+
+test('Iter_.toIter: duplicate iter', () => {
   const from = $([1, 2, 3]);
-  const to = from.iter();
+  const to = from.toIter();
   expect(to !== from).toBe(true);
   expect(to instanceof $.Iter).toBe(true);
   expect(Array.from(to)).toEqual([1, 2, 3]);
 });
 
-test('Iter_.asIt: convert from iter to asIt', async () => {
+test('Iter_.toAsIt: convert from iter to asIt', async () => {
   const iter = $([1, 2, 3]);
-  const asIt = iter.asIt();
+  const asIt = iter.toAsIt();
   expect(asIt instanceof $.AsIt).toBe(true);
   expect(await asItArray(asIt)).toEqual([1, 2, 3]);
 });
 
-test('AsIt_.asIt: duplicate asIt', async () => {
+test('$.keys: shortcut to Iter.objectsKeys', () => {
+  const keys = $.keys({a: 1, b: 2}, {c: 3}, null);
+  expect(Array.from(keys)).toEqual(['a', 'b', 'c']);
+});
+
+test('$.values: shortcut to Iter.objectsValues', () => {
+  const values = $.values({a: 1, b: 2}, {c: 3}, null);
+  expect(Array.from(values)).toEqual([1, 2, 3]);
+});
+
+test('$.entries: shortcut to Iter.objectsEntries', () => {
+  const entries = $.entries({a: 1, b: 2}, {c: 3}, null);
+  expect(Array.from(entries)).toEqual([['a', 1], ['b', 2], ['c', 3]]);
+});
+
+test('AsIt_.toAsIt: duplicate asIt', async () => {
   const from = $(async function* () { yield 1; yield 2; yield 3; } ());
-  const to = from.asIt();
+  const to = from.toAsIt();
   expect(to !== from).toBe(true);
   expect(to instanceof $.AsIt).toBe(true);
   expect(await asItArray(to)).toEqual([1, 2, 3]);
 });
 
-test('AsIt_.iter: convert from asIt to iter', async () => {
+test('AsIt_.toIter: convert from asIt to iter', async () => {
   const asIt = $(async function* () { yield 1; yield 2; yield 3; } ());
-  const iter = await asIt.iter();
+  const iter = await asIt.toIter();
   expect(iter instanceof $.Iter).toBe(true);
   expect(Array.from(iter)).toEqual([1, 2, 3]);
 });

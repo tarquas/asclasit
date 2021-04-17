@@ -1,15 +1,28 @@
 const AsIt = require('./value');
 
-test('AsIt_.array: grab to array', async () => {
+test('AsIt_.toArray: grab to array', async () => {
   const wrapped = new AsIt([2, 6, 7][Symbol.iterator]());
-  const array = await wrapped.array();
+  const array = await wrapped.toArray();
   expect(array).toEqual([2, 6, 7]);
 });
 
-test('AsIt_.set: grab to set', async () => {
+test('AsIt_.toSet: grab to set', async () => {
   const wrapped = new AsIt([2, 6, 7][Symbol.iterator]());
-  const set = await wrapped.set();
+  const set = await wrapped.toSet();
   expect(Array.from(set)).toEqual([2, 6, 7]);
+});
+
+test('Iter_.toObject: get object from entries', async () => {
+  const entries = new AsIt([['a', 1], ['b', 2], 'c', null][Symbol.iterator]());
+  const object = await entries.toObject(true);
+  expect(object).toEqual({a: 1, b: 2, c: true, null: true});
+});
+
+test('Iter_.toMap: get map from entries', async () => {
+  const entries = new AsIt([['a', 1], ['b', 2], 'c', null][Symbol.iterator]());
+  const map = await entries.toMap(true);
+  expect(map instanceof Map).toBe(true);
+  expect(Object.fromEntries(map)).toEqual({a: 1, b: 2, c: true, null: true});
 });
 
 test('AsIt_.count: count iterator items', async () => {

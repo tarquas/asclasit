@@ -1,15 +1,27 @@
 const Iter = require('./value');
 
-test('Iter_.array: grab to array', () => {
+test('Iter_.toArray: grab to array', () => {
   const wrapped = new Iter([2, 6, 7][Symbol.iterator]());
-  const array = wrapped.array();
+  const array = wrapped.toArray();
   expect(array).toEqual([2, 6, 7]);
 });
 
-test('Iter_.set: grab to set', () => {
+test('Iter_.toSet: grab to set', () => {
   const wrapped = new Iter([2, 6, 7][Symbol.iterator]());
-  const set = wrapped.set();
+  const set = wrapped.toSet();
   expect(Array.from(set)).toEqual([2, 6, 7]);
+});
+
+test('Iter_.toObject: get object from entries', () => {
+  const entries = new Iter([['a', 1], ['b', 2], 'c', null][Symbol.iterator]());
+  expect(entries.toObject(true)).toEqual({a: 1, b: 2, c: true, null: true});
+});
+
+test('Iter_.toMap: get map from entries', () => {
+  const entries = new Iter([['a', 1], ['b', 2], 'c', null][Symbol.iterator]());
+  const map = entries.toMap(true);
+  expect(map instanceof Map).toBe(true);
+  expect(Object.fromEntries(map)).toEqual({a: 1, b: 2, c: true, null: true});
 });
 
 test('Iter_.count: count iterator items', () => {

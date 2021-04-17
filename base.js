@@ -5,7 +5,7 @@ function makeEnum(...args) {  //TODO: >> Obj
   return obj;
 }
 
-const types = makeEnum('unknown', 'number', 'Iter', 'AsIt');
+const types = makeEnum('unknown', 'number', 'object', 'Iter', 'AsIt');
 
 function guessType(args) {
   let guess = types.unknown;
@@ -18,6 +18,8 @@ function guessType(args) {
       type = types.AsIt;
     } else if (arg[Symbol.iterator]) {
       type = types.Iter;
+    } else if (typeof arg === 'object') {
+      type = types.object;
     } else if (typeof arg === 'number') {
       type = types.number;
     } else continue;
@@ -34,6 +36,7 @@ class NotImplementedError extends Error { message = 'method not yet implemented'
 const guessActions = {
   [types.unknown]() { throw new UnknownArgsError(); },
   [types.number](...args) { return $.Iter.range(...args); },
+  [types.object](...args) { return $.Iter.entries(...args); },
   [types.Iter](...args) { return $.Iter.concat(...args); },
   [types.AsIt](...args) { return $.AsIt.concat(...args); },
 };

@@ -18,6 +18,8 @@ test('Iter_.map: map iterator: several functions', () => {
   expect(Array.from(wrapped)).toEqual([-8, -0, -16, -6, -2]);
 });
 
+//mapTo
+
 test('Iter_.mapAt: map by inwalk', () => {
   const wrapped = new Iter(Iter.getIter([[{a: [4]}, 1], [{a: [8]}, 2], [, 4], null]));
   wrapped.mapAt([0, 'a', 0], key => key ? key.toString() : 'def');
