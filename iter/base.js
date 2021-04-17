@@ -49,13 +49,15 @@ Iter.valueWrap = (func) => function valueWrap(...args) {
 
 const make_ = function make_(gen, name) {
   const wrap = Iter.makeWrap(gen);
-  wrap.raw = gen;
+  wrap.gen = gen;
   Iter[name || gen.name] = wrap;
 };
 
 const chain_ = function chain_(gen, name) {
   const n = name || gen.name;
-  Iter[n] = gen;
+  const wrap = Iter.makeWrap(gen);
+  wrap.gen = gen;
+  Iter[n] = wrap;
   Iter_[n] = Iter.chainWrap(gen);
 };
 
@@ -63,11 +65,6 @@ const value_ = function value_(func, name) {
   const n = name || func.name;
   Iter[n] = func;
   Iter_[n] = Iter.valueWrap(func);
-};
-
-const short_ = function short_(func, name) {
-  const n = name || func.name;
-  Iter_[n] = func;
 };
 
 Iter_[Symbol.iterator] = function iterator() {
@@ -104,6 +101,6 @@ value_(function skip(iter, count, value) {
   return last;
 });
 
-Object.assign(Iter, {wrapped, make_, chain_, value_, short_});
+Object.assign(Iter, {wrapped, make_, chain_, value_});
 
 module.exports = Iter;

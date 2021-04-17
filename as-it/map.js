@@ -1,7 +1,7 @@
 const AsIt = require('./base');
 const $ = require('../func/map');
 
-const {chain_, short_} = AsIt;
+const {chain_} = AsIt;
 
 chain_(async function* map(iter, ...funcs) {
   const desc = {it: iter, iter: this};
@@ -49,13 +49,13 @@ chain_(async function* mapTo(iter, to, ...funcs) {
   }
 });
 
-short_(function mapAt(at, ...funcs) {
+chain_(function mapAt(iter, at, ...funcs) {
   if (!(at instanceof Array)) at = [at];
-  return this.mapTo($.to_(...at), $.in_(...at), ...funcs);
+  return AsIt.mapTo.gen(iter, $.to_(...at), $.in_(...at), ...funcs);
 });
 
-short_(function mapKey(...funcs) {
-  return this.mapAt(0, ...funcs);
+chain_(function mapKey(iter, ...funcs) {
+  return AsIt.mapAt.gen(iter, 0, ...funcs);
 });
 
 module.exports = AsIt;

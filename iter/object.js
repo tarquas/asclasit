@@ -22,15 +22,15 @@ make_(function* objectValues(obj) {
 });
 
 make_(function* objectsKeys(...objs) {
-  for (const obj of objs) yield* Iter.objectKeys.raw(obj);
+  for (const obj of objs) yield* Iter.objectKeys.gen(obj);
 });
 
 make_(function* objectsEntries(...objs) {
-  for (const obj of objs) yield* Iter.objectEntries.raw(obj);
+  for (const obj of objs) yield* Iter.objectEntries.gen(obj);
 });
 
 make_(function* objectsValues(...objs) {
-  for (const obj of objs) yield* Iter.objectValues.raw(obj);
+  for (const obj of objs) yield* Iter.objectValues.gen(obj);
 });
 
 Iter.builtinEntries = new Set([Array, Set, Map]);
@@ -57,7 +57,7 @@ make_(function* keys(...objs) {
         if (item instanceof Array) yield item[0]; else yield item;
       }
     } else {
-      yield* Iter.objectKeys.raw(obj);
+      yield* Iter.objectKeys.gen(obj);
     }
   }
 });
@@ -84,7 +84,7 @@ make_(function* entries(...objs) {
         if (item instanceof Array) yield item; else yield [item, item];
       }
     } else {
-      yield* Iter.objectEntries.raw(obj);
+      yield* Iter.objectEntries.gen(obj);
     }
   }
 });
@@ -111,7 +111,7 @@ make_(function* values(...objs) {
         if (item instanceof Array) yield item[1]; else yield item;
       }
     } else {
-      yield* Iter.objectValues.raw(obj);
+      yield* Iter.objectValues.gen(obj);
     }
   }
 });

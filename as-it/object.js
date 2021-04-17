@@ -2,17 +2,17 @@ const Iter = require('../iter');
 const AsIt = require('./base');
 const {make_} = AsIt;
 
-make_(Iter.objectKeys.raw);
+make_(Iter.objectKeys.gen);
 
-make_(Iter.objectEntries.raw);
+make_(Iter.objectEntries.gen);
 
-make_(Iter.objectValues.raw);
+make_(Iter.objectValues.gen);
 
-make_(Iter.objectsKeys.raw);
+make_(Iter.objectsKeys.gen);
 
-make_(Iter.objectsEntries.raw);
+make_(Iter.objectsEntries.gen);
 
-make_(Iter.objectsValues.raw);
+make_(Iter.objectsValues.gen);
 
 AsIt.builtinEntries = Iter.builtinEntries;
 
@@ -38,7 +38,7 @@ make_(async function* keys(...objs) {
         if (item instanceof Array) yield item[0]; else yield item;
       }
     } else {
-      yield* AsIt.objectKeys.raw(obj);
+      yield* AsIt.objectKeys.gen(obj);
     }
   }
 });
@@ -65,7 +65,7 @@ make_(async function* entries(...objs) {
         if (item instanceof Array) yield item; else yield [item, item];
       }
     } else {
-      yield* AsIt.objectEntries.raw(obj);
+      yield* AsIt.objectEntries.gen(obj);
     }
   }
 });
@@ -92,7 +92,7 @@ make_(async function* values(...objs) {
         if (item instanceof Array) yield item[1]; else yield item;
       }
     } else {
-      yield* AsIt.objectValues.raw(obj);
+      yield* AsIt.objectValues.gen(obj);
     }
   }
 });

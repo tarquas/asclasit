@@ -19,8 +19,8 @@ AsIt.value_(function toAsIt(it) {
   return new AsIt(it);
 });
 
-AsIt.value_(async function toIter() {
-  const arr = await this.toArray();
+AsIt.value_(async function toIter(iter) {
+  const arr = await AsIt.toArray(iter);
   return Iter.from(arr);
 });
 

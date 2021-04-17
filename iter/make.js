@@ -1,17 +1,17 @@
 const Iter = require('./object');
-const {make_} = Iter;
+const {make_, chain_} = Iter;
 
-make_(function* from(arg, strOk) {
+chain_(function* from(arg, strOk) {
   const iter = Iter.getIter(arg, strOk);
 
   if (iter) yield* iter;
-  else if (typeof arg === 'object') yield* Iter.objectEntries.raw(arg);
+  else if (typeof arg === 'object') yield* Iter.objectEntries.gen(arg);
   else yield arg;
 });
 
-make_(function* concat(...args) {
+chain_(function* concat(...args) {
   for (const arg of args) {
-    yield* Iter.from.raw(arg);
+    yield* Iter.from.gen(arg);
   }
 });
 
