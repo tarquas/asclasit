@@ -6,6 +6,12 @@ async function asItArray(iter) {
   return res;
 }
 
+test('$: empty: null-prototype object', () => {
+  const obj = $();
+  expect(Object.getPrototypeOf(obj)).toEqual(null);
+  expect(obj).toEqual({});
+});
+
 test('$: unknown: null', () => {
   expect(() => $(null)).toThrow('unknown');
 });
@@ -44,14 +50,6 @@ test('$: make object entries iterator', () => {
   expect(Array.from(wrapped)).toEqual([['a', 1], ['b', 2], ['c', 3], ['d', 4]]);
 });
 
-test('Iter_.toIter: duplicate iter', () => {
-  const from = $([1, 2, 3]);
-  const to = from.toIter();
-  expect(to !== from).toBe(true);
-  expect(to instanceof $.Iter).toBe(true);
-  expect(Array.from(to)).toEqual([1, 2, 3]);
-});
-
 test('Iter_.toAsIt: convert from iter to asIt', async () => {
   const iter = $([1, 2, 3]);
   const asIt = iter.toAsIt();
@@ -72,21 +70,6 @@ test('$.values: shortcut to Iter.objectsValues', () => {
 test('$.entries: shortcut to Iter.objectsEntries', () => {
   const entries = $.entries({a: 1, b: 2}, {c: 3}, null);
   expect(Array.from(entries)).toEqual([['a', 1], ['b', 2], ['c', 3]]);
-});
-
-test('AsIt_.toAsIt: duplicate asIt', async () => {
-  const from = $(async function* () { yield 1; yield 2; yield 3; } ());
-  const to = from.toAsIt();
-  expect(to !== from).toBe(true);
-  expect(to instanceof $.AsIt).toBe(true);
-  expect(await asItArray(to)).toEqual([1, 2, 3]);
-});
-
-test('AsIt_.toIter: convert from asIt to iter', async () => {
-  const asIt = $(async function* () { yield 1; yield 2; yield 3; } ());
-  const iter = await asIt.toIter();
-  expect(iter instanceof $.Iter).toBe(true);
-  expect(Array.from(iter)).toEqual([1, 2, 3]);
 });
 
 test('$: async class', () => {

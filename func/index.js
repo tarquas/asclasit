@@ -5,5 +5,6 @@ require('./map');
 require('./math');
 require('./reduce');
 require('./sort');
+require('./time');
 
 module.exports = $;

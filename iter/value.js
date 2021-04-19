@@ -1,34 +1,126 @@
 const Iter = require('./base');
 
-const {value_} = Iter;
+const {value_, chain_} = Iter;
 
-value_(function toArray(iter) {
+chain_(function *appendArray(iter, to) {
+  for (const item of iter) {
+    to.push(item);
+    yield item;
+  }
+});
+
+value_(function toArray(iter, to) {
+  if (to) {
+    for (const item of iter) to.push(item);
+    return to;
+  }
+
   return Array.from(iter);
 });
 
-value_(function toSet(iter) {
+chain_(function *appendSet(iter, to) {
+  for (const item of iter) {
+    to.add(item);
+    yield item;
+  }
+});
+
+value_(function toSet(iter, to) {
+  if (to) {
+    for (const item of iter) to.add(item);
+    return to;
+  }
+
   return new Set(iter);
 });
 
-value_(function toObject(iter, value) {
-  const obj = Object.create(null);
+chain_(function *appendXorSet(iter, xor) {
+  if (!xor) xor = new Set();
 
-  for (const item of iter) {
-    if (item instanceof Array) obj[item[0]] = item[1];
-    else obj[item] = value;
+  for (const key of iter) {
+    if (xor.has(key)) { xor.delete(key); yield false; }
+    else { xor.add(key); yield true; }
   }
+});
 
+value_(function toXorSet(iter, xor) {
+  if (!xor) xor = new Set();
+  Iter.exec(Iter.appendXorSet.gen(iter, xor));
+  return xor;
+});
+
+chain_(function *appendObject(iter, obj, value) {
+  for (const item of iter) {
+    if (item instanceof Array) { obj[item[0]] = item[1]; yield item; }
+    else { obj[item] = value; yield [item, value]; }
+  }
+});
+
+value_(function toObject(iter, obj, value) {
+  if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
+  else if (!obj) obj = Object.create(null);
+
+  Iter.exec(Iter.appendObject.gen(iter, obj, value));
   return obj;
 });
 
-value_(function toMap(iter, value) {
-  const map = new Map();
+chain_(function *appendXorObject(iter, obj, value) {
+  if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
+  else if (!obj) obj = Object.create(null);
 
   for (const item of iter) {
-    if (item instanceof Array) map.set(item[0], item[1]);
-    else map.set(item, value);
+    if (item instanceof Array) {
+      const key = item[0];
+      if (key in obj) { delete obj[key]; yield false; }
+      else { obj[key] = item[1]; yield true; }
+    } else {
+      if (item in obj) { delete obj[item]; yield false; }
+      else { obj[item] = value; yield true; }
+    }
   }
+});
 
+value_(function toXorObject(iter, obj, value) {
+  if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
+  else if (!obj) obj = Object.create(null);
+
+  Iter.exec(Iter.appendXorObject.gen(iter, obj, value));
+  return obj;
+});
+
+chain_(function *appendMap(iter, map, value) {
+  for (const item of iter) {
+    if (item instanceof Array) { map.set(item[0], item[1]); yield item; }
+    else { map.set(item, value); yield [item, value]; }
+  }
+});
+
+value_(function toMap(iter, map, value) {
+  if (!(map instanceof Map)) { value = map; map = new Map(); }
+
+  Iter.exec(Iter.appendMap.gen(iter, map, value));
+  return map;
+});
+
+chain_(function *appendXorMap(iter, map, value) {
+  if (!(map instanceof Map)) { value = map; map = new Map(); }
+
+  for (const item of iter) {
+    if (item instanceof Array) {
+      const key = item[0];
+      if (map.has(key)) { map.delete(key); yield false; }
+      else { map.set(key, item[1]); yield true; }
+    } else {
+      if (map.has(item)) { map.delete(item); yield false; }
+      else { map.set(item, value); yield true; }
+    }
+  }
+});
+
+value_(function toXorMap(iter, map, value) {
+  if (!(map instanceof Map)) { value = map; map = new Map(); }
+
+  Iter.exec(Iter.appendXorMap.gen(iter, map, value));
   return map;
 });
 
@@ -50,6 +142,10 @@ value_(function last(iter) {
   let last;
   for (const item of iter) last = item;
   return last;
+});
+
+value_(function toIter(it) {
+  return new Iter(it);
 });
 
 module.exports = Iter;

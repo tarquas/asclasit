@@ -15,35 +15,37 @@ function* chunkByCount(iter, count) {
   if (buf.length) yield buf;
 }
 
-function* chunkByCountFunc(iter, count, func) {
-  let buf = [];
-  let idx = 0;
-  let desc = {buf, it: iter, iter: this};
+function* chunkByCountFunc(iter, count, ...funcs) {
+  let desc = {buf: [], idx: 0, it: iter, iter: this};
 
   for (const item of iter) {
-    const newChunk = func.call(this, item, idx, desc);
+    let newChunk = false;
 
-    if (newChunk) {
-      if (buf.length) yield buf;
-      buf = [];
-      desc = {buf, it: iter, iter: this};
+    for (const func of funcs) {
+      if (func && func.call(this, item, desc)) {
+        newChunk = true;
+      }
     }
 
-    if (buf.push(item) === count) {
-      yield buf;
-      buf = [];
-      desc = {buf, it: iter, iter: this};
+    if (newChunk && desc.buf.length) {
+      yield desc.buf;
+      desc.buf = [];
     }
 
-    idx++;
+    if (desc.buf.push(item) === count) {
+      yield desc.buf;
+      desc.buf = [];
+    }
+
+    desc.idx++;
   }
 
-  if (buf.length) yield buf;
+  if (desc.buf.length) yield desc.buf;
 }
 
-chain_(function* chunk(iter, count, func) {
-  if (typeof count === 'function') yield* chunkByCountFunc(iter, 0, count);
-  else if (typeof func === 'function') yield* chunkByCountFunc(iter, count, func);
+chain_(function* chunk(iter, count, func, ...funcs) {
+  if (typeof count === 'function') yield* chunkByCountFunc(iter, 0, count, func, ...funcs);
+  else if (typeof func === 'function') yield* chunkByCountFunc(iter, count, func, ...funcs);
   else yield* chunkByCount(iter, count);
 });
 
@@ -53,7 +55,10 @@ function* flatten(iter, depth) {
 
   for (const item of iter) {
     const it = Iter.getIter(item);
-    if (!it) yield item; else if (depth === 1) yield* it; else yield* flatten(it, depth - 1);
+
+    if (!it) yield item;
+    else if (depth === 1) yield* it;
+    else yield* flatten(it, depth - 1);
   }
 }
 

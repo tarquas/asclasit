@@ -42,7 +42,8 @@ const guessActions = {
 };
 
 const $ = function $(...args) {
-  if (this instanceof $) throw new NotImplementedError();
+  if (this !== global && this instanceof $) throw new NotImplementedError();
+  if (!args.length) return Object.create(null);
 
   const type = guessType(args);
   const res = guessActions[type](...args);

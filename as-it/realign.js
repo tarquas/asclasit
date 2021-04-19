@@ -1,4 +1,5 @@
 const AsIt = require('./base');
+const $ = require('../func');
 
 const {chain_} = AsIt;
 
@@ -15,33 +16,56 @@ async function* chunkByCount(iter, count) {
   if (buf.length) yield buf;
 }
 
-async function* chunkByCountFunc(iter, count, func) {
-  let buf = [];
-  let idx = 0;
+async function* chunkByCountFunc(iter, msec, count, ...funcs) {
+  let snap = msec && $.upMsec();
+  let desc = {buf: [], idx: 0, snap, it: iter, iter: this};
 
   for await (const item of iter) {
-    const newChunk = await func.call(this, item, {buf, idx, it: iter, iter: this});
+    let newChunk = false;
 
-    if (newChunk) {
-      if (buf.length) yield buf;
-      buf = [];
+    for (const func of funcs) {
+      if (func && await func.call(this, item, desc)) {
+        newChunk = true;
+        break;
+      }
     }
 
-    if (buf.push(item) === count) {
-      yield buf;
-      buf = [];
+    if (msec && !newChunk && $.upMsec(desc.snap) > msec) {
+      newChunk = true;
     }
 
-    idx++;
+    if (newChunk && desc.buf.length) {
+      yield desc.buf;
+      desc.buf = [];
+    }
+
+    if (msec) {
+      if (newChunk) desc.snap = snap;
+      snap = $.upMsec();
+    }
+
+    if (desc.buf.push(item) === count) {
+      newChunk = true;
+      yield desc.buf;
+      desc.buf = [];
+      desc.snap = snap;
+    }
+
+    desc.idx++;
   }
 
-  if (buf.length) yield buf;
+  if (desc.buf.length) yield desc.buf;
 }
 
-chain_(async function* chunk(iter, count, func) {
-  if (typeof count === 'function') yield* chunkByCountFunc(iter, 0, count);
-  else if (typeof func === 'function') yield* chunkByCountFunc(iter, count, func);
+chain_(async function* chunk(iter, count, func, ...funcs) {
+  if (typeof count === 'function') yield* chunkByCountFunc(iter, 0, 0, count, func, ...funcs);
+  else if (typeof func === 'function') yield* chunkByCountFunc(iter, 0, count, func, ...funcs);
   else yield* chunkByCount(iter, count);
+});
+
+chain_(async function* chunkMsec(iter, msec, count, func, ...funcs) {
+  if (typeof count === 'function') yield* chunkByCountFunc(iter, msec, 0, count, func, ...funcs);
+  yield* chunkByCountFunc(iter, msec, count, func, ...funcs);
 });
 
 async function* flatten(iter, depth) {
@@ -50,7 +74,10 @@ async function* flatten(iter, depth) {
 
   for await (const item of iter) {
     const it = AsIt.getIter(item);
-    if (!it) yield item; else if (depth === 1) yield* it; else yield* flatten(it, depth - 1);
+
+    if (!it) yield item;
+    else if (depth === 1) yield* it;
+    else yield* flatten(it, depth - 1);
   }
 }
 
