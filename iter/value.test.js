@@ -171,6 +171,27 @@ test('Iter_.last: get only last item', () => {
   expect(wrapped.last()).toEqual(7);
 });
 
+test('Iter_.toSum: add nothing', () => {
+  const wrapped = new Iter([][Symbol.iterator]());
+  const out = Object.create(null);
+  expect(wrapped.toSum(out)).toEqual(null);
+  expect(out).toEqual({});
+});
+
+test('Iter_.toSum: add numbers', () => {
+  const wrapped = new Iter([1, 2, 3, 4, 5][Symbol.iterator]());
+  const out = Object.create(null);
+  expect(wrapped.toSum(out)).toEqual(15);
+  expect(out).toEqual({sum: 15, count: 5});
+});
+
+test('Iter_.toSum: concat strings', () => {
+  const wrapped = new Iter(['a', 'b', 'c', 'hello'][Symbol.iterator]());
+  const out = Object.create(null);
+  expect(wrapped.toSum(out)).toEqual('abchello');
+  expect(out).toEqual({sum: 'abchello', count: 4});
+});
+
 test('Iter_.toIter: duplicate iter', () => {
   const from = new Iter([1, 2, 3][Symbol.iterator]());
   const to = from.toIter();

@@ -79,3 +79,26 @@ test('$.keyin_: entry key by object inwalk', () => {
 test('$.inKey: first element (index 0)', () => {
   expect([['a', 1], ['b', 2], null].map($.inKey)).toEqual(['a', 'b', null]);
 });
+
+test('$.value_: entry value by function', () => {
+  const keys = [7, 3, -4, 8, 'a', null, true];
+  const mapped = keys.map($.value_(v => v + 1));
+  expect(mapped).toEqual([[7, 8], [3, 4], [-4, -3], [8, 9], ['a', 'a1'], [null, 1], [true, 2]]);
+});
+
+test('$.valuein_: entry value by object inwalk', () => {
+  const mapped = deep.map($.valuein_('a1', 'b1'));
+  expect(mapped).toEqual([[deep[0], 1], [deep[1], 5], [deep[2], undefined], [deep[3], null]]);
+});
+
+test('$.inValue: second element (index 1)', () => {
+  expect([['a', 1], ['b', 2], null].map($.inValue)).toEqual([1, 2, null]);
+});
+
+test('$.equi_: empty', () => {
+  expect([{a: 1}, 'vv', 5.5, null].map($.equi_(0))).toEqual([[], [], [], []]);
+});
+
+test('$.equi: to equal entries', () => {
+  expect([{a: 1}, 'vv', 5.5, null].map($.equi)).toEqual([[{a: 1}, {a: 1}], ['vv', 'vv'], [5.5, 5.5], [null, null]]);
+});

@@ -32,8 +32,14 @@ test('AsIt_.mapAt: map by inwalk', async () => {
   expect(await asItArray(wrapped)).toEqual([[{a: ['4']}, 1], [{a: ['8']}, 2], [{a: ['def']}, 4], null]);
 });
 
-test('AsIt_.mapKey: map key in entries', async () => {
+test('AsIt_.mapKeys: map key in entries', async () => {
   const wrapped = new AsIt(AsIt.getIter([[4, 1], [8, 2]]));
-  wrapped.mapKey(key => key.toString());
+  wrapped.mapKeys(key => key.toString());
   expect(await asItArray(wrapped)).toEqual([['4', 1], ['8', 2]]);
+});
+
+test('AsIt_.mapValues: map value in entries', async () => {
+  const wrapped = new AsIt(AsIt.getIter([[4, 1], [8, 2]]));
+  wrapped.mapValues(value => value.toString());
+  expect(await asItArray(wrapped)).toEqual([[4, '1'], [8, '2']]);
 });

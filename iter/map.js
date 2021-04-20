@@ -4,7 +4,7 @@ const $ = require('../func/map');
 const {chain_} = Iter;
 
 chain_(function* map(iter, ...funcs) {
-  const desc = {it: iter, iter: this};
+  const desc = {iter, ctx: this};
   let idx = 0;
 
   if (!funcs.length) {
@@ -31,7 +31,7 @@ chain_(function* map(iter, ...funcs) {
 });
 
 chain_(function* mapTo(iter, to, ...funcs) {
-  const desc = {it: iter, iter: this};
+  const desc = {iter, ctx: this};
   let idx = 0;
 
   for (const item of iter) {
@@ -54,8 +54,12 @@ chain_(function mapAt(iter, at, ...funcs) {
   return Iter.mapTo.gen(iter, $.to_(...at), $.in_(...at), ...funcs);
 });
 
-chain_(function mapKey(iter, ...funcs) {
+chain_(function mapKeys(iter, ...funcs) {
   return Iter.mapAt.gen(iter, 0, ...funcs);
+});
+
+chain_(function mapValues(iter, ...funcs) {
+  return Iter.mapAt.gen(iter, 1, ...funcs);
 });
 
 module.exports = Iter;

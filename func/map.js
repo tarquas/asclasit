@@ -67,16 +67,6 @@ func_(function in_(...keys) {
   };
 });
 
-func_(function key_(func) {
-  return function _key(value) {
-    return [func.call(this, value), value];
-  }
-});
-
-func_(function keyin_(...keys) {
-  return $.key_($.in_(...keys));
-});
-
 func_(function to_(...keys) {
   if (!keys.length) keys = [0];
   const first = keys.shift();
@@ -98,7 +88,41 @@ func_(function to_(...keys) {
   };
 });
 
+func_(function key_(func) {
+  return function _key(value) {
+    return [func.call(this, value), value];
+  }
+});
+
+func_(function keyin_(...keys) {
+  return $.key_($.in_(...keys));
+});
+
 func_($.in_(), 'inKey');
 func_($.to_(), 'toKey');
+
+func_(function value_(func) {
+  return function _value(value) {
+    return [value, func.call(this, value)];
+  }
+});
+
+func_(function valuein_(...keys) {
+  return $.value_($.in_(...keys));
+});
+
+func_($.in_(1), 'inValue');
+func_($.to_(1), 'toValue');
+
+func_(function equi_(count) {
+  if (!Number.isInteger(count) || count < 0) count = 2;
+
+  return function _equi(value) {
+    const arr = new Array(count).fill(value);
+    return arr;
+  };
+});
+
+func_($.equi_(), 'equi');
 
 module.exports = $;

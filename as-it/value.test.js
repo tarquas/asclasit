@@ -179,6 +179,27 @@ test('AsIt_.last: get only last item', async () => {
   expect(await wrapped.last()).toEqual(7);
 });
 
+test('AsIt_.toSum: add nothing', async () => {
+  const wrapped = new AsIt([][Symbol.iterator]());
+  const out = Object.create(null);
+  expect(await wrapped.toSum(out)).toEqual(null);
+  expect(out).toEqual({});
+});
+
+test('AsIt_.toSum: add numbers', async () => {
+  const wrapped = new AsIt([1, 2, 3, 4, 5][Symbol.iterator]());
+  const out = Object.create(null);
+  expect(await wrapped.toSum(out)).toEqual(15);
+  expect(out).toEqual({sum: 15, count: 5});
+});
+
+test('AsIt_.toSum: concat strings', async () => {
+  const wrapped = new AsIt(['a', 'b', 'c', 'hello'][Symbol.iterator]());
+  const out = Object.create(null);
+  expect(await wrapped.toSum(out)).toEqual('abchello');
+  expect(out).toEqual({sum: 'abchello', count: 4});
+});
+
 test('AsIt_.toAsIt: duplicate asIt', async () => {
   const from = new AsIt(async function* () { yield 1; yield 2; yield 3; } ());
   const to = from.toAsIt();

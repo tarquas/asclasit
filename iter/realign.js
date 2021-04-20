@@ -16,7 +16,7 @@ function* chunkByCount(iter, count) {
 }
 
 function* chunkByCountFunc(iter, count, ...funcs) {
-  let desc = {buf: [], idx: 0, it: iter, iter: this};
+  let desc = {buf: [], idx: 0, iter, ctx: this};
 
   for (const item of iter) {
     let newChunk = false;

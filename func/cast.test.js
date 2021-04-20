@@ -80,7 +80,78 @@ test('$.string_: convert to string, numbers with radix 8', () => {
   expect(mapped).toEqual(['', 'true', '3', '5', '87', '11', '{"a":5}', '[43]', '112402762000', 'NaN', 'Infinity']);
 });
 
+test('$.jsonParse: type error', () => {
+  expect(() => $.jsonParse(Symbol())).toThrow(TypeError);
+});
+
+test('$.jsonParse: parse json strings with representing bad syntax with undefined', () => {
+  const mapped = ['1', '"1"', 'null', 'bad', '{"a": 4}', '[1, "2", {"3": "4"}]'].map($.jsonParse);
+  expect(mapped).toEqual([1, '1', null, , {a: 4}, [1, '2', {3: '4'}]]);
+});
+
+test('$.jsonParse_: parse json strings with default to src string', () => {
+  const mapped = ['1', '"1"', 'null', 'bad', '{"a": 4}', '[1, "2", {"3": "4"}]'].map($.jsonParse_(v => v));
+  expect(mapped).toEqual([1, '1', null, 'bad', {a: 4}, [1, '2', {3: '4'}]]);
+});
+
 test('$.json: convert to json', () => {
   const mapped = [undefined, true, 3, 5n, '87', 9.1, {a: 5}, [43], 1e10, NaN, Infinity].map($.json);
   expect(mapped).toEqual(['null', 'true', '3', '"5"', '"87"', '9.1', '{"a":5}', '[43]', '10000000000', 'null', 'null']);
+});
+
+test('$.fixCircular: discard circular refs in existing object', () => {
+  const cref = {a: [{b: {c: 1}}]};
+  cref.a[0].b.d = cref;
+  const orig = {x: {y: {z: cref}}};
+  const fixed = $.fixCircular(orig);
+  expect(orig === fixed).toBe(true);
+  expect(fixed).toEqual({x: {y: {z: {a: [{b: {c: 1}}]}}}});
+});
+
+test('$.fixCircular: replace circular refs in existing object with string', () => {
+  const cref = {a: [{b: {c: 1}}]};
+  cref.a[0].b.d = cref;
+  const orig = {x: {y: {z: cref}}};
+  const fixed = $.fixCircular_('[Circular]')(orig);
+  expect(orig === fixed).toBe(true);
+  expect(fixed).toEqual({x: {y: {z: {a: [{b: {c: 1, d: '[Circular]'}}]}}}});
+});
+
+test('$.noCircular: clone to object without circular refs', () => {
+  const cref = {a: [{b: {c: 1}}]};
+  cref.a[0].b.d = cref;
+  const orig = {x: {y: {z: cref}}};
+  const fixed = $.noCircular(orig);
+  expect(orig !== fixed).toBe(true);
+  expect(fixed).toEqual({x: {y: {z: {a: [{b: {c: 1}}]}}}});
+});
+
+test('$.noCircular: clone to object with circular refs replaced with its functional', () => {
+  const cref = {a: [{b: {c: 1}}]};
+  cref.a[0].b.d = cref;
+  const orig = {x: {y: {z: cref}}};
+  const fixed = $.noCircular_(ref => ref.a[0].b.c)(orig);
+  expect(orig !== fixed).toBe(true);
+  expect(fixed).toEqual({x: {y: {z: {a: [{b: {c: 1, d: 1}}]}}}});
+});
+
+test('$.clone: native clone', () => {
+  const src = [undefined, true, 3, 5n, '87', 9.1, {a: 5}, [43, {zzz: 'yes'}], 1e10, NaN, Infinity, new Date('2010-01-01')];
+  const mapped = src.map($.clone);
+  expect(mapped).toEqual(src);
+  expect(mapped[6] !== src[6]).toBe(true);
+  expect(mapped[7] !== src[7]).toBe(true);
+  expect(mapped[7][1] !== src[7][1]).toBe(true);
+  expect(mapped[11] !== src[11]).toBe(true);
+});
+
+test('$.clone: circular', () => {
+  const cref = {a: [{b: {c: 1}}]};
+  cref.a[0].b.d = cref;
+  const orig = {x: {y: {z: cref}}};
+  const cloned = $.clone(orig);
+  expect(cloned).toEqual(orig);
+  expect(cloned !== orig).toBe(true);
+  expect(cloned.x.y.z.a[0].b.d !== orig.x.y.z.a[0].b.d).toBe(true);
+  expect(cloned.x.y.z.a[0].b.d.a === cloned.x.y.z.a).toBe(true);
 });

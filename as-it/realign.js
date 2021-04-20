@@ -18,7 +18,7 @@ async function* chunkByCount(iter, count) {
 
 async function* chunkByCountFunc(iter, msec, count, ...funcs) {
   let snap = msec && $.upMsec();
-  let desc = {buf: [], idx: 0, snap, it: iter, iter: this};
+  let desc = {buf: [], idx: 0, snap, iter, ctx: this};
 
   for await (const item of iter) {
     let newChunk = false;

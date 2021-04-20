@@ -26,8 +26,14 @@ test('Iter_.mapAt: map by inwalk', () => {
   expect(Array.from(wrapped)).toEqual([[{a: ['4']}, 1], [{a: ['8']}, 2], [{a: ['def']}, 4], null]);
 });
 
-test('Iter_.mapKey: map key in entries', () => {
+test('Iter_.mapKeys: map key in entries', () => {
   const wrapped = new Iter(Iter.getIter([[4, 1], [8, 2]]));
-  wrapped.mapKey(key => key.toString());
+  wrapped.mapKeys(key => key.toString());
   expect(Array.from(wrapped)).toEqual([['4', 1], ['8', 2]]);
+});
+
+test('Iter_.mapValues: map value in entries', () => {
+  const wrapped = new Iter(Iter.getIter([[4, 1], [8, 2]]));
+  wrapped.mapValues(value => value.toString());
+  expect(Array.from(wrapped)).toEqual([[4, '1'], [8, '2']]);
 });

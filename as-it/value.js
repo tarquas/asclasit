@@ -139,6 +139,30 @@ value_(async function last(iter) {
   return last;
 });
 
+value_(async function toSum(iter, def, out) {
+  if (typeof def === 'object') { out = def; def = null; }
+  let n = 0;
+
+  if (def == null) {
+    const {value, done} = await iter.next();
+    if (done) return def;
+    def = value;
+    n++;
+  }
+
+  for await (const item of iter) {
+    def += item;
+    n++;
+  }
+
+  if (out) {
+    out.sum = def;
+    out.count = n;
+  }
+
+  return def;
+});
+
 value_(function toAsIt(it) {
   return new AsIt(it);
 });

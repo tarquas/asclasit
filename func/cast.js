@@ -1,3 +1,4 @@
+const v8 = require('v8');
 const $ = require('../base');
 
 const {func_} = $;
@@ -95,6 +96,23 @@ func_(function string_(radix) {
 
 func_($.string_(), 'string');
 
+func_(function jsonParse_(def, reviver) {
+  return function _jsonParse(value) {
+    try {
+      return JSON.parse(value, reviver);
+    } catch (err) {
+      if (typeof def === 'function') {
+        return def.call(this, value, err);
+      } else {
+        if (err.constructor === SyntaxError) return def;
+        throw err;
+      }
+    }
+  };
+});
+
+func_($.jsonParse_(), 'jsonParse');
+
 func_(function json_(pad, replacer) {
   return function _json(value) {
     if (value == null) return 'null';
@@ -104,5 +122,69 @@ func_(function json_(pad, replacer) {
 });
 
 func_($.json_(), 'json');
+
+function circular(obj, clone, chain, cache, root, depth, key) {
+  if (!obj || typeof(obj) !== 'object') return obj;
+
+  if (cache.has(obj)) {
+    if (chain.length) {
+      let v = obj;
+      const desc = {key, root, clone, cache, chain, depth, cur: v, ctx: this};
+
+      for (const fn of chain) {
+        if (typeof fn !== 'function') return fn;
+        v = fn.call(this, v, desc);
+      }
+
+      return v;
+    } else {
+      return circular;
+    }
+  }
+
+  cache.add(obj);
+
+  if (clone) {
+    const obj2 = (Array.isArray(obj) ? [] : Object.create(null));
+
+    for (const k in obj) {
+      const wrap = circular(obj[k], true, chain, cache, root, depth + 1, k);
+      if (wrap !== circular) obj2[k] = wrap;
+    }
+
+    cache.delete(obj);
+    return obj2;
+  } else {
+    for (const k in obj) {
+      const wrap = circular(obj[k], false, chain, cache, root, depth + 1, k);
+      if (wrap === circular) delete obj[k];
+      else obj[k] = wrap;
+    }
+
+    cache.delete(obj);
+    return obj;
+  }
+}
+
+func_(function fixCircular_(...args) {
+  return function _fixCircular(value) {
+    return circular.call(this, value, false, args, new Set(), value, 0);
+  };
+});
+
+func_($.fixCircular_(), 'fixCircular');
+
+func_(function noCircular_(...args) {
+  return function _noCircular(value) {
+    return circular.call(this, value, true, args, new Set(), value, 0);
+  };
+});
+
+func_($.noCircular_(), 'noCircular');
+func_($.noCircular_(), 'rawClone');
+
+func_(function clone(value) {
+  return v8.deserialize(v8.serialize(value));
+});
 
 module.exports = $;

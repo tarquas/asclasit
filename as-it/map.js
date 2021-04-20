@@ -4,7 +4,7 @@ const $ = require('../func/map');
 const {chain_} = AsIt;
 
 chain_(async function* map(iter, ...funcs) {
-  const desc = {it: iter, iter: this};
+  const desc = {iter, ctx: this};
   let idx = 0;
 
   if (!funcs.length) {
@@ -31,7 +31,7 @@ chain_(async function* map(iter, ...funcs) {
 });
 
 chain_(async function* mapTo(iter, to, ...funcs) {
-  const desc = {it: iter, iter: this};
+  const desc = {iter, ctx: this};
   let idx = 0;
 
   for await (const item of iter) {
@@ -54,8 +54,12 @@ chain_(function mapAt(iter, at, ...funcs) {
   return AsIt.mapTo.gen(iter, $.to_(...at), $.in_(...at), ...funcs);
 });
 
-chain_(function mapKey(iter, ...funcs) {
+chain_(function mapKeys(iter, ...funcs) {
   return AsIt.mapAt.gen(iter, 0, ...funcs);
+});
+
+chain_(function mapValues(iter, ...funcs) {
+  return AsIt.mapAt.gen(iter, 1, ...funcs);
 });
 
 module.exports = AsIt;
