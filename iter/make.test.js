@@ -1,5 +1,11 @@
 const Iter = require('./make');
 
+test('Iter.void: void iterator', () => {
+  const wrapped = Iter.void();
+  expect(wrapped instanceof Iter).toBe(true);
+  expect(Array.from(wrapped)).toEqual([]);
+});
+
 test('Iter.concat: concatenate iterators', () => {
   const i1 = ['a1', 'a2'];
   const i2 = function* () { yield 'a4'; yield 'a5'; } ();

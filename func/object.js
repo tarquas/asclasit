@@ -24,6 +24,52 @@ func_(function set(obj, ...walk) {
   return prev;
 });
 
+func_(function setDef(obj, ...walk) {
+  const value = walk.pop();
+  const {ctx, key} = $.to_(...walk)(obj);
+  const prev = ctx[key];
+  if (key in ctx) return prev;
+  ctx[key] = value;
+  return prev;
+});
+
+func_(function def(obj, ...walk) {
+  const type = walk.pop();
+  const {ctx, key} = $.to_(...walk)(obj);
+  if (key in ctx) return (typeof type === 'function' || typeof type === 'object') ? ctx[key] : ctx;
+  if (typeof type === 'function') return ctx[key] = new type();
+  if (typeof type === 'object') return ctx[key] = Object.create(type);
+  ctx[key] = type;
+  return ctx;
+});
+
+func_(function defs(obj, ...walk) {
+  const type = walk.pop();
+  const {ctx, key} = $.to_(...walk)(obj);
+
+  if (key in ctx) {
+    const prev = ctx[key];
+
+    if (typeof type === 'function') {
+      if (typeof prev === 'object' && prev instanceof type) return prev;
+      return ctx[key] = new type();
+    }
+
+    if (typeof type === 'object') {
+      if (typeof prev === 'object' && Object.getPrototypeOf(prev) === type) return prev;
+      return ctx[key] = Object.create(type);
+    }
+
+    if (typeof type !== typeof prev) ctx[key] = type;
+    return ctx;
+  }
+
+  if (typeof type === 'function') return ctx[key] = new type();
+  if (typeof type === 'object') return ctx[key] = Object.create(type);
+  ctx[key] = type;
+  return ctx;
+});
+
 func_(function unset(obj, ...walk) {
   const key = walk.pop();
   const ctx = walk.length ? $.in_(...walk)(obj) : obj;

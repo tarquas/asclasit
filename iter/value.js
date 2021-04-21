@@ -18,6 +18,19 @@ value_(function toArray(iter, to) {
   return Array.from(iter);
 });
 
+chain_(function *prependArray(iter, to) {
+  for (const item of iter) {
+    to.unshift(item);
+    yield item;
+  }
+});
+
+value_(function toPrependArray(iter, to) {
+  if (!to) to = [];
+  Iter.exec(Iter.prependArray.gen(iter, to));
+  return to;
+});
+
 chain_(function *appendSet(iter, to) {
   for (const item of iter) {
     to.add(item);
@@ -88,6 +101,27 @@ value_(function toXorObject(iter, obj, value) {
   return obj;
 });
 
+chain_(function *defaultsObject(iter, obj, value) {
+  for (const item of iter) {
+    if (item instanceof Array) {
+      const key = item[0];
+      if (!(key in obj)) obj[key] = item[1];
+      yield item;
+    } else {
+      if (!(item in obj)) obj[item] = value;
+      yield [item, value];
+    }
+  }
+});
+
+value_(function toDefaultsObject(iter, obj, value) {
+  if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
+  else if (!obj) obj = Object.create(null);
+
+  Iter.exec(Iter.defaultsObject.gen(iter, obj, value));
+  return obj;
+});
+
 chain_(function *appendMap(iter, map, value) {
   for (const item of iter) {
     if (item instanceof Array) { map.set(item[0], item[1]); yield item; }
@@ -99,6 +133,26 @@ value_(function toMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   Iter.exec(Iter.appendMap.gen(iter, map, value));
+  return map;
+});
+
+chain_(function *defaultsMap(iter, map, value) {
+  for (const item of iter) {
+    if (item instanceof Array) {
+      const key = item[0];
+      if (!map.has(key)) map.set(key, item[1]);
+      yield item;
+    } else {
+      if (!map.has(item)) map.set(item, value);
+      yield [item, value];
+    }
+  }
+});
+
+value_(function toDefaultsMap(iter, map, value) {
+  if (!(map instanceof Map)) { value = map; map = new Map(); }
+
+  Iter.exec(Iter.defaultsMap.gen(iter, map, value));
   return map;
 });
 

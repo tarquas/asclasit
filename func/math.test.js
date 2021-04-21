@@ -67,3 +67,20 @@ test('$.ln: natural logarithm', () => {
 test('$.log_: logarithm of base', () => {
   expect([1, 2, 4, 8, 16].map($.log_(2))).toEqual([0, 1, 2, 3, 4]);
 });
+
+test('$.eq_: equal', () => {
+  expect($.eq_(5)(5)).toBe(true);
+  expect($.eq_(3)(6)).toBe(false);
+});
+
+test('$.lt_: less than', () => {
+  expect($.lt_(5)(5)).toBe(false);
+  expect($.lt_(5)(6)).toBe(false);
+  expect($.lt_(6)(5)).toBe(true);
+});
+
+test('$.gt_: greater than', () => {
+  expect($.gt_(0)(0)).toBe(false);
+  expect($.gt_(6)(4)).toBe(false);
+  expect($.gt_(4)(5)).toBe(true);
+});

@@ -12,8 +12,10 @@ test('$: empty: null-prototype object', () => {
   expect(obj).toEqual({});
 });
 
-test('$: unknown: null', () => {
-  expect(() => $(null)).toThrow('unknown');
+test('$: void iterator: null', () => {
+  const wrapped = $(null);
+  expect(wrapped instanceof $.Iter).toBe(true);
+  expect(Array.from(wrapped)).toEqual([]);
 });
 
 test('$: unknown: other', () => {
@@ -44,10 +46,16 @@ test('$: make async iterator wrapper', async () => {
   expect(await asItArray(wrapped)).toEqual(['01', 'a', 'b', 'c', 'd']);
 });
 
-test('$: make object entries iterator', () => {
-  const wrapped = $({a: 1, b: 2, c: 3}, {d: 4});
+test('$: make object entries iterator with explicit concat', () => {
+  const wrapped = $({a: 1, b: 2, c: 3}, {d: 4}).concat({e: 5});
   expect(wrapped instanceof $.Iter).toBe(true);
-  expect(Array.from(wrapped)).toEqual([['a', 1], ['b', 2], ['c', 3], ['d', 4]]);
+  expect(Array.from(wrapped.from())).toEqual([['a', 1], ['b', 2], ['c', 3], ['d', 4], ['e', 5]]);
+});
+
+test('$: make object entries iterator with implicit concat', () => {
+  const wrapped = $({a: 1, b: 2, c: 3}, {d: 4}, [['e', 5]]);
+  expect(wrapped instanceof $.Iter).toBe(true);
+  expect(Array.from(wrapped.from())).toEqual([['a', 1], ['b', 2], ['c', 3], ['d', 4], ['e', 5]]);
 });
 
 test('Iter_.toAsIt: convert from iter to asIt', async () => {

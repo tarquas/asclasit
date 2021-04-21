@@ -16,6 +16,19 @@ value_(async function toArray(iter, to) {
   return to;
 });
 
+chain_(async function *prependArray(iter, to) {
+  for await (const item of iter) {
+    to.unshift(item);
+    yield item;
+  }
+});
+
+value_(async function toPrependArray(iter, to) {
+  if (!to) to = [];
+  await AsIt.exec(AsIt.prependArray.gen(iter, to));
+  return to;
+});
+
 chain_(async function *appendSet(iter, to) {
   for await (const item of iter) {
     to.add(item);
@@ -59,6 +72,27 @@ value_(async function toObject(iter, obj, value) {
   return obj;
 });
 
+chain_(async function *defaultsObject(iter, obj, value) {
+  for await (const item of iter) {
+    if (item instanceof Array) {
+      const key = item[0];
+      if (!(key in obj)) obj[key] = item[1];
+      yield item;
+    } else {
+      if (!(item in obj)) obj[item] = value;
+      yield [item, value];
+    }
+  }
+});
+
+value_(async function toDefaultsObject(iter, obj, value) {
+  if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
+  else if (!obj) obj = Object.create(null);
+
+  await AsIt.exec(AsIt.defaultsObject.gen(iter, obj, value));
+  return obj;
+});
+
 chain_(async function *appendXorObject(iter, obj, value) {
   if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
   else if (!obj) obj = Object.create(null);
@@ -94,6 +128,26 @@ value_(async function toMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   await AsIt.exec(AsIt.appendMap.gen(iter, map, value));
+  return map;
+});
+
+chain_(async function *defaultsMap(iter, map, value) {
+  for await (const item of iter) {
+    if (item instanceof Array) {
+      const key = item[0];
+      if (!map.has(key)) map.set(key, item[1]);
+      yield item;
+    } else {
+      if (!map.has(item)) map.set(item, value);
+      yield [item, value];
+    }
+  }
+});
+
+value_(async function toDefaultsMap(iter, map, value) {
+  if (!(map instanceof Map)) { value = map; map = new Map(); }
+
+  await AsIt.exec(AsIt.defaultsMap.gen(iter, map, value));
   return map;
 });
 

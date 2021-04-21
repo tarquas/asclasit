@@ -21,6 +21,27 @@ test('Iter_.toArray: append to array', () => {
   expect(to).toEqual([2, 6, 7, 6]);
 });
 
+test('Iter_.prependArray: tee to array from start / reversed', () => {
+  const wrapped = new Iter([2, 6, 7, 6][Symbol.iterator]());
+  const array = [];
+  wrapped.prependArray(array);
+  expect(Array.from(wrapped)).toEqual([2, 6, 7, 6]);
+  expect(array).toEqual([6, 7, 6, 2]);
+});
+
+test('Iter_.toPrependArray: grab to array reversed', () => {
+  const wrapped = new Iter([2, 6, 7, 6][Symbol.iterator]());
+  const array = wrapped.toPrependArray();
+  expect(array).toEqual([6, 7, 6, 2]);
+});
+
+test('Iter_.toPrependArray: prepend to array reversed', () => {
+  const wrapped = new Iter([2, 6, 7, 6][Symbol.iterator]());
+  const to = [];
+  expect(wrapped.toPrependArray(to)).toBe(to);
+  expect(to).toEqual([6, 7, 6, 2]);
+});
+
 test('Iter_.appendSet: tee to set', () => {
   const wrapped = new Iter([2, 6, 7, 6][Symbol.iterator]());
   const to = new Set();
@@ -80,6 +101,30 @@ test('Iter_.toObject: get object from entries', () => {
   expect(entries.toObject(null, true)).toEqual({a: 1, b: 2, c: true, null: true});
 });
 
+test('Iter_.defaultsObject: tee to defaults object from entries', () => {
+  const wrapped = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const to = {b: 8, null: 6};
+  wrapped.defaultsObject(to, false);
+  expect(Object.fromEntries(wrapped)).toEqual({a: 1, b: 2, c: false, null: false});
+  expect(to).toEqual({a: 1, b: 8, c: false, null: 6});
+});
+
+test('Iter_.toDefaultsObject: get to object from entries', () => {
+  const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  expect(entries.toDefaultsObject(true)).toEqual({a: 1, b: 0, c: true, null: true});
+});
+
+test('Iter_.toDefaultsObject: get to object from entries: explicit null spec', () => {
+  const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  expect(entries.toDefaultsObject(null, true)).toEqual({a: 1, b: 0, c: true, null: true});
+});
+
+test('Iter_.toDefaultsObject: get to defaults object from entries', () => {
+  const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const to = {a: 'hi', c: 4};
+  expect(entries.toDefaultsObject(to, true)).toEqual({a: 'hi', b: 0, c: 4, null: true});
+});
+
 test('Iter_.appendXorObject: tee and xor to object from entries', () => {
   const wrapped = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
   const to = Object.create(null);
@@ -123,6 +168,21 @@ test('Iter_.toMap: get map from entries', () => {
   const map = entries.toMap(true);
   expect(map instanceof Map).toBe(true);
   expect(Object.fromEntries(map)).toEqual({a: 1, b: 2, c: true, null: true});
+});
+
+test('Iter_.defaultsMap: tee to defaults map from entries', () => {
+  const wrapped = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const to = new Map([['c', 'cc'], ['a', 3]]);
+  wrapped.defaultsMap(to, true);
+  expect(Object.fromEntries(wrapped)).toEqual({a: 1, b: 2, c: true, null: true});
+  expect(Object.fromEntries(to)).toEqual({a: 3, b: 0, c: 'cc', null: true});
+});
+
+test('Iter_.toDefaultsMap: get to defaults map from entries', () => {
+  const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const map = entries.toDefaultsMap(true);
+  expect(map instanceof Map).toBe(true);
+  expect(Object.fromEntries(map)).toEqual({a: 1, b: 0, c: true, null: true});
 });
 
 test('Iter_.appendXorMap: tee and xor to map from entries', () => {

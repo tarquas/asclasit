@@ -28,6 +28,27 @@ test('AsIt_.toArray: append to array', async () => {
   expect(to).toEqual([2, 6, 7, 6]);
 });
 
+test('AsIt_.prependArray: tee to array from start / reversed', async () => {
+  const wrapped = new AsIt([2, 6, 7, 6][Symbol.iterator]());
+  const array = [];
+  wrapped.prependArray(array);
+  expect(await asItArray(wrapped)).toEqual([2, 6, 7, 6]);
+  expect(array).toEqual([6, 7, 6, 2]);
+});
+
+test('AsIt_.toPrependArray: grab to array reversed', async () => {
+  const wrapped = new AsIt([2, 6, 7, 6][Symbol.iterator]());
+  const array = await wrapped.toPrependArray();
+  expect(array).toEqual([6, 7, 6, 2]);
+});
+
+test('AsIt_.toPrependArray: prepend to array reversed', async () => {
+  const wrapped = new AsIt([2, 6, 7, 6][Symbol.iterator]());
+  const to = [];
+  expect(await wrapped.toPrependArray(to)).toBe(to);
+  expect(to).toEqual([6, 7, 6, 2]);
+});
+
 test('AsIt_.appendSet: tee to set', async () => {
   const wrapped = new AsIt([2, 6, 7, 6][Symbol.iterator]());
   const to = new Set();
@@ -88,6 +109,30 @@ test('AsIt_.toObject: get object from entries', async () => {
   expect(await entries.toObject(null, true)).toEqual({a: 1, b: 2, c: true, null: true});
 });
 
+test('AsIt_.defaultsObject: tee to defaults object from entries', async () => {
+  const wrapped = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const to = {b: 8, null: 6};
+  wrapped.defaultsObject(to, false);
+  expect(Object.fromEntries(await asItArray(wrapped))).toEqual({a: 1, b: 2, c: false, null: false});
+  expect(to).toEqual({a: 1, b: 8, c: false, null: 6});
+});
+
+test('AsIt_.toDefaultsObject: get to object from entries', async () => {
+  const entries = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  expect(await entries.toDefaultsObject(true)).toEqual({a: 1, b: 0, c: true, null: true});
+});
+
+test('AsIt_.toDefaultsObject: get to object from entries: explicit null spec', async () => {
+  const entries = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  expect(await entries.toDefaultsObject(null, true)).toEqual({a: 1, b: 0, c: true, null: true});
+});
+
+test('AsIt_.toDefaultsObject: get to defaults object from entries', async () => {
+  const entries = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const to = {a: 'hi', c: 4};
+  expect(await entries.toDefaultsObject(to, true)).toEqual({a: 'hi', b: 0, c: 4, null: true});
+});
+
 test('AsIt_.appendXorObject: tee and xor to object from entries', async () => {
   const wrapped = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
   const to = Object.create(null);
@@ -131,6 +176,21 @@ test('AsIt_.toMap: get map from entries', async () => {
   const map = await entries.toMap(true);
   expect(map instanceof Map).toBe(true);
   expect(Object.fromEntries(map)).toEqual({a: 1, b: 2, c: true, null: true});
+});
+
+test('AsIt_.defaultsMap: tee to defaults map from entries', async () => {
+  const wrapped = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const to = new Map([['c', 'cc'], ['a', 3]]);
+  wrapped.defaultsMap(to, true);
+  expect(Object.fromEntries(await asItArray(wrapped))).toEqual({a: 1, b: 2, c: true, null: true});
+  expect(Object.fromEntries(to)).toEqual({a: 3, b: 0, c: 'cc', null: true});
+});
+
+test('AsIt_.toDefaultsMap: get to defaults map from entries', async () => {
+  const entries = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const map = await entries.toDefaultsMap(true);
+  expect(map instanceof Map).toBe(true);
+  expect(Object.fromEntries(map)).toEqual({a: 1, b: 0, c: true, null: true});
 });
 
 test('AsIt_.appendXorMap: tee and xor to map from entries', async () => {

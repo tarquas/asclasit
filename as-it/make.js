@@ -1,6 +1,8 @@
 const AsIt = require('./object');
 const {chain_} = AsIt;
 
+chain_(async function* voidIter() { }, 'void');
+
 chain_(async function* from(arg, strOk) {
   const iter = AsIt.getIter(arg, strOk);
 

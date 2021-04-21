@@ -6,6 +6,12 @@ async function asItArray(iter) {
   return res;
 }
 
+test('AsIt.void: void iterator', async () => {
+  const wrapped = AsIt.void();
+  expect(wrapped instanceof AsIt).toBe(true);
+  expect(await asItArray(wrapped)).toEqual([]);
+});
+
 test('AsIt.concat: concatenate iterators', async () => {
   const i1 = ['a1', 'a2'];
   const i2 = async function* () { yield 'a4'; yield 'a5'; } ();

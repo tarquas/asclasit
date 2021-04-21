@@ -1,6 +1,8 @@
 const Iter = require('./object');
 const {make_, chain_} = Iter;
 
+chain_(function* voidIter() { }, 'void');
+
 chain_(function* from(arg, strOk) {
   const iter = Iter.getIter(arg, strOk);
 
