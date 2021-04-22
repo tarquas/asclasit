@@ -21,14 +21,15 @@ async function* chunkByCountFunc(iter, msec, count, ...funcs) {
   let desc = {buf: [], idx: 0, snap, iter, ctx: this};
 
   for await (const item of iter) {
-    let newChunk = false;
+    let newChunk = chunkByCountFunc;
 
     for (const func of funcs) {
-      if (func && await func.call(this, item, desc)) {
-        newChunk = true;
-        break;
-      }
+      if (!func) continue;
+      if (newChunk === chunkByCountFunc) newChunk = await func.call(this, item, item, desc);
+      else newChunk = await func.call(this, newChunk, item, desc);
     }
+
+    if (newChunk === chunkByCountFunc) newChunk = false;
 
     if (msec && !newChunk && $.upMsec(desc.snap) > msec) {
       newChunk = true;
@@ -68,7 +69,7 @@ chain_(async function* chunkMsec(iter, msec, count, func, ...funcs) {
   yield* chunkByCountFunc(iter, msec, count, func, ...funcs);
 });
 
-async function* flatten(iter, depth) {
+chain_(async function* flatten(iter, depth) {
   if (depth == null) { depth = 1; }
   else if (depth === 0) { yield* iter; return; }
 
@@ -79,8 +80,6 @@ async function* flatten(iter, depth) {
     else if (depth === 1) yield* it;
     else yield* flatten(it, depth - 1);
   }
-}
-
-chain_(flatten);
+});
 
 module.exports = AsIt;

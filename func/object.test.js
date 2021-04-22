@@ -234,3 +234,8 @@ test('unset: directly from object', () => {
   expect(prev).toEqual({m: 4, x: [{z: {v: 7}}]});
   expect(obj).toEqual({});
 });
+
+test('invert: swap key and value', () => {
+  const inv = [{a: 1, b: 2}, ['k', 'v'], 'a', null, new Map([['K', 'V'], [1, 2]])].map($.invert);
+  expect(inv).toEqual([{1: 'a', 2: 'b'}, ['v', 'k'], 'a', null, new Map([['V', 'K'], [2, 1]])]);
+});

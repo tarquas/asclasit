@@ -16,15 +16,13 @@ function* chunkByCount(iter, count) {
 }
 
 function* chunkByCountFunc(iter, count, ...funcs) {
-  let desc = {buf: [], idx: 0, iter, ctx: this};
+  const desc = {buf: [], idx: 0, iter, ctx: this};
 
   for (const item of iter) {
-    let newChunk = false;
+    let newChunk = item;
 
     for (const func of funcs) {
-      if (func && func.call(this, item, desc)) {
-        newChunk = true;
-      }
+      if (func) newChunk = func.call(this, newChunk, item, desc);
     }
 
     if (newChunk && desc.buf.length) {
@@ -49,7 +47,7 @@ chain_(function* chunk(iter, count, func, ...funcs) {
   else yield* chunkByCount(iter, count);
 });
 
-function* flatten(iter, depth) {
+chain_(function* flatten(iter, depth) {
   if (depth == null) { depth = 1; }
   else if (depth === 0) { yield* iter; return; }
 
@@ -60,8 +58,6 @@ function* flatten(iter, depth) {
     else if (depth === 1) yield* it;
     else yield* flatten(it, depth - 1);
   }
-}
-
-chain_(flatten);
+});
 
 module.exports = Iter;

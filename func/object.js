@@ -79,4 +79,20 @@ func_(function unset(obj, ...walk) {
   return prev;
 });
 
+func_(function invert(obj) {
+  if (obj == null) return obj;
+  if (typeof obj !== 'object') return obj;
+  if (obj instanceof Array) return obj.reverse();
+
+  if (obj instanceof Map) {
+    const res = new Map();
+    for (const [k, v] of obj.entries()) res.set(v, k);
+    return res;
+  }
+
+  const res = Object.create(null);
+  for (const key in obj) res[obj[key]] = key;
+  return res;
+});
+
 module.exports = $;

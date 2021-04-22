@@ -4,12 +4,13 @@ const $ = require('../func/map');
 const {chain_} = AsIt;
 
 chain_(async function* map(iter, ...funcs) {
+  const l = $._mappingFuncs(funcs, false);
+  if (!l) return yield* iter;
+
   const desc = {iter, ctx: this};
   let idx = 0;
 
-  if (!funcs.length) {
-    yield* iter;
-  } else if (funcs.length === 1) {
+  if (l === 1) {
     const func = funcs[0];
 
     for await (const item of iter) {
@@ -30,7 +31,31 @@ chain_(async function* map(iter, ...funcs) {
   }
 });
 
+chain_(async function* maps(iter, ...funcs) {
+  const l = $._mappingFuncs(funcs, true);
+  if (!l) return yield* iter;
+
+  const desc = {iter, ctx: this};
+  let idx = 0;
+
+  for await (const item of iter) {
+    let v = item;
+
+    for (const func of funcs) {
+      v = await func.call(this, v, idx, desc, item);
+    }
+
+    idx++;
+    if (v == null) continue;
+    const it = AsIt.getIter(v);
+    if (it) yield* it; else yield v;
+  }
+});
+
 chain_(async function* mapTo(iter, to, ...funcs) {
+  const l = $._mappingFuncs(funcs, false);
+  if (!l) return yield* iter;
+
   const desc = {iter, ctx: this};
   let idx = 0;
 

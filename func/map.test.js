@@ -95,10 +95,27 @@ test('$.inValue: second element (index 1)', () => {
   expect([['a', 1], ['b', 2], null].map($.inValue)).toEqual([1, 2, null]);
 });
 
-test('$.equi_: empty', () => {
-  expect([{a: 1}, 'vv', 5.5, null].map($.equi_(0))).toEqual([[], [], [], []]);
+test('$.stretch_: empty', () => {
+  expect([{a: 1}, 'vv', 5.5, null].map($.stretch_(0))).toEqual([[], [], [], []]);
 });
 
-test('$.equi: to equal entries', () => {
-  expect([{a: 1}, 'vv', 5.5, null].map($.equi)).toEqual([[{a: 1}, {a: 1}], ['vv', 'vv'], [5.5, 5.5], [null, null]]);
+test('$.stretch_: to iterator', () => {
+  const iter = $.stretch_(3, true)(1);
+  expect(iter [Symbol.iterator]()).toBe(iter);
+  expect(Array.from(iter)).toEqual([1, 1, 1]);
+});
+
+test('$.entry: to equal entries', () => {
+  expect([{a: 1}, 'vv', 5.5, null].map($.entry)).toEqual([[{a: 1}, {a: 1}], ['vv', 'vv'], [5.5, 5.5], [null, null]]);
+});
+
+test('$.times_: true within number of times', () => {
+  const t5 = $.times_(5);
+  const mapped = [1, 8, 2, 7, 3, 6, 5].map(t5);
+  expect(mapped).toEqual([true, true, true, true, true, false, false]);
+});
+
+test('$.lag: late in 1 iteration', () => {
+  const late = [1, 2, 3, 4, 5].map($.lag);
+  expect(late).toEqual([, 1, 2, 3, 4]);
 });

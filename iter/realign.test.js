@@ -32,6 +32,12 @@ test('Iter_.chunk: by condition limited to 2', () => {
   expect(Array.from(wrapped)).toEqual([[1], [2], [3, 4], [5], [6], [7, 8], [9]]);
 });
 
+test('Iter_.chunk: by conditions, limited to 2', () => {
+  const wrapped = new Iter(Iter.getIter(toChunk));
+  wrapped.chunk(2, item => item & 2, v => !v);
+  expect(Array.from(wrapped)).toEqual([[1, 2], [3], [4], [5, 6], [7], [8], [9]]);
+});
+
 const deepArray = [
   [[1, 2], ['3a', 4]],
   '5a',

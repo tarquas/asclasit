@@ -58,6 +58,20 @@ test('$: make object entries iterator with implicit concat', () => {
   expect(Array.from(wrapped.from())).toEqual([['a', 1], ['b', 2], ['c', 3], ['d', 4], ['e', 5]]);
 });
 
+test('$.enum: create enum', () => {
+  const fruits = $.enum('apple', 'pear', 'orange');
+  expect(fruits).toEqual({apple: 1, pear: 2, orange: 3, $: {1: 'apple', 2: 'pear', 3: 'orange'}});
+});
+
+test('$.enum: create fixed enum', () => {
+  const fruits = $.enum({unknown: 1, apple: 10, pear: 20, orange: 30}, 'n/a');
+
+  expect(fruits).toEqual({
+    unknown: 1, 'n/a': 2, apple: 10, pear: 20, orange: 30,
+    $: {1: 'unknown', 2: 'n/a', 10: 'apple', 20: 'pear', 30: 'orange'}
+  });
+});
+
 test('Iter_.toAsIt: convert from iter to asIt', async () => {
   const iter = $([1, 2, 3]);
   const asIt = iter.toAsIt();

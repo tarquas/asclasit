@@ -24,7 +24,47 @@ test('AsIt_.map: map iterator: several functions', async () => {
   expect(await asItArray(wrapped)).toEqual([-8, -0, -16, -6, -2]);
 });
 
-//mapTo
+test('AsIt_.map: stretch', async () => {
+  const wrapped = new AsIt(AsIt.getIter([4, 0, 8]));
+  wrapped.map(3);
+  expect(await asItArray(wrapped)).toEqual([[4, 4, 4], [0, 0, 0], [8, 8, 8]]);
+});
+
+test('AsIt_.map: map and lag', async () => {
+  const wrapped = new AsIt(AsIt.getIter([4, 0, [8, 9], 3, 1]));
+  wrapped.map(-2);
+  expect(await asItArray(wrapped)).toEqual([, , 4, 0, [8, 9]]);
+});
+
+test('AsIt_.maps: map multi iterator: echo', async () => {
+  const wrapped = new AsIt(AsIt.getIter([4, 0, 8, 3, 1]));
+  wrapped.maps();
+  expect(await asItArray(wrapped)).toEqual([4, 0, 8, 3, 1]);
+});
+
+test('AsIt_.maps: map multi iterator', async () => {
+  const wrapped = new AsIt(AsIt.getIter([4, 0, 8, 3, 1]));
+  wrapped.maps(v => v + v, v => -v, async v => !v ? null : v < -6 ? [v, -v] : v);
+  expect(await asItArray(wrapped)).toEqual([-8, 8, -16, 16, -6, -2]);
+});
+
+test('AsIt_.maps: stretch', async () => {
+  const wrapped = new AsIt(AsIt.getIter([4, 0, 8, 3, 1]));
+  wrapped.maps(2);
+  expect(await asItArray(wrapped)).toEqual([4, 4, 0, 0, 8, 8, 3, 3, 1, 1]);
+});
+
+test('AsIt_.maps: map multi and skip last', async () => {
+  const wrapped = new AsIt(AsIt.getIter([4, 0, [8, 9], 3, 1]));
+  wrapped.maps(-2);
+  expect(await asItArray(wrapped)).toEqual([4, 0, 8, 9]);
+});
+
+test('AsIt_.mapTo: map to entry: echo', async () => {
+  const wrapped = new AsIt(AsIt.getIter([4, 0, 8, 3, 1]));
+  wrapped.mapTo();
+  expect(await asItArray(wrapped)).toEqual([4, 0, 8, 3, 1]);
+});
 
 test('AsIt_.mapAt: map by inwalk', async () => {
   const wrapped = new AsIt(AsIt.getIter([[{a: [4]}, 1], [{a: [8]}, 2], [, 4], null]));

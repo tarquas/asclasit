@@ -32,10 +32,16 @@ test('AsIt_.chunk: by condition', async () => {
   expect(await asItArray(wrapped)).toEqual([[1], [2], [3, 4, 5], [6], [7, 8, 9]]);
 });
 
-test('AsIt_.chunk: by condition limited to 2', async () => {
+test('AsIt_.chunk: by condition, limited to 2', async () => {
   const wrapped = new AsIt(AsIt.getIter(toChunk));
   wrapped.chunk(2, item => item & 2);
   expect(await asItArray(wrapped)).toEqual([[1], [2], [3, 4], [5], [6], [7, 8], [9]]);
+});
+
+test('AsIt_.chunk: by conditions, limited to 2', async () => {
+  const wrapped = new AsIt(AsIt.getIter(toChunk));
+  wrapped.chunk(2, item => item & 2, async v => !v);
+  expect(await asItArray(wrapped)).toEqual([[1, 2], [3], [4], [5, 6], [7], [8], [9]]);
 });
 
 const deepArray = [

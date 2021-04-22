@@ -4,16 +4,17 @@ const $ = require('../func/map');
 const {chain_} = Iter;
 
 chain_(function* map(iter, ...funcs) {
+  const l = $._mappingFuncs(funcs, false);
+  if (!l) return yield* iter;
+
   const desc = {iter, ctx: this};
   let idx = 0;
 
-  if (!funcs.length) {
-    yield* iter;
-  } else if (funcs.length === 1) {
+  if (l === 1) {
     const func = funcs[0];
 
     for (const item of iter) {
-      yield func.call(this, item, idx, desc);
+      yield func.call(this, item, idx, desc, item);
       idx++;
     }
   } else {
@@ -21,7 +22,7 @@ chain_(function* map(iter, ...funcs) {
       let v = item;
 
       for (const func of funcs) {
-        v = func.call(this, v, idx, desc);
+        v = func.call(this, v, idx, desc, item);
       }
 
       yield v;
@@ -30,7 +31,10 @@ chain_(function* map(iter, ...funcs) {
   }
 });
 
-chain_(function* mapTo(iter, to, ...funcs) {
+chain_(function* maps(iter, ...funcs) {
+  const l = $._mappingFuncs(funcs, true);
+  if (!l) return yield* iter;
+
   const desc = {iter, ctx: this};
   let idx = 0;
 
@@ -38,10 +42,31 @@ chain_(function* mapTo(iter, to, ...funcs) {
     let v = item;
 
     for (const func of funcs) {
-      v = func.call(this, v, idx, desc);
+      v = func.call(this, v, idx, desc, item);
     }
 
-    const p = to.call(this, item, idx, desc);
+    idx++;
+    if (v == null) continue;
+    const it = Iter.getIter(v);
+    if (it) yield* it; else yield v;
+  }
+});
+
+chain_(function* mapTo(iter, to, ...funcs) {
+  const l = $._mappingFuncs(funcs, false);
+  if (!l) return yield* iter;
+
+  const desc = {iter, ctx: this};
+  let idx = 0;
+
+  for (const item of iter) {
+    let v = item;
+
+    for (const func of funcs) {
+      v = func.call(this, v, idx, desc, item);
+    }
+
+    const p = to.call(this, item, idx, desc, item);
     if (p) p.ctx[p.key] = v;
 
     yield item;
