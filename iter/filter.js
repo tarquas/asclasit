@@ -36,7 +36,7 @@ chain_(function* filter(iter, ...funcs) {
 });
 
 chain_(function* skip(iter, ...funcs) {
-  yield* Iter.filter.call(this, iter, ...funcs, $.not);
+  yield* Iter.filter.gen.call(this, iter, ...funcs, $.not);
 });
 
 chain_(function* take(iter, ...funcs) {

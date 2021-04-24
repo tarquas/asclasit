@@ -106,6 +106,14 @@ test('AsIt_.next: take values', async () => {
   expect(await asItArray(wrapped)).toEqual([3, 2, 1, 0]);
 });
 
+test('AsIt_.next: take values from generic iterator', async () => {
+  const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const iter = myGen();
+  expect(await AsIt.next(iter, true)).toEqual({done: false, value: 6});
+  expect(await AsIt.next(iter, true)).toEqual({done: false, value: 4});
+  expect(await asItArray(iter)).toEqual([3, 2, 1, 0]);
+});
+
 test('AsIt_.return: break in the middle', async () => {
   const myGen = async function* () {
     try {
@@ -153,18 +161,25 @@ test('AsIt_.read: read value', async () => {
   expect(await asItArray(wrapped)).toEqual([3, 2, 1, 0]);
 });
 
-test('AsIt_.skip: skip values', async () => {
+test('AsIt_.ffwd: fast forward values', async () => {
   const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new AsIt(myGen());
-  expect(await wrapped.skip(2, true)).toEqual(4);
+  expect(await wrapped.ffwd(2, true)).toEqual(4);
   expect(wrapped.cur).toEqual(2);
   expect(await asItArray(wrapped)).toEqual([3, 2, 1, 0]);
 });
 
-test('AsIt_.skip: skip beyond', async () => {
+test('AsIt_.ffwd: fast forward beyond', async () => {
   const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new AsIt(myGen());
-  expect(await wrapped.skip(10, true)).toEqual(undefined);
+  expect(await wrapped.ffwd(10, true)).toEqual(undefined);
   expect(wrapped.cur).toEqual(null);
   expect(await asItArray(wrapped)).toEqual([]);
+});
+
+test('AsIt_.ffwd: fast forward generic iter beyond', async () => {
+  const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const iter = myGen();
+  expect(await AsIt.ffwd(iter, 10, true)).toEqual(undefined);
+  expect(await asItArray(iter)).toEqual([]);
 });

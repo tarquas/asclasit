@@ -81,3 +81,51 @@ test('Iter_.flatten: full depth 3', () => {
   wrapped.flatten(3);
   expect(Array.from(wrapped)).toEqual(deepFlattened);
 });
+
+test('Iter_.zipt: termination zip with no iterators yields empty', () => {
+  const zipped = Iter.zipt();
+  expect(Array.from(zipped)).toEqual([]);
+});
+
+test('Iter_.zipt: zip iterators', () => {
+  const zipped = Iter.zipt(Iter.getIter([1, 2, 3]), Iter.getIter([4, 5]), Iter.getIter([6]));
+  expect(Array.from(zipped)).toEqual([1, 4, 6, 2, 5, , 3, , , , , undefined]);
+});
+
+test('Iter_.zipt: term-zip values and iterables with limit to longest', () => {
+  const zipped = Iter.zipt([1, 2], [3, 4, 5, 6], 'a', () => ['x', 'y'], function*() {yield 'z'; yield 't'; yield 0;});
+
+  expect(Array.from(zipped)).toEqual([
+    1, 3, 'a', 'x', 'z', 2, 4, 'a', 'y', 't', 1, 5, 'a', 'x', 0, 2, 6, 'a', 'y', 'z', 1, 3, 'a', 'x', 't'
+  ]);
+});
+
+test('Iter_.zip: zip no iterators yields empty', () => {
+  const zipped = Iter.zip();
+  expect(Array.from(zipped)).toEqual([]);
+});
+
+test('Iter_.zip: zip only values yields empty', () => {
+  const zipped = Iter.zip(1, 2, 3);
+  expect(Array.from(zipped)).toEqual([]);
+});
+
+test('Iter_.zip: zip iterators', () => {
+  const zipped = Iter.zip(Iter.getIter([1, 2, 3]), Iter.getIter([4, 5]), Iter.getIter([6]));
+  expect(Array.from(zipped)).toEqual([1, 4, 6, 2, 5, , 3, , undefined]);
+});
+
+test('Iter_.zip: zip values and iterables with limit to longest', () => {
+  const zipped = Iter.zip([1, 2], [3, 4, 5, 6], 'a', () => ['x', 'y'], function*() {yield 'z'; yield 't'; yield 0;});
+  expect(Array.from(zipped)).toEqual([1, 3, 'a', 'x', 'z', 2, 4, 'a', 'y', 't', 1, 5, 'a', 'x', 0, 2, 6, 'a', 'y', 'z']);
+});
+
+test('Iter_.zip: throw', () => {
+  const zipped = Iter.zip(
+    [1, 2, 3],
+    function*() { yield 4; throw new Error('interrupted'); },
+    function*() { try { yield 5; yield 6; } catch(err) { throw new Error('unexpected'); } },
+  );
+
+  expect(() => Array.from(zipped)).toThrow('interrupted');
+});

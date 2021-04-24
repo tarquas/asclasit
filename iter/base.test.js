@@ -92,6 +92,14 @@ test('Iter_.next: take values', () => {
   expect(Array.from(wrapped)).toEqual([3, 2, 1, 0]);
 });
 
+test('Iter_.next: take values of generic iterator', () => {
+  const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const iter = myGen();
+  expect(Iter.next(iter, true)).toEqual({done: false, value: 6});
+  expect(Iter.next(iter, true)).toEqual({done: false, value: 4});
+  expect(Array.from(iter)).toEqual([3, 2, 1, 0]);
+});
+
 test('Iter_.return: break in the middle', () => {
   const myGen = function* () {
     try {
@@ -139,18 +147,25 @@ test('Iter_.read: read value', () => {
   expect(Array.from(wrapped)).toEqual([3, 2, 1, 0]);
 });
 
-test('Iter_.skip: skip values', () => {
+test('Iter_.ffwd: fast forward values', () => {
   const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new Iter(myGen());
-  expect(wrapped.skip(2, true)).toEqual(4);
+  expect(wrapped.ffwd(2, true)).toEqual(4);
   expect(wrapped.cur).toEqual(2);
   expect(Array.from(wrapped)).toEqual([3, 2, 1, 0]);
 });
 
-test('Iter_.skip: skip beyond', () => {
+test('Iter_.ffwd: fast forward beyond', () => {
   const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new Iter(myGen());
-  expect(wrapped.skip(10, true)).toEqual(undefined);
+  expect(wrapped.ffwd(10, true)).toEqual(undefined);
   expect(wrapped.cur).toEqual(null);
   expect(Array.from(wrapped)).toEqual([]);
+});
+
+test('Iter_.ffwd: fast forward generic iterator beyond', () => {
+  const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const iter = myGen();
+  expect(Iter.ffwd(iter, 10, true)).toEqual(undefined);
+  expect(Array.from(iter)).toEqual([]);
 });

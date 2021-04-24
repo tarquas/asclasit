@@ -147,7 +147,7 @@ func_(function lag_(n, buf) {
   if (!Number.isInteger(n) || n <= 0) n = 1;
   if (!buf) buf = [];
 
-  return function _times(v) {
+  return function _lag(v) {
     if (buf.push(v) > n) return buf.shift();
   };
 });

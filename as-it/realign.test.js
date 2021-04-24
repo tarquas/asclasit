@@ -58,32 +58,84 @@ test('AsIt_.flatten: default depth 1', async () => {
   expect(await asItArray(wrapped)).toEqual([[1, 2], ['3a', 4], '5a', [[6, '7a'], 8], 9]);
 });
 
-test('Iter_.flatten: as-is depth 0', async () => {
+test('AsIt_.flatten: as-is depth 0', async () => {
   const wrapped = new AsIt(AsIt.getIter(deepArray));
   wrapped.flatten(0);
   expect(await asItArray(wrapped)).toEqual(deepArray);
 });
 
-test('Iter_.flatten: infinite depth < 0', async () => {
+test('AsIt_.flatten: infinite depth < 0', async () => {
   const wrapped = new AsIt(AsIt.getIter(deepArray));
   wrapped.flatten(-1);
   expect(await asItArray(wrapped)).toEqual(deepFlattened);
 });
 
-test('Iter_.flatten: infinite depth Infinity', async () => {
+test('AsIt_.flatten: infinite depth Infinity', async () => {
   const wrapped = new AsIt(AsIt.getIter(deepArray));
   wrapped.flatten(Infinity);
   expect(await asItArray(wrapped)).toEqual(deepFlattened);
 });
 
-test('Iter_.flatten: depth 2', async () => {
+test('AsIt_.flatten: depth 2', async () => {
   const wrapped = new AsIt(AsIt.getIter(deepArray));
   wrapped.flatten(2);
   expect(await asItArray(wrapped)).toEqual([1, 2, '3a', 4, '5a', [6, '7a'], 8, 9]);
 });
 
-test('Iter_.flatten: full depth 3', async () => {
+test('AsIt_.flatten: full depth 3', async () => {
   const wrapped = new AsIt(AsIt.getIter(deepArray));
   wrapped.flatten(3);
   expect(await asItArray(wrapped)).toEqual(deepFlattened);
+});
+
+test('AsIt_.zipt: termination zip with no iterators yields empty', async () => {
+  const zipped = AsIt.zipt();
+  expect(await asItArray(zipped)).toEqual([]);
+});
+
+test('AsIt_.zipt: zip iterators', async () => {
+  const zipped = AsIt.zipt(AsIt.getIter([1, 2, 3]), AsIt.getIter([4, 5]), AsIt.getIter([6]));
+  expect(await asItArray(zipped)).toEqual([1, 4, 6, 2, 5, , 3, , , , , undefined]);
+});
+
+test('AsIt_.zipt: term-zip values and iterables with limit to longest', async () => {
+  const zipped = AsIt.zipt([1, 2], [3, 4, 5, 6], 'a', () => ['x', 'y'], function*() {yield 'z'; yield 't'; yield 0;});
+
+  expect(await asItArray(zipped)).toEqual([
+    1, 3, 'a', 'x', 'z', 2, 4, 'a', 'y', 't', 1, 5, 'a', 'x', 0, 2, 6, 'a', 'y', 'z', 1, 3, 'a', 'x', 't'
+  ]);
+});
+
+test('AsIt_.zip: zip no iterators yields empty', async () => {
+  const zipped = AsIt.zip();
+  expect(await asItArray(zipped)).toEqual([]);
+});
+
+test('AsIt_.zip: zip only values yields empty', async () => {
+  const zipped = AsIt.zip(1, 2, 3);
+  expect(await asItArray(zipped)).toEqual([]);
+});
+
+test('AsIt_.zip: zip iterators', async () => {
+  const zipped = AsIt.zip(AsIt.getIter([1, 2, 3]), AsIt.getIter([4, 5]), AsIt.getIter([6]));
+  expect(await asItArray(zipped)).toEqual([1, 4, 6, 2, 5, , 3, , undefined]);
+});
+
+test('AsIt_.zip: zip values and iterables with limit to longest', async () => {
+  const zipped = AsIt.zip([1, 2], [3, 4, 5, 6], 'a', () => ['x', 'y'], function*() {yield 'z'; yield 't'; yield 0;});
+  expect(await asItArray(zipped)).toEqual([1, 3, 'a', 'x', 'z', 2, 4, 'a', 'y', 't', 1, 5, 'a', 'x', 0, 2, 6, 'a', 'y', 'z']);
+});
+
+test('AsIt_.zip: throw', async () => {
+  const zipped = AsIt.zip(
+    [1, 2, 3],
+    async function*() { yield 4; throw new Error('interrupted'); },
+    async function*() { try { yield 5; yield 6; } catch(err) { throw new Error('unexpected'); } },
+  );
+
+  try {
+    await asItArray(zipped);
+  } catch (err) {
+    expect(err.message).toEqual('interrupted');
+  }
 });

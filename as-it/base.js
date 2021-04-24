@@ -81,27 +81,34 @@ AsIt_[Symbol.asyncIterator] = function asyncIterator() {
 value_((iter, err) => iter.throw(err), 'throw');
 value_((iter, value) => iter.return(value), 'return');
 
-async function next(iter, value) {
+value_(async function next(iter, value) {
   const item = await iter.next(value);
+  if (this.constructor !== AsIt) return item;
   if (item.done) this.cur = null; else this.cur++;
   return item;
-};
-
-value_(next);
+});
 
 value_(async function read(iter, value) {
-  const item = await next.call(this, iter, value);
+  const item = await AsIt.next.call(this, iter, value);
   return item.value;
 });
 
-value_(async function skip(iter, count, value) {
+value_(async function ffwd(iter, count, value) {
   let last;
 
-  while (count--) {
-    const item = await iter.next(value);
-    last = item.value;
-    if (item.done) { this.cur = null; break; }
-    this.cur++;
+  if (this.constructor === AsIt) {
+    while (count--) {
+      const item = await iter.next(value);
+      last = item.value;
+      if (item.done) { this.cur = null; break; }
+      this.cur++;
+    }
+  } else {
+    while (count--) {
+      const item = await iter.next(value);
+      last = item.value;
+      if (item.done) break;
+    }
   }
 
   return last;

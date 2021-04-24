@@ -75,27 +75,34 @@ Iter_[Symbol.iterator] = function iterator() {
 value_((iter, err) => iter.throw(err), 'throw');
 value_((iter, value) => iter.return(value), 'return');
 
-function next(iter, value) {
+value_(function next(iter, value) {
   const item = iter.next(value);
+  if (this.constructor !== Iter) return item;
   if (item.done) this.cur = null; else this.cur++;
   return item;
-};
-
-value_(next);
+});
 
 value_(function read(iter, value) {
-  const item = next.call(this, iter, value);
+  const item = Iter.next.call(this, iter, value);
   return item.value;
 });
 
-value_(function skip(iter, count, value) {
+value_(function ffwd(iter, count, value) {
   let last;
 
-  while (count--) {
-    const item = iter.next(value);
-    last = item.value;
-    if (item.done) { this.cur = null; break; }
-    this.cur++;
+  if (this.constructor === Iter) {
+    while (count--) {
+      const item = iter.next(value);
+      last = item.value;
+      if (item.done) { this.cur = null; break; }
+      this.cur++;
+    }
+  } else {
+    while (count--) {
+      const item = iter.next(value);
+      last = item.value;
+      if (item.done) break;
+    }
   }
 
   return last;

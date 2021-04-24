@@ -17,4 +17,12 @@ chain_(async function* concat(...args) {
   }
 });
 
+chain_(AsIt.concat.gen, 'append');
+
+chain_(async function* prepend(...args) {
+  for (let i = args.length - 1; i >= 0; i--) {
+    yield* AsIt.from.gen(args[i]);
+  }
+});
+
 module.exports = AsIt;

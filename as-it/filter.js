@@ -36,7 +36,7 @@ chain_(async function* filter(iter, ...funcs) {
 });
 
 chain_(async function* skip(iter, ...funcs) {
-  yield* AsIt.filter.call(this, iter, ...funcs, $.not);
+  yield* AsIt.filter.gen.call(this, iter, ...funcs, $.not);
 });
 
 chain_(async function* take(iter, ...funcs) {

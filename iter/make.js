@@ -17,6 +17,14 @@ chain_(function* concat(...args) {
   }
 });
 
+chain_(Iter.concat.gen, 'append');
+
+chain_(function* prepend(...args) {
+  for (let i = args.length - 1; i >= 0; i--) {
+    yield* Iter.from.gen(args[i]);
+  }
+});
+
 make_(function* range(from, to, step) {
   if (to == null) { to = from; from = 0; }
   if (!step) step = from > to ? -1 : 1;

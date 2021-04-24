@@ -14,6 +14,14 @@ test('Iter.concat: concatenate iterators', () => {
   expect(Array.from(concat)).toEqual(['a1', 'a2', 3, ['a', 1], 'a4', 'a5', 'a6', 'a7']);
 });
 
+test('Iter.prepend: concatenate iterators reversed', () => {
+  const i1 = ['a1', 'a2'];
+  const i2 = function* () { yield 'a4'; yield 'a5'; } ();
+  const i3 = new Iter(['a6', 'a7'][Symbol.iterator]());
+  const concat = Iter.prepend(i1, 3, {a: 1}, i2, i3);
+  expect(Array.from(concat)).toEqual(['a6', 'a7', 'a4', 'a5', ['a', 1], 3, 'a1', 'a2']);
+});
+
 test('Iter.range: 1 arg (x): [0 ... +1 ... x)', () => {
   const wrapped = Iter.range(5);
   expect(wrapped instanceof Iter).toBe(true);
