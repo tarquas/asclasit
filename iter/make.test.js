@@ -51,3 +51,84 @@ test('Iter.range: 3 args desc (x, y, d): [x ... +d ... y)', () => {
   expect(wrapped instanceof Iter).toBe(true);
   expect(Array.from(wrapped)).toEqual([14, 11]);
 });
+
+test('AsIt.fork: 1 fork', () => {
+  const src = Iter.from([1, 2, 3]);
+  const fork1 = src.fork();
+  expect(Array.from(fork1)).toEqual([1, 2, 3]);
+  expect(Array.from(src)).toEqual([]);
+});
+
+test('AsIt.fork: 2 forks', () => {
+  const src = Iter.from([1, 2, 3]);
+  const fork1 = src.fork();
+  const fork2 = src.fork();
+  expect(Array.from(fork1)).toEqual([1, 2, 3]);
+  expect(Array.from(fork2)).toEqual([1, 2, 3]);
+  expect(Array.from(src)).toEqual([]);
+});
+
+test('AsIt.fork: 3 forks with 1 chained', () => {
+  const src = Iter.from([1, 2, 3]);
+  const fork1 = src.fork();
+  const fork2 = src.fork();
+  const fork3 = fork2.fork();
+  expect(Array.from(fork1)).toEqual([1, 2, 3]);
+  expect(Array.from(fork2)).toEqual([1, 2, 3]);
+  expect(Array.from(fork3)).toEqual([1, 2, 3]);
+  expect(Array.from(src)).toEqual([]);
+});
+
+test('AsIt.fork: 2 forks: mixed pipeline', () => {
+  const src = Iter.from([1, 2, 3]);
+  const fork1 = src.fork();
+  const fork2 = src.fork();
+  expect(fork1.read()).toBe(1);
+  expect(Array.from(fork2)).toEqual([1, 2, 3]);
+  expect(Array.from(fork1)).toEqual([2, 3]);
+  expect(Array.from(src)).toEqual([]);
+});
+
+test('AsIt.fork: 3 forks: one broken', () => {
+  const src = Iter.from([1, 2, 3]);
+  const fork1 = src.fork();
+  const fork2 = src.fork();
+  const fork3 = src.fork();
+  expect(fork1.read()).toBe(1);
+  expect(Array.from(fork2)).toEqual([1, 2, 3]);
+  expect(Array.from(fork3)).toEqual([1, 2, 3]);
+  fork1.return();
+  expect(Array.from(src)).toEqual([]);
+});
+
+test('AsIt.fork: 1 fork: break limit ok', () => {
+  const src = Iter.from([1, 2, 3]);
+  const fork1 = src.fork(2);
+  expect(Array.from(fork1)).toEqual([1, 2, 3]);
+  expect(Array.from(src)).toEqual([]);
+});
+
+test('AsIt.fork: 2 forks', () => {
+  const src = Iter.from([1, 2, 3]);
+  const fork1 = src.fork(2);
+  const fork2 = src.fork(2);
+  let error;
+
+  try {
+    Array.from(fork1);
+  } catch (err) {
+    error = err;
+  }
+
+  expect(error instanceof Iter.ForkBufferLimitExceededError).toBe(true);
+  expect(Array.from(src)).toEqual([3]);
+});
+
+test('AsIt.fork: 2 raw forks', () => {
+  const src = function* () { yield 1; yield 2; yield 3; } ();
+  const fork1 = Iter.fork(src);
+  const fork2 = Iter.fork(src);
+  expect(Array.from(fork1)).toEqual([1, 2, 3]);
+  expect(Array.from(fork2)).toEqual([1, 2, 3]);
+  expect(Array.from(src)).toEqual([]);
+});

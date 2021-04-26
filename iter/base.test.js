@@ -150,7 +150,7 @@ test('Iter_.read: read value', () => {
 test('Iter_.ffwd: fast forward values', () => {
   const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new Iter(myGen());
-  expect(wrapped.ffwd(2, true)).toEqual(4);
+  expect(wrapped.ffwd(2, true)).toEqual({done: false, value: 4});
   expect(wrapped.cur).toEqual(2);
   expect(Array.from(wrapped)).toEqual([3, 2, 1, 0]);
 });
@@ -158,7 +158,7 @@ test('Iter_.ffwd: fast forward values', () => {
 test('Iter_.ffwd: fast forward beyond', () => {
   const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new Iter(myGen());
-  expect(wrapped.ffwd(10, true)).toEqual(undefined);
+  expect(wrapped.ffwd(10, true)).toEqual({done: true});
   expect(wrapped.cur).toEqual(null);
   expect(Array.from(wrapped)).toEqual([]);
 });
@@ -166,6 +166,6 @@ test('Iter_.ffwd: fast forward beyond', () => {
 test('Iter_.ffwd: fast forward generic iterator beyond', () => {
   const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const iter = myGen();
-  expect(Iter.ffwd(iter, 10, true)).toEqual(undefined);
+  expect(Iter.ffwd(iter, 10, true)).toEqual({done: true});
   expect(Array.from(iter)).toEqual([]);
 });

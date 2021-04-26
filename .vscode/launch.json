@@ -32,7 +32,7 @@
         "${workspaceRoot}/node_modules/.bin/jest",
         "--runInBand",
         "--logHeapUsage",
-        "as-it/realign"
+        "as-it/make"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

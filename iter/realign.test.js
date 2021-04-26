@@ -82,6 +82,21 @@ test('Iter_.flatten: full depth 3', () => {
   expect(Array.from(wrapped)).toEqual(deepFlattened);
 });
 
+test('Iter_.cut: as is', () => {
+  const cut = new Iter(Iter.getIter([1, 2, 3, 4, 5])).cut(0);
+  expect(Array.from(cut)).toEqual([1, 2, 3, 4, 5]);
+});
+
+test('Iter_.cut: left', () => {
+  const cut = new Iter(Iter.getIter([1, 2, 3, 4, 5])).cut(-2);
+  expect(Array.from(cut)).toEqual([1, 2, 3]);
+});
+
+test('Iter_.cut: right', () => {
+  const cut = new Iter(Iter.getIter([1, 2, 3, 4, 5])).cut(2);
+  expect(Array.from(cut)).toEqual([3, 4, 5]);
+});
+
 test('Iter_.zipt: termination zip with no iterators yields empty', () => {
   const zipped = Iter.zipt();
   expect(Array.from(zipped)).toEqual([]);

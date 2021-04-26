@@ -7,5 +7,6 @@ require('./reduce');
 require('./sort');
 require('./time');
 require('./object');
+require('./promise');
 
 module.exports = $;

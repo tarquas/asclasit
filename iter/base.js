@@ -89,20 +89,16 @@ value_(function read(iter, value) {
 
 value_(function ffwd(iter, count, value) {
   let last;
+  let n = count;
+
+  while (n--) {
+    last = iter.next(value);
+    if (last.done) break;
+  }
 
   if (this.constructor === Iter) {
-    while (count--) {
-      const item = iter.next(value);
-      last = item.value;
-      if (item.done) { this.cur = null; break; }
-      this.cur++;
-    }
-  } else {
-    while (count--) {
-      const item = iter.next(value);
-      last = item.value;
-      if (item.done) break;
-    }
+    if (last.done) this.cur = null;
+    else this.cur += count;
   }
 
   return last;

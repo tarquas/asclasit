@@ -95,20 +95,35 @@ value_(async function read(iter, value) {
 
 value_(async function ffwd(iter, count, value) {
   let last;
+  let n = count;
+
+  while (n--) {
+    last = await iter.next(value);
+    if (last.done) break;
+  }
 
   if (this.constructor === AsIt) {
-    while (count--) {
-      const item = await iter.next(value);
-      last = item.value;
-      if (item.done) { this.cur = null; break; }
-      this.cur++;
-    }
-  } else {
-    while (count--) {
-      const item = await iter.next(value);
-      last = item.value;
-      if (item.done) break;
-    }
+    if (last.done) this.cur = null;
+    else this.cur += count;
+  }
+
+  return last;
+});
+
+value_(async function affwd(iter, count, value) {
+  const proms = [];
+  let n = count;
+
+  while (n--) {
+    proms.push(iter.next(value));
+  }
+
+  const nexts = await Promise.all(proms);
+  const last = nexts[nexts.length - 1];
+
+  if (this.constructor === AsIt) {
+    if (last.done) this.cur = null;
+    else this.cur += count;
   }
 
   return last;

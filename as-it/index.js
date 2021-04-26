@@ -6,5 +6,6 @@ require('./value');
 require('./map');
 require('./filter');
 require('./realign');
+require('./promise');
 
 module.exports = AsIt;

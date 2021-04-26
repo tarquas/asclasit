@@ -133,13 +133,27 @@ chain_(function* zipt(...iters) {
   }
 });
 
+chain_(function* cut(iter, n) {
+  if (!n || !Number.isInteger(n)) return yield* iter;
+  let cutted;
+
+  if (n > 0) {
+    cutted = iter;
+  } else {
+    cutted = Iter.map.gen.call(this, iter, n);
+    n = -n;
+  }
+
+  Iter.ffwd(cutted, n);
+  yield* cutted;
+});
+
 chain_(function* zip(...iters) {
   const l = iters.length;
   if (!l) return;
 
   const zipt = Iter.zipt.gen.call(this, ...iters);
-  const cut = Iter.map.gen.call(this, zipt, $.lag_(l));
-  Iter.ffwd(cut, l);
+  const cut = Iter.cut.gen.call(this, zipt, -l);
   yield* cut;
 });
 

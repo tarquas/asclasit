@@ -94,6 +94,21 @@ function countIter(sum, i2) {
   return sum;
 }
 
+chain_(async function* cut(iter, n) {
+  if (!n || !Number.isInteger(n)) return yield* iter;
+  let cutted;
+
+  if (n > 0) {
+    cutted = iter;
+  } else {
+    cutted = AsIt.map.gen.call(this, iter, n);
+    n = -n;
+  }
+
+  await AsIt.affwd(cutted, n);
+  yield* cutted;
+});
+
 chain_(async function* zipt(...iters) {
   const l = iters.length;
   if (!l) return;
@@ -159,11 +174,8 @@ chain_(async function* zip(...iters) {
   if (!l) return;
 
   const zipt = AsIt.zipt.gen.call(this, ...iters);
-  const cut = AsIt.map.gen.call(this, zipt, $.lag_(l));
-  await AsIt.ffwd(cut, l);
+  const cut = AsIt.cut.gen.call(this, zipt, -l);
   yield* cut;
 });
-
-process.on('unhandledRejection', console.log);
 
 module.exports = AsIt;

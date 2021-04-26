@@ -164,7 +164,7 @@ test('AsIt_.read: read value', async () => {
 test('AsIt_.ffwd: fast forward values', async () => {
   const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new AsIt(myGen());
-  expect(await wrapped.ffwd(2, true)).toEqual(4);
+  expect(await wrapped.ffwd(2, true)).toEqual({done: false, value: 4});
   expect(wrapped.cur).toEqual(2);
   expect(await asItArray(wrapped)).toEqual([3, 2, 1, 0]);
 });
@@ -172,7 +172,7 @@ test('AsIt_.ffwd: fast forward values', async () => {
 test('AsIt_.ffwd: fast forward beyond', async () => {
   const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new AsIt(myGen());
-  expect(await wrapped.ffwd(10, true)).toEqual(undefined);
+  expect(await wrapped.ffwd(10, true)).toEqual({done: true});
   expect(wrapped.cur).toEqual(null);
   expect(await asItArray(wrapped)).toEqual([]);
 });
@@ -180,6 +180,22 @@ test('AsIt_.ffwd: fast forward beyond', async () => {
 test('AsIt_.ffwd: fast forward generic iter beyond', async () => {
   const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const iter = myGen();
-  expect(await AsIt.ffwd(iter, 10, true)).toEqual(undefined);
+  expect(await AsIt.ffwd(iter, 10, true)).toEqual({done: true});
   expect(await asItArray(iter)).toEqual([]);
+});
+
+test('AsIt_.affwd: async fast forward values', async () => {
+  const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const wrapped = new AsIt(myGen());
+  expect(await wrapped.affwd(2, true)).toEqual({done: false, value: 4});
+  expect(wrapped.cur).toEqual(2);
+  expect(await asItArray(wrapped)).toEqual([3, 2, 1, 0]);
+});
+
+test('AsIt_.affwd: async fast forward beyond', async () => {
+  const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
+  const wrapped = new AsIt(myGen());
+  expect(await wrapped.affwd(10, true)).toEqual({done: true});
+  expect(wrapped.cur).toEqual(null);
+  expect(await asItArray(wrapped)).toEqual([]);
 });

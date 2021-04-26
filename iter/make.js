@@ -1,5 +1,5 @@
 const Iter = require('./object');
-const {make_, chain_} = Iter;
+const {make_, chain_, value_} = Iter;
 
 chain_(function* voidIter() { }, 'void');
 
@@ -33,6 +33,74 @@ make_(function* range(from, to, step) {
     for (let v = from; v < to; v += step) yield v;
   } else {
     for (let v = from; v > to; v += step) yield v;
+  }
+});
+
+class ForkBufferLimitExceededError extends Error { message = 'fork buffer limit exceeded'; }
+Object.assign(Iter, {ForkBufferLimitExceededError});
+
+function* _fork(iter, limit, i) {
+  const o = iter.forkObj;
+  const {b, u} = o;
+
+  try {
+    while (true) {
+      const d = i - o.i;
+
+      if (d >= b.length) {
+        const {value, done} = iter.next();
+        if (done) return;
+
+        if (o.n > 0) {
+          u.push(o.n);
+          if (b.push(value) === limit) throw new ForkBufferLimitExceededError();
+          i++;
+        }
+
+        yield value;
+      } else {
+        if (--u[d] <= 0) {
+          o.i++;
+          u.shift();
+          yield b.shift();
+        } else {
+          yield b[d];
+        }
+
+        i++;
+      }
+    }
+  } finally {
+    const l = b.length;
+
+    if (l) {
+      for (let d = i - o.i; d < l; d++) u[d]--;
+      //if (!u[l - 1]) { o.i += l; b.splice(0); u.splice(0); }
+    }
+
+    if (!(o.n--)) iter.forkObj = null;
+  }
+}
+
+value_(function fork(iter, limit) {
+  if (iter.forkSrc) iter = iter.forkSrc;
+
+  let o = iter.forkObj;
+
+  if (o) {
+    o.n++;
+  } else {
+    iter.forkObj = o = {b: [], u: [], i: 0, n: 0};
+  }
+
+  const forked = _fork.call(this, iter, limit, o.i);
+  forked.forkSrc = iter;
+
+  if (this.constructor === Iter) {
+    const wrapped = new Iter(forked);
+    return wrapped;
+  } else {
+    return forked;
   }
 });
 

@@ -1,9 +1,10 @@
-const Iter = require('./realign');
+const AsIt = require('./realign');
 require('./make');
 require('./value');
+const Iter = require('../iter');
 const $ = require('../func');
 
-const {value_} = Iter;
+const {value_} = AsIt;
 
 value_(async function promise(iter, reduce, func) {
   const desc = {iter, ctx: this};
@@ -12,7 +13,7 @@ value_(async function promise(iter, reduce, func) {
   let isObj = false;
   let idx = 0;
 
-  for (const item of iter) {
+  for await (const item of iter) {
     let k, v;
 
     if (item instanceof Array) {
@@ -41,7 +42,7 @@ value_(async function promise(iter, reduce, func) {
 });
 
 value_(async function all(iter, func) {
-  return await Iter.promise.call(this, iter, $.promiseAll, func);
+  return await AsIt.promise.call(this, iter, $.promiseAll, func);
 });
 
-module.exports = Iter;
+module.exports = AsIt;

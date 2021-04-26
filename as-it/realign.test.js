@@ -88,6 +88,21 @@ test('AsIt_.flatten: full depth 3', async () => {
   expect(await asItArray(wrapped)).toEqual(deepFlattened);
 });
 
+test('AsIt_.cut: as is', async () => {
+  const cut = new AsIt(AsIt.getIter([1, 2, 3, 4, 5])).cut(0);
+  expect(await asItArray(cut)).toEqual([1, 2, 3, 4, 5]);
+});
+
+test('AsIt_.cut: left', async () => {
+  const cut = new AsIt(AsIt.getIter([1, 2, 3, 4, 5])).cut(-2);
+  expect(await asItArray(cut)).toEqual([1, 2, 3]);
+});
+
+test('AsIt_.cut: right', async () => {
+  const cut = new AsIt(AsIt.getIter([1, 2, 3, 4, 5])).cut(2);
+  expect(await asItArray(cut)).toEqual([3, 4, 5]);
+});
+
 test('AsIt_.zipt: termination zip with no iterators yields empty', async () => {
   const zipped = AsIt.zipt();
   expect(await asItArray(zipped)).toEqual([]);
