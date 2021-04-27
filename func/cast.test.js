@@ -155,3 +155,18 @@ test('$.clone: circular', () => {
   expect(cloned.x.y.z.a[0].b.d !== orig.x.y.z.a[0].b.d).toBe(true);
   expect(cloned.x.y.z.a[0].b.d.a === cloned.x.y.z.a).toBe(true);
 });
+
+test('$.merge: deep', () => {
+  const src = {a: {b: [{c: 1}, {d: 2}]}, x: {y: ['a', null, 9.1]}};
+  const dst = {x: {z: ['c', 5]}};
+  $.merge(src, dst);
+  expect(dst).toEqual({a: {b: [{c: 1}, {d: 2}]}, x: {z: ['c', 5], y: ['a', null, 9.1]}});
+});
+
+test('$.merge: circular', () => {
+  const src = {a: {b: [{c: 1}, {d: 2}]}, x: {y: ['a', null, 9.1]}};
+  src.x.z = src;
+  const dst = {x: {z: ['c', 5]}};
+  $.merge(src, dst, () => 'circular');
+  expect(dst).toEqual({a: {b: [{c: 1}, {d: 2}]}, x: {z: 'circular', y: ['a', null, 9.1]}});
+});

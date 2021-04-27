@@ -78,8 +78,8 @@ AsIt_[Symbol.asyncIterator] = function asyncIterator() {
   return cur;
 };
 
-value_((iter, err) => iter.throw(err), 'throw');
-value_((iter, value) => iter.return(value), 'return');
+value_((iter, err) => { if (iter.throw) return iter.throw(err); }, 'throw');
+value_((iter, value) => { if (iter.return) return iter.return(value); }, 'return');
 
 value_(async function next(iter, value) {
   const item = await iter.next(value);

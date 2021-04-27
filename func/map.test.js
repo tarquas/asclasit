@@ -14,6 +14,10 @@ test('$.null: map null', () => {
   expect([1, 'a', {a: 1}, [5]].map($.null)).toEqual([null, null, null, null]);
 });
 
+test('$._: force value', () => {
+  expect([1, 'a', {a: 1}, [5]].map($._(5))).toEqual([5, 5, 5, 5]);
+});
+
 test('$.anull: map null async', async () => {
   const promises = [1, 'a', {a: 1}, [5]].map($.anull);
   expect(promises[0] instanceof Promise).toBe(true);

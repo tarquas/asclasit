@@ -7,5 +7,6 @@ require('./map');
 require('./filter');
 require('./realign');
 require('./promise');
+require('./feed');
 
 module.exports = AsIt;

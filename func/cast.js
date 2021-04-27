@@ -144,21 +144,22 @@ function circular(obj, clone, chain, cache, root, depth, key) {
 
   cache.add(obj);
 
-  if (clone) {
-    const obj2 = (Array.isArray(obj) ? [] : Object.create(null));
+  if (clone !== circular) {
+    const obj2 = clone || (obj instanceof Array ? [] : Object.create(null));
 
     for (const k in obj) {
-      const wrap = circular(obj[k], true, chain, cache, root, depth + 1, k);
-      if (wrap !== circular) obj2[k] = wrap;
+      let ex = obj2[k];
+      if (typeof ex !== 'object') ex = null;
+      const wrap = circular(obj[k], ex, chain, cache, root, depth + 1, k);
+      if (wrap === circular) delete obj2[k]; else obj2[k] = wrap;
     }
 
     cache.delete(obj);
     return obj2;
   } else {
     for (const k in obj) {
-      const wrap = circular(obj[k], false, chain, cache, root, depth + 1, k);
-      if (wrap === circular) delete obj[k];
-      else obj[k] = wrap;
+      const wrap = circular(obj[k], circular, chain, cache, root, depth + 1, k);
+      if (wrap === circular) delete obj[k]; else obj[k] = wrap;
     }
 
     cache.delete(obj);
@@ -168,7 +169,7 @@ function circular(obj, clone, chain, cache, root, depth, key) {
 
 func_(function fixCircular_(...args) {
   return function _fixCircular(value) {
-    return circular.call(this, value, false, args, new Set(), value, 0);
+    return circular.call(this, value, circular, args, new Set(), value, 0);
   };
 });
 
@@ -176,15 +177,43 @@ func_($.fixCircular_(), 'fixCircular');
 
 func_(function noCircular_(...args) {
   return function _noCircular(value) {
-    return circular.call(this, value, true, args, new Set(), value, 0);
+    return circular.call(this, value, null, args, new Set(), value, 0);
   };
 });
 
 func_($.noCircular_(), 'noCircular');
 func_($.noCircular_(), 'rawClone');
 
+func_(function mergeNoCircular_(to, ...args) {
+  return function _noCircular(value) {
+    return circular.call(this, value, to, args, new Set(), value, 0);
+  };
+});
+
+func_(function merge(src, dst, ...funcs) {
+  return $.mergeNoCircular_(dst, ...funcs)(src);
+});
+
 func_(function clone(value) {
   return v8.deserialize(v8.serialize(value));
 });
+
+/*func_(function merge(src, dst) {
+  if (!dst) dst = src instanceof Array ? [] : Object.create(null);
+
+  for (const k in src) {
+    const v = src[k];
+
+    if (v && typeof v === 'object') {
+      let d = dst[k];
+      if (!d || typeof d !== 'object') dst[k] = d = v instanceof Array ? [] : Object.create(null);
+      merge(d, v);
+    } else {
+      dst[k] = v;
+    }
+  }
+
+  return dst;
+});*/
 
 module.exports = $;

@@ -6,6 +6,12 @@ func_(function echo(value) {
   return value;
 });
 
+func_(function _(force) {
+  return function _value() {
+    return force;
+  };
+});
+
 func_(async function aecho(value) {
   return value;
 });
