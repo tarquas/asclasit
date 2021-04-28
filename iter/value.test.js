@@ -259,3 +259,15 @@ test('Iter_.toIter: duplicate iter', () => {
   expect(to instanceof Iter).toBe(true);
   expect(Array.from(to)).toEqual([1, 2, 3]);
 });
+
+test('$.feedback: return', () => {
+  const fb = new Iter(function* () { yield 1; yield 2; } ()).feedback();
+  expect(fb.next()).toEqual({value: 1, done: false});
+  expect(fb.return()).toEqual({done: true});
+});
+
+test('$.feedback: throw', () => {
+  const fb = new Iter(function* () { yield 1; yield 2; } ()).feedback();
+  expect(fb.next()).toEqual({value: 1, done: false});
+  expect(() => fb.throw(new Error('break'))).toThrow('break');
+});

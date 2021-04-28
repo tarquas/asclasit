@@ -144,3 +144,17 @@ test('Iter_.zip: throw', () => {
 
   expect(() => Array.from(zipped)).toThrow('interrupted');
 });
+
+test('Iter_.dim: unwrap to dimensions', async () => {
+  const iter = new Iter([1, 2][Symbol.iterator]());
+  iter.dim(['a', 'b'], ([dim1, dim2]) => new Array(dim1).fill(dim2), function* () { yield 'ok'; }, 'good');
+
+  expect(Array.from(iter)).toEqual([
+    [1, 'a', 'a', 'ok', 'good'],
+    [1, 'b', 'b', 'ok', 'good'],
+    [2, 'a', 'a', 'ok', 'good'],
+    [2, 'a', 'a', 'ok', 'good'],
+    [2, 'b', 'b', 'ok', 'good'],
+    [2, 'b', 'b', 'ok', 'good'],
+  ]);
+});

@@ -108,7 +108,7 @@ test('AsIt_.prefetch: time PoC', async () => {
   const snap1 = $.upMsec();
   const iter1 = AsIt.from([1, 2, 3, 4, 5, 6]).map($.delayMsec_(100)).prefetch(1).map($.delayMsec_(100));
   expect(await asItArray(iter1)).toEqual([1, 2, 3, 4, 5, 6]);
-  expect($.upMsec(snap1).toPrecision(2)).toBe('1.2e+3');
+  expect($.upMsec(snap1).toPrecision(1)).toBe('1e+3');
 
   const snap2 = $.upMsec();
   const iter2 = AsIt.from([1, 2, 3, 4, 5, 6]).map($.delayMsec_(100)).prefetch(2).map($.delayMsec_(100));

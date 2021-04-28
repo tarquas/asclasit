@@ -274,3 +274,14 @@ test('AsIt_.toIter: convert from asIt to iter', async () => {
   expect(iter instanceof Iter).toBe(true);
   expect(Array.from(iter)).toEqual([1, 2, 3]);
 });
+
+test('AsIt_.feedback: ', async () => {
+  const iter = new AsIt(async function* () { let a = 1; while (a & 1) a = yield a + 1; } ());
+
+  const use = async function* (iter, a) { const fb = iter.feedback(); for await (const item of fb) {
+    yield item; fb(a.shift());
+  } };
+
+  const used = new AsIt(use(iter, [1, 3, 9, -1, 2, 3]));
+  expect(await used.toArray()).toEqual([2, 2, 4, 10, 0]);
+});

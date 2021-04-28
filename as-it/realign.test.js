@@ -114,7 +114,10 @@ test('AsIt_.zipt: zip iterators', async () => {
 });
 
 test('AsIt_.zipt: term-zip values and iterables with limit to longest', async () => {
-  const zipped = AsIt.zipt([1, 2], [3, 4, 5, 6], 'a', () => ['x', 'y'], function*() {yield 'z'; yield 't'; yield 0;});
+  const zipped = AsIt.zipt([1, 2], [3, 4, 5, 6], 'a',
+    () => ['x', 'y'],
+    async function* () { yield 'z'; yield 't'; yield 0;}
+  );
 
   expect(await asItArray(zipped)).toEqual([
     1, 3, 'a', 'x', 'z', 2, 4, 'a', 'y', 't', 1, 5, 'a', 'x', 0, 2, 6, 'a', 'y', 'z', 1, 3, 'a', 'x', 't'
@@ -137,7 +140,11 @@ test('AsIt_.zip: zip iterators', async () => {
 });
 
 test('AsIt_.zip: zip values and iterables with limit to longest', async () => {
-  const zipped = AsIt.zip([1, 2], [3, 4, 5, 6], 'a', () => ['x', 'y'], function*() {yield 'z'; yield 't'; yield 0;});
+  const zipped = AsIt.zip([1, 2], [3, 4, 5, 6], 'a',
+    () => ['x', 'y'],
+    function* () { yield 'z'; yield 't'; yield 0; }
+  );
+
   expect(await asItArray(zipped)).toEqual([1, 3, 'a', 'x', 'z', 2, 4, 'a', 'y', 't', 1, 5, 'a', 'x', 0, 2, 6, 'a', 'y', 'z']);
 });
 
@@ -153,4 +160,22 @@ test('AsIt_.zip: throw', async () => {
   } catch (err) {
     expect(err.message).toEqual('interrupted');
   }
+});
+
+test('AsIt_.dim: unwrap to dimensions', async () => {
+  const iter = new AsIt([1, 2][Symbol.iterator]());
+
+  iter.dim(['a', 'b'],
+    async function* ([dim1, dim2]) { yield* new Array(dim1).fill(dim2); },
+    async function* () { yield 'ok'; }, 'good'
+  );
+
+  expect(await asItArray(iter)).toEqual([
+    [1, 'a', 'a', 'ok', 'good'],
+    [1, 'b', 'b', 'ok', 'good'],
+    [2, 'a', 'a', 'ok', 'good'],
+    [2, 'a', 'a', 'ok', 'good'],
+    [2, 'b', 'b', 'ok', 'good'],
+    [2, 'b', 'b', 'ok', 'good'],
+  ]);
 });

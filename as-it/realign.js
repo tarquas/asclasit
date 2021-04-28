@@ -178,4 +178,24 @@ chain_(async function* zip(...iters) {
   yield* cut;
 });
 
+async function *partialDim(pfx, dim1, dim2, ...dims) {
+  const desc = {iter: dim1, ctx: this};
+
+  for await (const item of dim1) {
+    const out = [...pfx, item];
+
+    if (dim2) {
+      const iter = AsIt.getIter.call(this, dim2, false, out, desc);
+      yield* partialDim.call(this, out, iter || [dim2], ...dims);
+    } else {
+      yield out;
+    }
+  }
+};
+
+chain_(async function *dim(...dims) {
+  const pfx = [];
+  yield* partialDim.call(this, pfx, ...dims);
+});
+
 module.exports = AsIt;

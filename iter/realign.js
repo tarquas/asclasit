@@ -157,4 +157,24 @@ chain_(function* zip(...iters) {
   yield* cut;
 });
 
+function *partialDim(pfx, dim1, dim2, ...dims) {
+  const desc = {iter: dim1, ctx: this};
+
+  for (const item of dim1) {
+    const out = [...pfx, item];
+
+    if (dim2) {
+      const iter = Iter.getIter.call(this, dim2, false, out, desc);
+      yield* partialDim.call(this, out, iter || [dim2], ...dims);
+    } else {
+      yield out;
+    }
+  }
+};
+
+chain_(function *dim(...dims) {
+  const pfx = [];
+  yield* partialDim.call(this, pfx, ...dims);
+});
+
 module.exports = Iter;

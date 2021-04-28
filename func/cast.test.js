@@ -170,3 +170,15 @@ test('$.merge: circular', () => {
   $.merge(src, dst, () => 'circular');
   expect(dst).toEqual({a: {b: [{c: 1}, {d: 2}]}, x: {z: 'circular', y: ['a', null, 9.1]}});
 });
+
+test('$.feedback: ', () => {
+  const iter = function* () { let a = 1; while (a & 1) a = yield a + 1; } ();
+  const use = function* (iter, a) { const fb = $.feedback(iter); for (const item of fb) { yield item; fb(a.shift()); } };
+  const used = use(iter, [1, 3, 9, -1, 2, 3]);
+  expect(Array.from(used)).toEqual([2, 2, 4, 10, 0]);
+});
+
+test('$.rx: escape string for use as RegExp literal', () => {
+  const rx = new RegExp(`1[ab]${$.rx('\\.[ab]')}[cd]2`);
+  expect(rx.test('head1b\\.[ab]c2tail')).toBe(true);
+});

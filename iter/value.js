@@ -1,4 +1,5 @@
 const Iter = require('./base');
+const $ = require('../func');
 
 const {value_, chain_} = Iter;
 
@@ -225,5 +226,7 @@ value_(function toSum(iter, def, out) {
 value_(function toIter(it) {
   return new Iter(it);
 });
+
+value_($.feedback);
 
 module.exports = Iter;

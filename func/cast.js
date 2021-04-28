@@ -216,4 +216,30 @@ func_(function clone(value) {
   return dst;
 });*/
 
+func_(function feedback(iter) {
+  let fv;
+  const iobj = (v) => { fv = v; };
+  const selfIterFn = () => iobj;
+
+  iobj.next = (old) => {
+    const next = iter.next(fv !== undefined ? fv : old);
+    fv = undefined;
+    return next;
+  };
+
+  if (iter.throw) iobj.throw = (err) => iter.throw(err);
+  if (iter.return) iobj.return = (ret) => iter.return(ret);
+  if (iter[Symbol.iterator]) iobj[Symbol.iterator] = selfIterFn;
+  if (iter[Symbol.asyncIterator]) iobj[Symbol.asyncIterator] = selfIterFn;
+
+  return iobj;
+});
+
+$.rxEscape = /[-\/\\^$*+?.()|[\]{}]/g;
+
+func_(function rx(s) {
+  const result = s.replace($.rxEscape, '\\$&');
+  return result;
+});
+
 module.exports = $;

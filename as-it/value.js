@@ -1,5 +1,6 @@
 const AsIt = require('./base');
 const Iter = require('../iter');
+const $ = require('../func');
 
 const {value_, chain_} = AsIt;
 
@@ -225,5 +226,7 @@ value_(async function toIter(iter) {
   const arr = await AsIt.toArray(iter);
   return Iter.from(arr);
 });
+
+value_($.feedback);
 
 module.exports = AsIt;
