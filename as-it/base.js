@@ -1,4 +1,4 @@
-const wrapped = Symbol('$.AsIt.wrap');
+const wrapped = Symbol('$.AsIt.wrapped');
 
 const AsIt = function(iter) {
   this[wrapped] = iter;

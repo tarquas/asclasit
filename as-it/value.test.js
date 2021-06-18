@@ -1,5 +1,6 @@
 const AsIt = require('./value');
 const Iter = require('../iter');
+const $ = require('../func');
 
 async function asItArray(iter) {
   const res = [];
@@ -94,43 +95,44 @@ test('AsIt_.appendObject: tee object from entries', async () => {
   const wrapped = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
   const to = Object.create(null);
   wrapped.appendObject(to, true);
-  expect(Object.fromEntries(await asItArray(wrapped))).toEqual({a: 1, b: 2, c: true, null: true});
-  expect(to).toEqual({a: 1, b: 2, c: true, null: true});
+  expect(Object.fromEntries(await asItArray(wrapped))).toEqual({a: 1, b: 2, c: true});
+  expect(to).toEqual({a: 1, b: 2, c: true});
 });
 
 test('AsIt_.toObject: get object from entries', async () => {
   const entries = new AsIt([['a', 1], ['b', 2], 'c', null][Symbol.iterator]());
-  const object = await entries.toObject(true);
-  expect(object).toEqual({a: 1, b: 2, c: true, null: true});
+  const object = await entries.toObject(null);
+  expect(object).toEqual({a: 1, b: 2, c: undefined});
 });
 
-test('AsIt_.toObject: get object from entries', async () => {
-  const entries = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
-  expect(await entries.toObject(null, true)).toEqual({a: 1, b: 2, c: true, null: true});
+test('AsIt_.toObject: get object from entries with default', async () => {
+  const entries = new AsIt([['a', 1], ['b', 2], 'c', null][Symbol.iterator]());
+  const object = await entries.toObject(false);
+  expect(object).toEqual({a: 1, b: 2, c: false});
 });
 
 test('AsIt_.defaultsObject: tee to defaults object from entries', async () => {
-  const wrapped = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const wrapped = new AsIt([['a', 1], ['b', 0], 'c', {b: 2}, null][Symbol.iterator]());
   const to = {b: 8, null: 6};
-  wrapped.defaultsObject(to, false);
-  expect(Object.fromEntries(await asItArray(wrapped))).toEqual({a: 1, b: 2, c: false, null: false});
+  wrapped.defaultsObject(null, false).defaultsObject(to);
+  expect(Object.fromEntries(await asItArray(wrapped))).toEqual({a: 1, b: 2, c: false});
   expect(to).toEqual({a: 1, b: 8, c: false, null: 6});
 });
 
 test('AsIt_.toDefaultsObject: get to object from entries', async () => {
-  const entries = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
-  expect(await entries.toDefaultsObject(true)).toEqual({a: 1, b: 0, c: true, null: true});
+  const entries = new AsIt([['a', 1], {b: 0}, 'c', ['b', 2], null][Symbol.iterator]());
+  expect(await entries.toDefaultsObject(true)).toEqual({a: 1, b: 0, c: true});
 });
 
 test('AsIt_.toDefaultsObject: get to object from entries: explicit null spec', async () => {
   const entries = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
-  expect(await entries.toDefaultsObject(null, true)).toEqual({a: 1, b: 0, c: true, null: true});
+  expect(await entries.toDefaultsObject(null, true)).toEqual({a: 1, b: 0, c: true});
 });
 
 test('AsIt_.toDefaultsObject: get to defaults object from entries', async () => {
   const entries = new AsIt([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
   const to = {a: 'hi', c: 4};
-  expect(await entries.toDefaultsObject(to, true)).toEqual({a: 'hi', b: 0, c: 4, null: true});
+  expect(await entries.toDefaultsObject(to, true)).toEqual({a: 'hi', b: 0, c: 4});
 });
 
 test('AsIt_.appendXorObject: tee and xor to object from entries', async () => {
@@ -239,25 +241,25 @@ test('AsIt_.last: get only last item', async () => {
   expect(await wrapped.last()).toEqual(7);
 });
 
-test('AsIt_.toSum: add nothing', async () => {
+test('AsIt_.reduce: add nothing', async () => {
   const wrapped = new AsIt([][Symbol.iterator]());
   const out = Object.create(null);
-  expect(await wrapped.toSum(out)).toEqual(null);
+  expect(await wrapped.reduce($.sum, null, out)).toEqual(null);
   expect(out).toEqual({});
 });
 
-test('AsIt_.toSum: add numbers', async () => {
+test('AsIt_.reduce: multiply numbers', async () => {
   const wrapped = new AsIt([1, 2, 3, 4, 5][Symbol.iterator]());
   const out = Object.create(null);
-  expect(await wrapped.toSum(out)).toEqual(15);
-  expect(out).toEqual({sum: 15, count: 5});
+  expect(await wrapped.reduce($.prod, null, out)).toEqual(120);
+  expect(out).toEqual({count: 5});
 });
 
-test('AsIt_.toSum: concat strings', async () => {
+test('AsIt_.reduce: concat strings', async () => {
   const wrapped = new AsIt(['a', 'b', 'c', 'hello'][Symbol.iterator]());
   const out = Object.create(null);
-  expect(await wrapped.toSum(out)).toEqual('abchello');
-  expect(out).toEqual({sum: 'abchello', count: 4});
+  expect(await wrapped.reduce(null, null, out)).toEqual('abchello');
+  expect(out).toEqual({count: 4});
 });
 
 test('AsIt_.toAsIt: duplicate asIt', async () => {

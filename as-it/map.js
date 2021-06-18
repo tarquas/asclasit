@@ -56,6 +56,11 @@ chain_(async function* mapTo(iter, to, ...funcs) {
   const l = $._mappingFuncs(funcs, false);
   if (!l) return yield* iter;
 
+  if (typeof to !== 'function') {
+    if (to instanceof Array) to = $.to_(...to);
+    else to = $.to_(to);
+  }
+
   const desc = {iter, ctx: this};
   let idx = 0;
 
@@ -75,16 +80,18 @@ chain_(async function* mapTo(iter, to, ...funcs) {
 });
 
 chain_(function mapAt(iter, at, ...funcs) {
-  if (!(at instanceof Array)) at = [at];
-  return AsIt.mapTo.gen(iter, $.to_(...at), $.in_(...at), ...funcs);
+  let ato, ain;
+  if (at instanceof Array) { ato = $.to_(...at); ain = $.in_(...at); }
+  else { ato = $.to_(at); ain = $.in_(at); }
+  return AsIt.mapTo.gen(iter, ato, ain, ...funcs);
 });
 
 chain_(function mapKeys(iter, ...funcs) {
-  return AsIt.mapAt.gen(iter, 0, ...funcs);
+  return AsIt.mapTo.gen(iter, 0, ...funcs);
 });
 
 chain_(function mapValues(iter, ...funcs) {
-  return AsIt.mapAt.gen(iter, 1, ...funcs);
+  return AsIt.mapTo.gen(iter, 1, ...funcs);
 });
 
 module.exports = AsIt;

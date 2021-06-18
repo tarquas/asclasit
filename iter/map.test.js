@@ -60,6 +60,18 @@ test('Iter_.mapTo: map to entry: echo', () => {
   expect(Array.from(wrapped)).toEqual([4, 0, 8, 3, 1]);
 });
 
+test('Iter_.mapTo: map to inwalk', () => {
+  const wrapped = new Iter(Iter.getIter([[{a: [4]}, 1], [{a: [8]}, 2], [, 4], null]));
+  wrapped.mapTo([0, 'a', 0], a => a && a[1] ? a[1] + 1 : 'def');
+  expect(Array.from(wrapped)).toEqual([[{a: [2]}, 1], [{a: [3]}, 2], [{a: [5]}, 4], null]);
+});
+
+test('Iter_.mapAt: map by field', () => {
+  const wrapped = new Iter(Iter.getIter([['a', 1], ['b', 2], ['c', 4], null]));
+  wrapped.mapAt(0, key => key ? key.toString().toUpperCase() : 'def');
+  expect(Array.from(wrapped)).toEqual([['A', 1], ['B', 2], ['C', 4], null]);
+});
+
 test('Iter_.mapAt: map by inwalk', () => {
   const wrapped = new Iter(Iter.getIter([[{a: [4]}, 1], [{a: [8]}, 2], [, 4], null]));
   wrapped.mapAt([0, 'a', 0], key => key ? key.toString() : 'def');
@@ -68,12 +80,12 @@ test('Iter_.mapAt: map by inwalk', () => {
 
 test('Iter_.mapKeys: map key in entries', () => {
   const wrapped = new Iter(Iter.getIter([[4, 1], [8, 2]]));
-  wrapped.mapKeys(key => key.toString());
+  wrapped.mapKeys(([key]) => key.toString());
   expect(Array.from(wrapped)).toEqual([['4', 1], ['8', 2]]);
 });
 
 test('Iter_.mapValues: map value in entries', () => {
   const wrapped = new Iter(Iter.getIter([[4, 1], [8, 2]]));
-  wrapped.mapValues(value => value.toString());
+  wrapped.mapValues(([, value]) => value.toString());
   expect(Array.from(wrapped)).toEqual([[4, '1'], [8, '2']]);
 });

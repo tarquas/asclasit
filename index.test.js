@@ -94,6 +94,18 @@ test('$.entries: shortcut to Iter.objectsEntries', () => {
   expect(Array.from(entries)).toEqual([['a', 1], ['b', 2], ['c', 3]]);
 });
 
+test('$.pure: set null prototype', () => {
+  const pure = $.pure({a: 1});
+  expect(pure).toEqual({a: 1});
+  expect(Object.getPrototypeOf(pure)).toBe(null);
+});
+
+test('$.pure: create null prototype', () => {
+  const pure = $.pure(null, {a: 1}, {b: 2});
+  expect(pure).toEqual({a: 1, b: 2});
+  expect(Object.getPrototypeOf(pure)).toBe(null);
+});
+
 test('$: async class', () => {
   expect(() => new $()).toThrow('not yet implemented');
 });

@@ -70,9 +70,9 @@ test('$.in_: object inwalk', () => {
 });
 
 test('$.key_: entry key by function', () => {
-  const values = [7, 3, -4, 8, 'a', null, true];
+  const values = [7, 3, -4, 8, 'a', null, ['x', 'y'], true];
   const mapped = values.map($.key_(v => v + 1));
-  expect(mapped).toEqual([[8, 7], [4, 3], [-3, -4], [9, 8], ['a1', 'a'], [1, null], [2, true]]);
+  expect(mapped).toEqual([[8, 7], [4, 3], [-3, -4], [9, 8], ['a1', 'a'], [1, null], ['x', 'y'], [2, true]]);
 });
 
 test('$.keyin_: entry key by object inwalk', () => {
@@ -85,9 +85,9 @@ test('$.inKey: first element (index 0)', () => {
 });
 
 test('$.value_: entry value by function', () => {
-  const keys = [7, 3, -4, 8, 'a', null, true];
+  const keys = [7, 3, -4, 8, 'a', null, ['a', 'b'], true];
   const mapped = keys.map($.value_(v => v + 1));
-  expect(mapped).toEqual([[7, 8], [3, 4], [-4, -3], [8, 9], ['a', 'a1'], [null, 1], [true, 2]]);
+  expect(mapped).toEqual([[7, 8], [3, 4], [-4, -3], [8, 9], ['a', 'a1'], [null, 1], ['a', 'b'], [true, 2]]);
 });
 
 test('$.valuein_: entry value by object inwalk', () => {

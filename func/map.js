@@ -96,6 +96,7 @@ func_(function to_(...keys) {
 
 func_(function key_(func) {
   return function _key(value) {
+    if (value instanceof Array) return value;
     return [func.call(this, value), value];
   }
 });
@@ -109,6 +110,7 @@ func_($.to_(), 'toKey');
 
 func_(function value_(func) {
   return function _value(value) {
+    if (value instanceof Array) return value;
     return [value, func.call(this, value)];
   }
 });

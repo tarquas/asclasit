@@ -64,7 +64,7 @@ const guessActions = {
   [types.unknown]() { throw new UnknownArgsError(); },
   [types.null]() { return $.Iter.void(); },
   [types.number](...args) { return $.Iter.range(...args); },
-  [types.object](...args) { return $.Iter.entries(...args); },
+  [types.object](...args) { return $.Iter.objectsEntries(...args); },
   [types.Iter](...args) { return $.Iter.concat(...args); },
   [types.AsIt](...args) { return $.AsIt.concat(...args); },
 };

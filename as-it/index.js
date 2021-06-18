@@ -6,6 +6,7 @@ require('./value');
 require('./map');
 require('./filter');
 require('./realign');
+require('./aggr');
 require('./promise');
 require('./feed');
 

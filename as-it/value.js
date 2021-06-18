@@ -60,14 +60,17 @@ value_(async function toXorSet(iter, xor) {
 
 chain_(async function *appendObject(iter, obj, value) {
   for await (const item of iter) {
-    if (item instanceof Array) { obj[item[0]] = item[1]; yield item; }
-    else { obj[item] = value; yield [item, value]; }
+    if (item instanceof Array) { if (obj) obj[item[0]] = item[1]; yield item; }
+    else if (typeof item === 'object') { if (obj) Object.assign(obj, item); yield* Iter.objectEntries.gen(item); }
+    else { if (obj) obj[item] = value; yield [item, value]; }
   }
 });
 
 value_(async function toObject(iter, obj, value) {
-  if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
-  else if (!obj) obj = Object.create(null);
+  if (typeof obj !== 'object') {
+    value = obj;
+    obj = Object.create(null);
+  } else if (!obj) obj = Object.create(null);
 
   await AsIt.exec(AsIt.appendObject.gen(iter, obj, value));
   return obj;
@@ -77,10 +80,17 @@ chain_(async function *defaultsObject(iter, obj, value) {
   for await (const item of iter) {
     if (item instanceof Array) {
       const key = item[0];
-      if (!(key in obj)) obj[key] = item[1];
+      if (obj && !(key in obj)) obj[key] = item[1];
       yield item;
+    } else if (typeof item === 'object') {
+      const ents = Iter.objectEntries.gen(item);
+      if (!obj) yield* ents;
+      else for (const [k, v] of ents) {
+        if (!(k in obj)) obj[k] = v;
+        yield [k, v];
+      }
     } else {
-      if (!(item in obj)) obj[item] = value;
+      if (obj && !(item in obj)) obj[item] = value;
       yield [item, value];
     }
   }
@@ -194,8 +204,8 @@ value_(async function last(iter) {
   return last;
 });
 
-value_(async function toSum(iter, def, out) {
-  if (typeof def === 'object') { out = def; def = null; }
+value_(async function reduce(iter, func, def, out) {
+  const desc = {iter, ctx: this};
   let n = 0;
 
   if (def == null) {
@@ -205,13 +215,13 @@ value_(async function toSum(iter, def, out) {
     n++;
   }
 
-  for await (const item of iter) {
-    def += item;
-    n++;
+  if (func) {
+    for await (const item of iter) { def = await func.call(this, def, item, n, desc); n++; }
+  } else {
+    for await (const item of iter) { def += item; n++; }
   }
 
   if (out) {
-    out.sum = def;
     out.count = n;
   }
 

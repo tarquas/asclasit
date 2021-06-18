@@ -1,4 +1,6 @@
 const Iter = require('./value');
+require('./object');
+const $ = require('../func');
 
 test('Iter_.appendArray: tee to array', () => {
   const wrapped = new Iter([2, 6, 7, 6][Symbol.iterator]());
@@ -87,42 +89,42 @@ test('Iter_.appendObject: tee object from entries', () => {
   const wrapped = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
   const to = Object.create(null);
   wrapped.appendObject(to, true);
-  expect(Object.fromEntries(wrapped)).toEqual({a: 1, b: 2, c: true, null: true});
-  expect(to).toEqual({a: 1, b: 2, c: true, null: true});
+  expect(Object.fromEntries(wrapped)).toEqual({a: 1, b: 2, c: true});
+  expect(to).toEqual({a: 1, b: 2, c: true});
 });
 
 test('Iter_.toObject: get object from entries', () => {
   const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
-  expect(entries.toObject(true)).toEqual({a: 1, b: 2, c: true, null: true});
+  expect(entries.toObject(true)).toEqual({a: 1, b: 2, c: true});
 });
 
-test('Iter_.toObject: get object from entries', () => {
+test('Iter_.toObject: get object from entries with default', () => {
   const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
-  expect(entries.toObject(null, true)).toEqual({a: 1, b: 2, c: true, null: true});
+  expect(entries.toObject(null, false)).toEqual({a: 1, b: 2, c: false});
 });
 
 test('Iter_.defaultsObject: tee to defaults object from entries', () => {
-  const wrapped = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
+  const wrapped = new Iter([['a', 1], ['b', 0], 'c', {b: 2}, null][Symbol.iterator]());
   const to = {b: 8, null: 6};
-  wrapped.defaultsObject(to, false);
-  expect(Object.fromEntries(wrapped)).toEqual({a: 1, b: 2, c: false, null: false});
+  wrapped.defaultsObject(null, false).defaultsObject(to);
+  expect(Object.fromEntries(wrapped)).toEqual({a: 1, b: 2, c: false});
   expect(to).toEqual({a: 1, b: 8, c: false, null: 6});
 });
 
 test('Iter_.toDefaultsObject: get to object from entries', () => {
-  const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
-  expect(entries.toDefaultsObject(true)).toEqual({a: 1, b: 0, c: true, null: true});
+  const entries = new Iter([['a', 1], {b: 0}, 'c', ['b', 2], null][Symbol.iterator]());
+  expect(entries.toDefaultsObject(true)).toEqual({a: 1, b: 0, c: true});
 });
 
 test('Iter_.toDefaultsObject: get to object from entries: explicit null spec', () => {
   const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
-  expect(entries.toDefaultsObject(null, true)).toEqual({a: 1, b: 0, c: true, null: true});
+  expect(entries.toDefaultsObject(null, true)).toEqual({a: 1, b: 0, c: true});
 });
 
 test('Iter_.toDefaultsObject: get to defaults object from entries', () => {
   const entries = new Iter([['a', 1], ['b', 0], 'c', ['b', 2], null][Symbol.iterator]());
   const to = {a: 'hi', c: 4};
-  expect(entries.toDefaultsObject(to, true)).toEqual({a: 'hi', b: 0, c: 4, null: true});
+  expect(entries.toDefaultsObject(to, true)).toEqual({a: 'hi', b: 0, c: 4});
 });
 
 test('Iter_.appendXorObject: tee and xor to object from entries', () => {
@@ -231,25 +233,25 @@ test('Iter_.last: get only last item', () => {
   expect(wrapped.last()).toEqual(7);
 });
 
-test('Iter_.toSum: add nothing', () => {
+test('Iter_.reduce: add nothing', () => {
   const wrapped = new Iter([][Symbol.iterator]());
   const out = Object.create(null);
-  expect(wrapped.toSum(out)).toEqual(null);
+  expect(wrapped.reduce($.sum, null, out)).toEqual(null);
   expect(out).toEqual({});
 });
 
-test('Iter_.toSum: add numbers', () => {
+test('Iter_.reduce: multiply numbers', () => {
   const wrapped = new Iter([1, 2, 3, 4, 5][Symbol.iterator]());
   const out = Object.create(null);
-  expect(wrapped.toSum(out)).toEqual(15);
-  expect(out).toEqual({sum: 15, count: 5});
+  expect(wrapped.reduce($.prod, null, out)).toEqual(120);
+  expect(out).toEqual({count: 5});
 });
 
-test('Iter_.toSum: concat strings', () => {
+test('Iter_.reduce: concat strings', () => {
   const wrapped = new Iter(['a', 'b', 'c', 'hello'][Symbol.iterator]());
   const out = Object.create(null);
-  expect(wrapped.toSum(out)).toEqual('abchello');
-  expect(out).toEqual({sum: 'abchello', count: 4});
+  expect(wrapped.reduce(null, null, out)).toEqual('abchello');
+  expect(out).toEqual({count: 4});
 });
 
 test('Iter_.toIter: duplicate iter', () => {

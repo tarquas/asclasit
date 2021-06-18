@@ -239,3 +239,13 @@ test('invert: swap key and value', () => {
   const inv = [{a: 1, b: 2}, ['k', 'v'], 'a', null, new Map([['K', 'V'], [1, 2]])].map($.invert);
   expect(inv).toEqual([{1: 'a', 2: 'b'}, ['v', 'k'], 'a', null, new Map([['V', 'K'], [2, 1]])]);
 });
+
+test('toString: symbol hack', () => {
+  expect($.toString()).toBe($.symbol);
+});
+
+test('[$]: purifier', () => {
+  const pure = {a: 1}[$];
+  expect(pure).toEqual({a: 1});
+  expect(Object.getPrototypeOf(pure)).toBe(null);
+});

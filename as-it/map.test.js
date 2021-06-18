@@ -66,6 +66,18 @@ test('AsIt_.mapTo: map to entry: echo', async () => {
   expect(await asItArray(wrapped)).toEqual([4, 0, 8, 3, 1]);
 });
 
+test('AsIt_.mapTo: map to inwalk', async () => {
+  const wrapped = new AsIt(AsIt.getIter([[{a: [4]}, 1], [{a: [8]}, 2], [, 4], null]));
+  wrapped.mapTo([0, 'a', 0], a => a && a[1] ? a[1] + 1 : 'def');
+  expect(await asItArray(wrapped)).toEqual([[{a: [2]}, 1], [{a: [3]}, 2], [{a: [5]}, 4], null]);
+});
+
+test('AsIt_.mapAt: map by field', async () => {
+  const wrapped = new AsIt(AsIt.getIter([['a', 1], ['b', 2], ['c', 4], null]));
+  wrapped.mapAt(0, async key => key ? key.toString().toUpperCase() : 'def');
+  expect(await asItArray(wrapped)).toEqual([['A', 1], ['B', 2], ['C', 4], null]);
+});
+
 test('AsIt_.mapAt: map by inwalk', async () => {
   const wrapped = new AsIt(AsIt.getIter([[{a: [4]}, 1], [{a: [8]}, 2], [, 4], null]));
   wrapped.mapAt([0, 'a', 0], async key => key ? key.toString() : 'def');
@@ -74,12 +86,12 @@ test('AsIt_.mapAt: map by inwalk', async () => {
 
 test('AsIt_.mapKeys: map key in entries', async () => {
   const wrapped = new AsIt(AsIt.getIter([[4, 1], [8, 2]]));
-  wrapped.mapKeys(key => key.toString());
+  wrapped.mapKeys(([key]) => key.toString());
   expect(await asItArray(wrapped)).toEqual([['4', 1], ['8', 2]]);
 });
 
 test('AsIt_.mapValues: map value in entries', async () => {
   const wrapped = new AsIt(AsIt.getIter([[4, 1], [8, 2]]));
-  wrapped.mapValues(value => value.toString());
+  wrapped.mapValues(([, value]) => value.toString());
   expect(await asItArray(wrapped)).toEqual([[4, '1'], [8, '2']]);
 });

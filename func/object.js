@@ -95,4 +95,15 @@ func_(function invert(obj) {
   return res;
 });
 
+const symbol = Symbol('$');
+$.symbol = symbol;
+
+func_(function toString() {
+  return symbol;
+});
+
+Object.defineProperty(Object.prototype, symbol, {
+  get() { return Object.setPrototypeOf(this, null); }
+});
+
 module.exports = $;
