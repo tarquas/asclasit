@@ -51,7 +51,7 @@ Iter.chain_(function* skip(iter, ...funcs) {
   yield* Iter.filter.gen.call(this, iter, ...funcs, $.not);
 });
 
-Iter.chain_(function* take(iter, ...funcs) {
+function* takeWhile(iter, double, ...funcs) {
   const l = $._predicateFuncs(funcs);
   if (!l) return yield* iter;
 
@@ -63,19 +63,39 @@ Iter.chain_(function* take(iter, ...funcs) {
     for (const item of iter) {
       if (!func.call(this, item, item, desc)) break;
       yield item;
+      if (double && !func.call(this, item, item, desc)) break;
     }
   } else {
     for (const item of iter) {
       let v = item;
-
       for (const func of funcs) {
         v = func.call(this, v, item, desc);
       }
-
       if (!v) break;
+
       yield item;
+
+      if (!double) continue;
+
+      v = item;
+      for (const func of funcs) {
+        v = func.call(this, v, item, desc);
+      }
+      if (!v) break;
     }
   }
+}
+
+Iter.chain_(function* take(iter, ...funcs) {
+  yield* takeWhile.call(this, iter, false, ...funcs);
+});
+
+Iter.chain_(function* dtake(iter, ...funcs) {
+  yield* takeWhile.call(this, iter, true, ...funcs);
+});
+
+Iter.chain_(function* stop(iter, ...funcs) {
+  yield* takeWhile.call(this, iter, true, ...funcs, $.not);
 });
 
 module.exports = Iter;

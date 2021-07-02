@@ -1,4 +1,5 @@
 const Iter = require('./filter');
+const $ = require('../func');
 
 test('Iter_.filter: true filter', () => {
   const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
@@ -57,4 +58,16 @@ test('Iter_.take: multi arg', () => {
   const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.take(o => o && o.x, v => !v);
   expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null, NaN]);
+});
+
+test('Iter_.dtake: one arg', () => {
+  const wrapped = new Iter(Iter.getIter([1, 2, 3, 4, 5, 4, 3, 2, 1]));
+  wrapped.dtake($.times_(7));
+  expect(Array.from(wrapped)).toEqual([1, 2, 3, 4]);
+});
+
+test('Iter_.stop: multi arg', () => {
+  const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.stop($.times_(7), $.not);
+  expect(Array.from(wrapped)).toEqual(['a', '', 1, 0]);
 });

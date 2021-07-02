@@ -51,7 +51,7 @@ AsIt.chain_(async function* skip(iter, ...funcs) {
   yield* AsIt.filter.gen.call(this, iter, ...funcs, $.not);
 });
 
-AsIt.chain_(async function* take(iter, ...funcs) {
+async function* takeWhile(iter, double, ...funcs) {
   const l = $._predicateFuncs(funcs);
   if (!l) return yield* iter;
 
@@ -63,19 +63,39 @@ AsIt.chain_(async function* take(iter, ...funcs) {
     for await (const item of iter) {
       if (!await func.call(this, item, item, desc)) break;
       yield item;
+      if (double && !await func.call(this, item, item, desc)) break;
     }
   } else {
     for await (const item of iter) {
       let v = item;
-
       for await (const func of funcs) {
         v = await func.call(this, v, item, desc);
       }
-
       if (!v) break;
+
       yield item;
+
+      if (!double) continue;
+
+      v = item;
+      for await (const func of funcs) {
+        v = await func.call(this, v, item, desc);
+      }
+      if (!v) break;
     }
   }
+}
+
+AsIt.chain_(async function* take(iter, ...funcs) {
+  yield* takeWhile.call(this, iter, false, ...funcs);
+});
+
+AsIt.chain_(async function* dtake(iter, ...funcs) {
+  yield* takeWhile.call(this, iter, true, ...funcs);
+});
+
+AsIt.chain_(async function* stop(iter, ...funcs) {
+  yield* takeWhile.call(this, iter, true, ...funcs, $.not);
 });
 
 module.exports = AsIt;

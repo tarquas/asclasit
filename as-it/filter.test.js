@@ -1,4 +1,5 @@
 const AsIt = require('./filter');
+const $ = require('../func');
 
 async function asItArray(iter) {
   const res = [];
@@ -63,4 +64,16 @@ test('AsIt_.take: multi arg', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.take(o => o && o.x, v => !v);
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN]);
+});
+
+test('AsIt_.dtake: one arg', async () => {
+  const wrapped = new AsIt(AsIt.getIter([1, 2, 3, 4, 5, 4, 3, 2, 1]));
+  wrapped.dtake($.times_(7));
+  expect(await asItArray(wrapped)).toEqual([1, 2, 3, 4]);
+});
+
+test('AsIt_.stop: multi arg', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.stop($.times_(7), $.not);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0]);
 });
