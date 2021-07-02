@@ -1,4 +1,8 @@
+const cr = require('crypto');
+
 const Iter = require('./value');
+require('./make');
+require('./map');
 require('./object');
 const $ = require('../func');
 
@@ -236,7 +240,7 @@ test('Iter_.last: get only last item', () => {
 test('Iter_.reduce: add nothing', () => {
   const wrapped = new Iter([][Symbol.iterator]());
   const out = Object.create(null);
-  expect(wrapped.reduce($.sum, null, out)).toEqual(null);
+  expect(wrapped.reduce($.sum, null, out)).toEqual(undefined);
   expect(out).toEqual({});
 });
 
@@ -244,14 +248,14 @@ test('Iter_.reduce: multiply numbers', () => {
   const wrapped = new Iter([1, 2, 3, 4, 5][Symbol.iterator]());
   const out = Object.create(null);
   expect(wrapped.reduce($.prod, null, out)).toEqual(120);
-  expect(out).toEqual({count: 5});
+  expect(out).toEqual({count: 5, result: 120});
 });
 
 test('Iter_.reduce: concat strings', () => {
   const wrapped = new Iter(['a', 'b', 'c', 'hello'][Symbol.iterator]());
   const out = Object.create(null);
   expect(wrapped.reduce(null, null, out)).toEqual('abchello');
-  expect(out).toEqual({count: 4});
+  expect(out).toEqual({count: 4, result: 'abchello'});
 });
 
 test('Iter_.toIter: duplicate iter', () => {
@@ -260,6 +264,37 @@ test('Iter_.toIter: duplicate iter', () => {
   expect(to !== from).toBe(true);
   expect(to instanceof Iter).toBe(true);
   expect(Array.from(to)).toEqual([1, 2, 3]);
+});
+
+class Quoter extends Iter {
+  *$_quote_(iter) {
+    for (const item of iter) {
+      yield `"${item}"`;
+    }
+  }
+
+  *$_tick_(iter) {
+    for (const item of iter) {
+      yield `'${item}'`;
+    }
+  }
+
+  $_spaced(iter) {
+    const m = Iter.from(iter).maps(v => [' ', v]);
+    m.ffwd(1);
+    return m.reduce();
+  }
+}
+
+test('Iter_.to: cast to subclass', () => {
+  const from = new Iter([1, 2, 3][Symbol.iterator]());
+  const to = from.to(Quoter);
+  expect(to !== from).toBe(true);
+  expect(to instanceof Iter).toBe(true);
+  expect(to instanceof Quoter).toBe(true);
+  expect(to.$).toBe(Quoter);
+  expect(Array.from(to.quote().tick())).toEqual([`'"1"'`, `'"2"'`, `'"3"'`]);
+  expect(Quoter.from([1, 2, 3]).spaced()).toBe('1 2 3');
 });
 
 test('$.feedback: return', () => {
@@ -272,4 +307,30 @@ test('$.feedback: throw', () => {
   const fb = new Iter(function* () { yield 1; yield 2; } ()).feedback();
   expect(fb.next()).toEqual({value: 1, done: false});
   expect(() => fb.throw(new Error('break'))).toThrow('break');
+});
+
+async function asItArray(iter) {
+  const res = [];
+  for await (const item of iter) res.push(item);
+  return res;
+}
+
+test('Iter_.stream: pipe to duplex stream', async () => {
+  const stream = Iter.range(5).map($.string).stream(cr.createCipheriv('bf-cbc', '1234', '12345678'));
+  const crypted = Iter.from(await asItArray(stream)).map(v => v.toString('hex')).reduce();
+  expect(stream.constructor.name).toBe('Cipheriv');
+  expect(crypted).toBe('68422a8db6cd9371');
+});
+
+test('Iter_.streams: partially pipe to duplex stream', async () => {
+  const cipher = cr.createCipheriv('bf-cbc', '1234', '12345678');
+  const out = Object.create(null);
+  const stream = Iter.range(5).map($.string).streams(cipher, out);
+  await $.finishedRead(out.stream);
+  const stream2 = Iter.range(5).map($.string).stream().pipe(cipher);
+  await $.finishedWrite(stream2);
+  const crypted = Iter.from(await asItArray(stream2)).map($.string_('hex')).reduce();
+  expect(crypted).toBe('7f04e1fa59d4c6b6e13fd4493d9d6c8a');
+  expect(stream).toBe(cipher);
+  expect(stream2).toBe(cipher);
 });

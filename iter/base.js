@@ -1,11 +1,29 @@
+const Design = require('../design');
+
 const wrapped = Symbol('$.Iter.wrapped');
 
 const Iter = function(iter) {
+  if (!iter || !iter[Symbol.iterator]) throw new TypeError('not iterable');
   this[wrapped] = iter;
-  this.cur = 0;
+
+  Object.defineProperties(this, {
+    cur: { value: 0, writable: true },
+    $: {value: this.constructor, configurable: true},
+    $_: {value: this.constructor.prototype, configurable: true},
+  });
+
+  this[wrapped] = iter;
+  Design.$itApply.call(this.constructor);
 };
 
+Iter.wrapped = wrapped;
+
 const {prototype: Iter_} = Iter;
+
+Object.defineProperties(Iter, {
+  $: { get() { return this; } },
+  $_: { get() { return this.prototype; } },
+});
 
 Iter.getGen = function getGen(itrb, strOk, ...args) {
   if (typeof itrb === 'function') return itrb.bind(this, ...args);
@@ -29,7 +47,7 @@ Iter.getIter = function getIter(itrb, strOk, ...args) {
 
 Iter.makeWrap = (gen) => function makeWrap(...args) {
   const iter = gen.call(this, ...args);
-  const wrapped = new Iter(iter);
+  const wrapped = new this.$(iter);
   return wrapped;
 };
 
@@ -47,47 +65,52 @@ Iter.valueWrap = (func) => function valueWrap(...args) {
   return res;
 };
 
-const make_ = function make_(gen, name) {
-  const wrap = Iter.makeWrap(gen);
+Iter.make_ = Iter_.make_ = function make_(gen, name) {
+  const wrap = this.$.makeWrap(gen);
   wrap.gen = gen;
-  Iter[name || gen.name] = wrap;
+  Object.defineProperty(this.$, name || gen.name, {value: wrap});
+  return this;
 };
 
-const chain_ = function chain_(gen, name) {
+Iter.chain_ = Iter_.chain_ = function chain_(gen, name) {
   const n = name || gen.name;
-  const wrap = Iter.makeWrap(gen);
+  const wrap = this.$.makeWrap(gen);
   wrap.gen = gen;
-  Iter[n] = wrap;
-  Iter_[n] = Iter.chainWrap(gen);
+  Object.defineProperty(this.$, n, {value: wrap});
+  this.$_[n] = this.$.chainWrap(gen);
+  return this;
 };
 
-const value_ = function value_(func, name) {
+Iter.value_ = Iter_.value_ = function value_(func, name) {
   const n = name || func.name;
-  Iter[n] = func;
-  Iter_[n] = Iter.valueWrap(func);
+  Object.defineProperty(this.$, n, {value: func});
+  this.$_[n] = this.$.valueWrap(func);
+  return this;
 };
+
+Iter_.$applied = true;
 
 Iter_[Symbol.iterator] = function iterator() {
   const cur = this[wrapped];
   return cur;
 };
 
-value_((iter, err) => { if (iter.throw) return iter.throw(err); }, 'throw');
-value_((iter, value) => { if (iter.return) return iter.return(value); }, 'return');
+Iter.value_((iter, err) => { if (iter.throw) return iter.throw(err); }, 'throw');
+Iter.value_((iter, value) => { if (iter.return) return iter.return(value); }, 'return');
 
-value_(function next(iter, value) {
+Iter.value_(function next(iter, value) {
   const item = iter.next(value);
-  if (this.constructor !== Iter) return item;
+  if (!(this instanceof Iter)) return item;
   if (item.done) this.cur = null; else this.cur++;
   return item;
 });
 
-value_(function read(iter, value) {
-  const item = Iter.next.call(this, iter, value);
+Iter.value_(function read(iter, value) {
+  const item = this.$.next.call(this, iter, value);
   return item.value;
 });
 
-value_(function ffwd(iter, count, value) {
+Iter.value_(function ffwd(iter, count, value) {
   let last;
   let n = count;
 
@@ -96,7 +119,7 @@ value_(function ffwd(iter, count, value) {
     if (last.done) break;
   }
 
-  if (this.constructor === Iter) {
+  if (this instanceof Iter) {
     if (last.done) this.cur = null;
     else this.cur += count;
   }
@@ -104,6 +127,17 @@ value_(function ffwd(iter, count, value) {
   return last;
 });
 
-Object.assign(Iter, {wrapped, make_, chain_, value_});
+Iter.chain_(function* save(iter, id) {
+  for (const item of iter) {
+    this[id] = item;
+    yield item;
+  }
+});
+
+Iter.chain_(function* load(iter, id) {
+  for (const item of iter) {
+    yield this[id];
+  }
+});
 
 module.exports = Iter;

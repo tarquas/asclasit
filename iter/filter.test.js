@@ -18,6 +18,17 @@ test('Iter_.filter: several functionals', () => {
   expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null, NaN, [5, 1], false, 0n]);
 });
 
+test('Iter_.call, AsIt_.debug: call external function', () => {
+  const res = [];
+  const seq = [];
+  const wrapped = new Iter(Iter.getIter([1, 2, 3]));
+  wrapped.call(x => x + 1, (x, y) => seq.push(x, y));
+  wrapped.debug(x => res.push(x));
+  expect(Array.from(wrapped)).toEqual([1, 2, 3]);
+  expect(res).toEqual([1, 2, 3]);
+  expect(seq).toEqual([2, 1, 3, 2, 4, 3]);
+});
+
 test('Iter_.skip: shortcut for not filter', () => {
   const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.skip(o => o && o.x);

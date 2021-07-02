@@ -1,18 +1,70 @@
 const AsIt = require('./promise');
+const Iter = require('../iter');
 require('./make');
 const $ = require('../func');
 
-test('AsIt_.all: Promise.all: array', async () => {
-  const all = await AsIt.all([1, 2, 3], async v => v + 1);
-  expect(all).toEqual([2, 3, 4]);
+test('AsIt_.race: race promises', async () => {
+  const src = {
+    a: $.delayMsec(60).then(() => 'A'),
+    b: $.delayMsec(40).then(() => 'B'),
+    c: $.delayMsec(20).then(() => 'C'),
+  };
+
+  const top = await AsIt.from(src).race().toArray();
+
+  expect(top).toEqual([
+    ['c', 'C'],
+    ['b', 'B'],
+    ['a', 'A'],
+  ]);
 });
 
-test('AsIt_.all: Promise.all: object', async () => {
-  const all = await AsIt.all([1, ['a', 2], 3], async v => v + 1);
-  expect(all).toEqual({0: 2, a: 3, 2: 4});
+test('AsIt_.race: race chunked', async () => {
+  const src = {
+    a: $.delayMsec(60).then(() => 'A'),
+    b: $.delayMsec(50).then(() => 'B'),
+    c: $.delayMsec(40).then(() => 'C'),
+    x: 'X',
+    d: $.delayMsec(30).then(() => 'D'),
+    y: Promise.resolve('Y'),
+    e: $.delayMsec(20).then(() => 'E'),
+  };
+
+  const top = await AsIt.from(src).concat('0').concat({1: $.reject('1')}).race(3).toArray();
+
+  expect(top).toEqual([
+    ['c', 'C'],
+    ['x', 'X'],
+    ['d', 'D'],
+    ['y', 'Y'],
+    ['e', 'E'],
+    ['0', '0'],
+    ['1', new $.RaceError('1')],
+    ['b', 'B'],
+    ['a', 'A'],
+  ]);
 });
 
-test('AsIt_.all: Promise.all: as-is', async () => {
-  const all = await AsIt.from([1, 2, 3]).map(async v => v + 1).all();
-  expect(all).toEqual([2, 3, 4]);
+test('AsIt_.race: twice race', async () => {
+  const src = {
+    a: () => $.delayMsec(60).then(() => 'A'),
+    b: $.delayMsec(40).then(() => $.reject('B')),
+    c: $.delayMsec(20).then(() => 'C'),
+  };
+
+  const top = await AsIt.from(src).race().toArray();
+
+  expect(top).toEqual([
+    ['c', 'C'],
+    ['b', new $.RaceError('B')],
+    ['a', 'A'],
+  ]);
+
+  const top2 = await AsIt.from(src).race().toArray();
+
+  expect(top2).toEqual([
+    ['b', new $.RaceError('B')],
+    ['c', 'C'],
+    ['a', 'A'],
+  ]);
 });

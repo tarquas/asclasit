@@ -123,3 +123,32 @@ test('$.lag: late in 1 iteration', () => {
   const late = [1, 2, 3, 4, 5].map($.lag);
   expect(late).toEqual([, 1, 2, 3, 4]);
 });
+
+test('$.save_, $.load_: save/load value', () => {
+  const to = {};
+  expect($.save_('a').call(to, 5)).toBe(5);
+  expect(to).toEqual({a: 5});
+  expect($.load_('a').call(to, 1)).toBe(5);
+});
+
+test('$.counter_: range counter: infinite', () => {
+  const ct = $.counter_(5);
+  expect(ct()).toBe(5);
+  expect(ct()).toBe(6);
+});
+
+test('$.counter_: range counter: forward', () => {
+  const ct = $.counter_(0, 3);
+  expect(ct()).toBe(0);
+  expect(ct()).toBe(1);
+  expect(ct()).toBe(2);
+  expect(ct()).toBe(null);
+});
+
+test('$.counter_: range counter: backward', () => {
+  const ct = $.counter_(3, 0);
+  expect(ct()).toBe(3);
+  expect(ct()).toBe(2);
+  expect(ct()).toBe(1);
+  expect(ct()).toBe(null);
+});

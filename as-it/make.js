@@ -1,9 +1,8 @@
 const AsIt = require('./object');
-const {chain_, value_} = AsIt;
 
-chain_(async function* voidIter() { }, 'void');
+AsIt.chain_(async function* voidIter() { }, 'void');
 
-chain_(async function* from(arg, strOk) {
+AsIt.chain_(async function* from(arg, strOk) {
   const iter = AsIt.getIter(arg, strOk);
 
   if (iter) yield* iter;
@@ -11,15 +10,15 @@ chain_(async function* from(arg, strOk) {
   else yield arg;
 });
 
-chain_(async function* concat(...args) {
+AsIt.chain_(async function* concat(...args) {
   for await (const arg of args) {
     yield* AsIt.from.gen(arg);
   }
 });
 
-chain_(AsIt.concat.gen, 'append');
+AsIt.chain_(AsIt.concat.gen, 'append');
 
-chain_(async function* prepend(...args) {
+AsIt.chain_(async function* prepend(...args) {
   for (let i = args.length - 1; i >= 0; i--) {
     yield* AsIt.from.gen(args[i]);
   }
@@ -78,7 +77,7 @@ async function* _fork(iter, limit, i) {
   }
 }
 
-value_(function fork(iter, limit) {
+AsIt.value_(function fork(iter, limit) {
   if (iter.forkSrc) iter = iter.forkSrc;
 
   let o = iter.forkObj;

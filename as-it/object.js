@@ -1,22 +1,21 @@
 const Iter = require('../iter');
 const AsIt = require('./base');
-const {make_} = AsIt;
 
-make_(Iter.objectKeys.gen);
+AsIt.make_(Iter.objectKeys.gen);
 
-make_(Iter.objectEntries.gen);
+AsIt.make_(Iter.objectEntries.gen);
 
-make_(Iter.objectValues.gen);
+AsIt.make_(Iter.objectValues.gen);
 
-make_(Iter.objectsKeys.gen);
+AsIt.make_(Iter.objectsKeys.gen);
 
-make_(Iter.objectsEntries.gen);
+AsIt.make_(Iter.objectsEntries.gen);
 
-make_(Iter.objectsValues.gen);
+AsIt.make_(Iter.objectsValues.gen);
 
 AsIt.builtinEntries = Iter.builtinEntries;
 
-make_(async function* keys(...objs) {
+AsIt.make_(async function* keys(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = await obj.call(this);
     if (obj == null) continue;
@@ -43,7 +42,7 @@ make_(async function* keys(...objs) {
   }
 });
 
-make_(async function* entries(...objs) {
+AsIt.make_(async function* entries(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = await obj.call(this);
     if (obj == null) continue;
@@ -70,7 +69,7 @@ make_(async function* entries(...objs) {
   }
 });
 
-make_(async function* values(...objs) {
+AsIt.make_(async function* values(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = await obj.call(this);
     if (obj == null) continue;

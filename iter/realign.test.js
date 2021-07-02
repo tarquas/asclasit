@@ -34,7 +34,7 @@ test('Iter_.chunk: by condition limited to 2', () => {
 
 test('Iter_.chunk: by conditions, limited to 2', () => {
   const wrapped = new Iter(Iter.getIter(toChunk));
-  wrapped.chunk(2, item => item & 2, v => !v);
+  wrapped.chunk(2, item => item & 2, (item, desc, v) => !v);
   expect(Array.from(wrapped)).toEqual([[1, 2], [3], [4], [5, 6], [7], [8], [9]]);
 });
 

@@ -1,5 +1,10 @@
 const Iter = require('./base');
 
+test('new Iter: bad argument', () => {
+  expect(() => new Iter()).toThrow('not iterable');
+  expect(() => new Iter({})).toThrow('not iterable');
+});
+
 test('new Iter: wrap to iterator', () => {
   const wrapped = new Iter([][Symbol.iterator]());
   expect(typeof wrapped[Iter.wrapped].next).toBe('function');

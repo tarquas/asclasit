@@ -2,8 +2,6 @@ const AsIt = require('./make');
 const Iter = require('../iter');
 const $ = require('../func');
 
-const {chain_} = AsIt;
-
 class Feed {
   active = true;
   buf = [];
@@ -130,7 +128,7 @@ async function prefetchWorker(iter, funcs) {
   }
 }
 
-chain_(async function* prefetch(iter, ...funcs) {
+AsIt.chain_(async function* prefetch(iter, ...funcs) {
   if (!funcs.length) return yield* iter;
 
   const feed = $.feed();

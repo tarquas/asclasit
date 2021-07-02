@@ -244,8 +244,8 @@ test('toString: symbol hack', () => {
   expect($.toString()).toBe($.symbol);
 });
 
-test('[$]: purifier', () => {
+/*test('[$]: purifier', () => {
   const pure = {a: 1}[$];
   expect(pure).toEqual({a: 1});
   expect(Object.getPrototypeOf(pure)).toBe(null);
-});
+});*/

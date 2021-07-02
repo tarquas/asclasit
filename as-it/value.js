@@ -1,49 +1,48 @@
+const {Readable} = require('stream');
 const AsIt = require('./base');
 const Iter = require('../iter');
 const $ = require('../func');
 
-const {value_, chain_} = AsIt;
-
-chain_(async function *appendArray(iter, to) {
+AsIt.chain_(async function *appendArray(iter, to) {
   for await (const item of iter) {
     to.push(item);
     yield item;
   }
 });
 
-value_(async function toArray(iter, to) {
+AsIt.value_(async function toArray(iter, to) {
   if (!to) to = [];
   await AsIt.exec(AsIt.appendArray.gen(iter, to));
   return to;
 });
 
-chain_(async function *prependArray(iter, to) {
+AsIt.chain_(async function *prependArray(iter, to) {
   for await (const item of iter) {
     to.unshift(item);
     yield item;
   }
 });
 
-value_(async function toPrependArray(iter, to) {
+AsIt.value_(async function toPrependArray(iter, to) {
   if (!to) to = [];
   await AsIt.exec(AsIt.prependArray.gen(iter, to));
   return to;
 });
 
-chain_(async function *appendSet(iter, to) {
+AsIt.chain_(async function *appendSet(iter, to) {
   for await (const item of iter) {
     to.add(item);
     yield item;
   }
 });
 
-value_(async function toSet(iter, to) {
+AsIt.value_(async function toSet(iter, to) {
   if (!to) to = new Set();
   await AsIt.exec(AsIt.appendSet.gen(iter, to));
   return to;
 });
 
-chain_(async function *appendXorSet(iter, xor) {
+AsIt.chain_(async function *appendXorSet(iter, xor) {
   if (!xor) xor = new Set();
 
   for await (const key of iter) {
@@ -52,13 +51,13 @@ chain_(async function *appendXorSet(iter, xor) {
   }
 });
 
-value_(async function toXorSet(iter, xor) {
+AsIt.value_(async function toXorSet(iter, xor) {
   if (!xor) xor = new Set();
   await AsIt.exec(AsIt.appendXorSet.gen(iter, xor));
   return xor;
 });
 
-chain_(async function *appendObject(iter, obj, value) {
+AsIt.chain_(async function *appendObject(iter, obj, value) {
   for await (const item of iter) {
     if (item instanceof Array) { if (obj) obj[item[0]] = item[1]; yield item; }
     else if (typeof item === 'object') { if (obj) Object.assign(obj, item); yield* Iter.objectEntries.gen(item); }
@@ -66,7 +65,7 @@ chain_(async function *appendObject(iter, obj, value) {
   }
 });
 
-value_(async function toObject(iter, obj, value) {
+AsIt.value_(async function toObject(iter, obj, value) {
   if (typeof obj !== 'object') {
     value = obj;
     obj = Object.create(null);
@@ -76,7 +75,7 @@ value_(async function toObject(iter, obj, value) {
   return obj;
 });
 
-chain_(async function *defaultsObject(iter, obj, value) {
+AsIt.chain_(async function *defaultsObject(iter, obj, value) {
   for await (const item of iter) {
     if (item instanceof Array) {
       const key = item[0];
@@ -96,7 +95,7 @@ chain_(async function *defaultsObject(iter, obj, value) {
   }
 });
 
-value_(async function toDefaultsObject(iter, obj, value) {
+AsIt.value_(async function toDefaultsObject(iter, obj, value) {
   if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
   else if (!obj) obj = Object.create(null);
 
@@ -104,7 +103,7 @@ value_(async function toDefaultsObject(iter, obj, value) {
   return obj;
 });
 
-chain_(async function *appendXorObject(iter, obj, value) {
+AsIt.chain_(async function *appendXorObject(iter, obj, value) {
   if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
   else if (!obj) obj = Object.create(null);
 
@@ -120,7 +119,7 @@ chain_(async function *appendXorObject(iter, obj, value) {
   }
 });
 
-value_(async function toXorObject(iter, obj, value) {
+AsIt.value_(async function toXorObject(iter, obj, value) {
   if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
   else if (!obj) obj = Object.create(null);
 
@@ -128,21 +127,21 @@ value_(async function toXorObject(iter, obj, value) {
   return obj;
 });
 
-chain_(async function *appendMap(iter, map, value) {
+AsIt.chain_(async function *appendMap(iter, map, value) {
   for await (const item of iter) {
     if (item instanceof Array) { map.set(item[0], item[1]); yield item; }
     else { map.set(item, value); yield [item, value]; }
   }
 });
 
-value_(async function toMap(iter, map, value) {
+AsIt.value_(async function toMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   await AsIt.exec(AsIt.appendMap.gen(iter, map, value));
   return map;
 });
 
-chain_(async function *defaultsMap(iter, map, value) {
+AsIt.chain_(async function *defaultsMap(iter, map, value) {
   for await (const item of iter) {
     if (item instanceof Array) {
       const key = item[0];
@@ -155,14 +154,14 @@ chain_(async function *defaultsMap(iter, map, value) {
   }
 });
 
-value_(async function toDefaultsMap(iter, map, value) {
+AsIt.value_(async function toDefaultsMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   await AsIt.exec(AsIt.defaultsMap.gen(iter, map, value));
   return map;
 });
 
-chain_(async function *appendXorMap(iter, map, value) {
+AsIt.chain_(async function *appendXorMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   for await (const item of iter) {
@@ -177,34 +176,34 @@ chain_(async function *appendXorMap(iter, map, value) {
   }
 });
 
-value_(async function toXorMap(iter, map, value) {
+AsIt.value_(async function toXorMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   await AsIt.exec(AsIt.appendXorMap.gen(iter, map, value));
   return map;
 });
 
-value_(async function count(iter) {
+AsIt.value_(async function count(iter) {
   let c = 0;
   for await (const item of iter) c++;
   return c;
 });
 
-value_(async function exec(iter) {
+AsIt.value_(async function exec(iter) {
   for await (const item of iter);
 });
 
-value_(async function first(iter) {
+AsIt.value_(async function first(iter) {
   for await (const item of iter) return item;
 });
 
-value_(async function last(iter) {
+AsIt.value_(async function last(iter) {
   let last;
   for await (const item of iter) last = item;
   return last;
 });
 
-value_(async function reduce(iter, func, def, out) {
+AsIt.chain_(async function* reduceTo(iter, func, def, out) {
   const desc = {iter, ctx: this};
   let n = 0;
 
@@ -216,27 +215,59 @@ value_(async function reduce(iter, func, def, out) {
   }
 
   if (func) {
-    for await (const item of iter) { def = await func.call(this, def, item, n, desc); n++; }
+    for await (const item of iter) { def = await func.call(this, def, item, n, desc); n++; yield item; }
   } else {
-    for await (const item of iter) { def += item; n++; }
+    for await (const item of iter) { def += item; n++; yield item; }
   }
 
   if (out) {
     out.count = n;
+    out.result = def;
   }
-
-  return def;
 });
 
-value_(function toAsIt(it) {
+AsIt.value_(async function reduce(iter, func, def, out = {}) {
+  const it = AsIt.reduceTo.gen(iter, func, def, out);
+  for await (const item of it);
+  return out.result;
+});
+
+AsIt.value_(function stream(iter, to, opts = {}) {
+  const read = Readable.from(iter);
+  if (to) read.pipe(to, opts);
+  opts.stream = read;
+  return to || read;
+});
+
+AsIt.value_(function streams(iter, to, opts = {}) {
+  if (!('end' in opts)) opts.end = false;
+  return AsIt.stream(iter, to, opts);
+});
+
+AsIt.chain_(function pipe(iter, to, opts) {
+  const stream = AsIt.stream.call(this, iter, to, opts);
+  return stream;
+});
+
+AsIt.chain_(function pipes(iter, to, opts) {
+  const stream = AsIt.streams.call(this, iter, to, opts);
+  return stream;
+});
+
+AsIt.value_(function toAsIt(it) {
   return new AsIt(it);
 });
 
-value_(async function toIter(iter) {
+AsIt.value_(async function toIter(iter) {
   const arr = await AsIt.toArray(iter);
   return Iter.from(arr);
 });
 
-value_($.feedback);
+AsIt.value_($.feedback);
+
+AsIt.value_(function to(iter, Class, ...args) {
+  const inst = new Class(iter, ...args);
+  return inst;
+});
 
 module.exports = AsIt;

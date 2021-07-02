@@ -1,3 +1,6 @@
+const util = require('util');
+const streams = require('stream/promises');
+
 const $ = function $(...args) {
   if (this !== global && this instanceof $) throw new NotImplementedError();
   if (!args.length) return Object.create(null);
@@ -6,6 +9,9 @@ const $ = function $(...args) {
   const res = guessActions[type](...args);
   return res;
 };
+
+const symbol = Symbol('$');
+$.symbol = symbol;
 
 const func_ = function func_(func, name) {
   $[name || func.name] = func;
@@ -45,7 +51,7 @@ function guessType(args) {
       type = types.AsIt;
     } else if (arg[Symbol.iterator]) {
       type = types.Iter;
-    } else if (typeof arg === 'object') {
+    } else if (typeof arg === 'object' || typeof arg === 'function') {
       type = types.object;
     } else if (typeof arg === 'number') {
       type = types.number;

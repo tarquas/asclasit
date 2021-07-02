@@ -89,3 +89,29 @@ test('Iter_.mapValues: map value in entries', () => {
   wrapped.mapValues(([, value]) => value.toString());
   expect(Array.from(wrapped)).toEqual([[4, '1'], [8, '2']]);
 });
+
+test('Iter_.mapKey: map key in entries', () => {
+  const wrapped = new Iter(Iter.getIter([[4, 1], [8, 2]]));
+  wrapped.mapKey((key) => key.toString());
+  expect(Array.from(wrapped)).toEqual([['4', 1], ['8', 2]]);
+});
+
+test('Iter_.mapValue: map value in entries', () => {
+  const wrapped = new Iter(Iter.getIter([[4, 1], [8, 2]]));
+  wrapped.mapValue((value) => value.toString());
+  expect(Array.from(wrapped)).toEqual([[4, '1'], [8, '2']]);
+});
+
+test('Iter_.gen: apply generator', () => {
+  const wrapped = new Iter(Iter.getIter([1, 2, 3]));
+  wrapped.gen(function* (iter, arg) { for (const item of iter) yield `${arg}${item}`; }, 'z');
+  expect(Array.from(wrapped)).toEqual(['z1', 'z2', 'z3']);
+});
+
+test('Iter_.save, Iter_.load: save/load items', () => {
+  const wrap = new Iter(Iter.getIter([1, 2, 3]));
+  const strs = [];
+  const sqrs = Array.from(wrap.save(1).map(v => v.toString()).map(v => strs.push(v)).load(1).map(v => v*v));
+  expect(strs).toEqual(['1', '2', '3']);
+  expect(sqrs).toEqual([1, 4, 9]);
+});

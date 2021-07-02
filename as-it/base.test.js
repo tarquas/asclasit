@@ -8,6 +8,11 @@ async function asItArray(iter) {
   return res;
 }
 
+test('new AsIt: bad argument', () => {
+  expect(() => new AsIt()).toThrow('not iterable');
+  expect(() => new AsIt({})).toThrow('not iterable');
+});
+
 test('new AsIt: wrap to iterator', () => {
   const wrapped = new AsIt(asIt([]));
   expect(typeof wrapped[AsIt.wrapped].next).toBe('function');

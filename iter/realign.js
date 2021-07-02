@@ -1,8 +1,6 @@
 const Iter = require('./map');
 const $ = require('../func');
 
-const {chain_} = Iter;
-
 function* chunkByCount(iter, count) {
   let buf = [];
 
@@ -20,18 +18,18 @@ function* chunkByCountFunc(iter, count, ...funcs) {
   const desc = {buf: [], idx: 0, iter, ctx: this};
 
   for (const item of iter) {
-    let newChunk = item;
+    let newChunk = 0;
 
     for (const func of funcs) {
-      if (func) newChunk = func.call(this, newChunk, item, desc);
+      if (func) newChunk = func.call(this, item, desc, newChunk);
     }
 
-    if (newChunk && desc.buf.length) {
+    if (newChunk > 0 && desc.buf.length) {
       yield desc.buf;
       desc.buf = [];
     }
 
-    if (desc.buf.push(item) === count) {
+    if (desc.buf.push(item) === count || newChunk < 0) {
       yield desc.buf;
       desc.buf = [];
     }
@@ -42,13 +40,13 @@ function* chunkByCountFunc(iter, count, ...funcs) {
   if (desc.buf.length) yield desc.buf;
 }
 
-chain_(function* chunk(iter, count, func, ...funcs) {
+Iter.chain_(function* chunk(iter, count, func, ...funcs) {
   if (typeof count === 'function') yield* chunkByCountFunc(iter, 0, count, func, ...funcs);
   else if (typeof func === 'function') yield* chunkByCountFunc(iter, count, func, ...funcs);
   else yield* chunkByCount(iter, count);
 });
 
-chain_(function* flatten(iter, depth) {
+Iter.chain_(function* flatten(iter, depth) {
   if (depth == null) { depth = 1; }
   else if (depth === 0) { yield* iter; return; }
 
@@ -73,7 +71,7 @@ function countIter(sum, i2) {
   return sum;
 }
 
-chain_(function* zipt(...iters) {
+Iter.chain_(function* zipt(...iters) {
   const l = iters.length;
   if (!l) return;
 
@@ -133,7 +131,7 @@ chain_(function* zipt(...iters) {
   }
 });
 
-chain_(function* cut(iter, n) {
+Iter.chain_(function* cut(iter, n) {
   if (!n || !Number.isInteger(n)) return yield* iter;
   let cutted;
 
@@ -148,7 +146,7 @@ chain_(function* cut(iter, n) {
   yield* cutted;
 });
 
-chain_(function* zip(...iters) {
+Iter.chain_(function* zip(...iters) {
   const l = iters.length;
   if (!l) return;
 
@@ -172,7 +170,7 @@ function *partialDim(pfx, dim1, dim2, ...dims) {
   }
 };
 
-chain_(function *dim(...dims) {
+Iter.chain_(function *dim(...dims) {
   const pfx = [];
   yield* partialDim.call(this, pfx, ...dims);
 });

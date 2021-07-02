@@ -1,9 +1,7 @@
 const AsIt = require('./base');
 const $ = require('../func/map');
 
-const {chain_} = AsIt;
-
-chain_(async function* map(iter, ...funcs) {
+AsIt.chain_(async function* map(iter, ...funcs) {
   const l = $._mappingFuncs(funcs, false);
   if (!l) return yield* iter;
 
@@ -31,7 +29,7 @@ chain_(async function* map(iter, ...funcs) {
   }
 });
 
-chain_(async function* maps(iter, ...funcs) {
+AsIt.chain_(async function* maps(iter, ...funcs) {
   const l = $._mappingFuncs(funcs, true);
   if (!l) return yield* iter;
 
@@ -52,7 +50,7 @@ chain_(async function* maps(iter, ...funcs) {
   }
 });
 
-chain_(async function* mapTo(iter, to, ...funcs) {
+AsIt.chain_(async function* mapTo(iter, to, ...funcs) {
   const l = $._mappingFuncs(funcs, false);
   if (!l) return yield* iter;
 
@@ -79,19 +77,31 @@ chain_(async function* mapTo(iter, to, ...funcs) {
   }
 });
 
-chain_(function mapAt(iter, at, ...funcs) {
+AsIt.chain_(function mapAt(iter, at, ...funcs) {
   let ato, ain;
   if (at instanceof Array) { ato = $.to_(...at); ain = $.in_(...at); }
   else { ato = $.to_(at); ain = $.in_(at); }
   return AsIt.mapTo.gen(iter, ato, ain, ...funcs);
 });
 
-chain_(function mapKeys(iter, ...funcs) {
+AsIt.chain_(function mapKey(iter, ...funcs) {
+  return AsIt.mapAt.gen(iter, 0, ...funcs);
+});
+
+AsIt.chain_(function mapValue(iter, ...funcs) {
+  return AsIt.mapAt.gen(iter, 1, ...funcs);
+});
+
+AsIt.chain_(function mapKeys(iter, ...funcs) {
   return AsIt.mapTo.gen(iter, 0, ...funcs);
 });
 
-chain_(function mapValues(iter, ...funcs) {
+AsIt.chain_(function mapValues(iter, ...funcs) {
   return AsIt.mapTo.gen(iter, 1, ...funcs);
+});
+
+AsIt.chain_(async function* gen(iter, func, ...args) {
+  yield* func.call(this, iter, ...args);
 });
 
 module.exports = AsIt;

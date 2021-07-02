@@ -1,9 +1,7 @@
 const Iter = require('./base');
 const $ = require('../func/map');
 
-const {chain_} = Iter;
-
-chain_(function* map(iter, ...funcs) {
+Iter.chain_(function* map(iter, ...funcs) {
   const l = $._mappingFuncs(funcs, false);
   if (!l) return yield* iter;
 
@@ -31,7 +29,7 @@ chain_(function* map(iter, ...funcs) {
   }
 });
 
-chain_(function* maps(iter, ...funcs) {
+Iter.chain_(function* maps(iter, ...funcs) {
   const l = $._mappingFuncs(funcs, true);
   if (!l) return yield* iter;
 
@@ -52,7 +50,7 @@ chain_(function* maps(iter, ...funcs) {
   }
 });
 
-chain_(function* mapTo(iter, to, ...funcs) {
+Iter.chain_(function* mapTo(iter, to, ...funcs) {
   const l = $._mappingFuncs(funcs, false);
   if (!l) return yield* iter;
 
@@ -79,19 +77,31 @@ chain_(function* mapTo(iter, to, ...funcs) {
   }
 });
 
-chain_(function mapAt(iter, at, ...funcs) {
+Iter.chain_(function mapAt(iter, at, ...funcs) {
   let ato, ain;
   if (at instanceof Array) { ato = $.to_(...at); ain = $.in_(...at); }
   else { ato = $.to_(at); ain = $.in_(at); }
   return Iter.mapTo.gen(iter, ato, ain, ...funcs);
 });
 
-chain_(function mapKeys(iter, ...funcs) {
+Iter.chain_(function mapKey(iter, ...funcs) {
+  return Iter.mapAt.gen(iter, 0, ...funcs);
+});
+
+Iter.chain_(function mapValue(iter, ...funcs) {
+  return Iter.mapAt.gen(iter, 1, ...funcs);
+});
+
+Iter.chain_(function mapKeys(iter, ...funcs) {
   return Iter.mapTo.gen(iter, 0, ...funcs);
 });
 
-chain_(function mapValues(iter, ...funcs) {
+Iter.chain_(function mapValues(iter, ...funcs) {
   return Iter.mapTo.gen(iter, 1, ...funcs);
+});
+
+Iter.chain_(function* gen(iter, func, ...args) {
+  yield* func.call(this, iter, ...args);
 });
 
 module.exports = Iter;

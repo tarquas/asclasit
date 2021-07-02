@@ -7,6 +7,5 @@ require('./map');
 require('./filter');
 require('./realign');
 require('./aggr');
-require('./promise');
 
 module.exports = Iter;

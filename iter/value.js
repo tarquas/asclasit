@@ -1,16 +1,15 @@
+const {Readable} = require('stream');
 const Iter = require('./base');
 const $ = require('../func');
 
-const {value_, chain_} = Iter;
-
-chain_(function *appendArray(iter, to) {
+Iter.chain_(function *appendArray(iter, to) {
   for (const item of iter) {
     to.push(item);
     yield item;
   }
 });
 
-value_(function toArray(iter, to) {
+Iter.value_(function toArray(iter, to) {
   if (to) {
     for (const item of iter) to.push(item);
     return to;
@@ -19,27 +18,27 @@ value_(function toArray(iter, to) {
   return Array.from(iter);
 });
 
-chain_(function *prependArray(iter, to) {
+Iter.chain_(function *prependArray(iter, to) {
   for (const item of iter) {
     to.unshift(item);
     yield item;
   }
 });
 
-value_(function toPrependArray(iter, to) {
+Iter.value_(function toPrependArray(iter, to) {
   if (!to) to = [];
   Iter.exec(Iter.prependArray.gen(iter, to));
   return to;
 });
 
-chain_(function *appendSet(iter, to) {
+Iter.chain_(function *appendSet(iter, to) {
   for (const item of iter) {
     to.add(item);
     yield item;
   }
 });
 
-value_(function toSet(iter, to) {
+Iter.value_(function toSet(iter, to) {
   if (to) {
     for (const item of iter) to.add(item);
     return to;
@@ -48,7 +47,7 @@ value_(function toSet(iter, to) {
   return new Set(iter);
 });
 
-chain_(function *appendXorSet(iter, xor) {
+Iter.chain_(function *appendXorSet(iter, xor) {
   if (!xor) xor = new Set();
 
   for (const key of iter) {
@@ -57,13 +56,13 @@ chain_(function *appendXorSet(iter, xor) {
   }
 });
 
-value_(function toXorSet(iter, xor) {
+Iter.value_(function toXorSet(iter, xor) {
   if (!xor) xor = new Set();
   Iter.exec(Iter.appendXorSet.gen(iter, xor));
   return xor;
 });
 
-chain_(function *appendObject(iter, obj, value) {
+Iter.chain_(function *appendObject(iter, obj, value) {
   for (const item of iter) {
     if (item instanceof Array) { if (obj) obj[item[0]] = item[1]; yield item; }
     else if (typeof item === 'object') { if (obj) Object.assign(obj, item); yield* Iter.objectEntries.gen(item); }
@@ -71,7 +70,7 @@ chain_(function *appendObject(iter, obj, value) {
   }
 });
 
-value_(function toObject(iter, obj, value) {
+Iter.value_(function toObject(iter, obj, value) {
   if (typeof obj !== 'object') {
     value = obj; obj = Object.create(null);
   } else if (!obj) obj = Object.create(null);
@@ -80,7 +79,7 @@ value_(function toObject(iter, obj, value) {
   return obj;
 });
 
-chain_(function *appendXorObject(iter, obj, value) {
+Iter.chain_(function *appendXorObject(iter, obj, value) {
   if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
   else if (!obj) obj = Object.create(null);
 
@@ -96,7 +95,7 @@ chain_(function *appendXorObject(iter, obj, value) {
   }
 });
 
-value_(function toXorObject(iter, obj, value) {
+Iter.value_(function toXorObject(iter, obj, value) {
   if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
   else if (!obj) obj = Object.create(null);
 
@@ -104,7 +103,7 @@ value_(function toXorObject(iter, obj, value) {
   return obj;
 });
 
-chain_(function *defaultsObject(iter, obj, value) {
+Iter.chain_(function *defaultsObject(iter, obj, value) {
   for (const item of iter) {
     if (item instanceof Array) {
       const key = item[0];
@@ -124,7 +123,7 @@ chain_(function *defaultsObject(iter, obj, value) {
   }
 });
 
-value_(function toDefaultsObject(iter, obj, value) {
+Iter.value_(function toDefaultsObject(iter, obj, value) {
   if (typeof obj !== 'object') { value = obj; obj = Object.create(null); }
   else if (!obj) obj = Object.create(null);
 
@@ -132,21 +131,21 @@ value_(function toDefaultsObject(iter, obj, value) {
   return obj;
 });
 
-chain_(function *appendMap(iter, map, value) {
+Iter.chain_(function *appendMap(iter, map, value) {
   for (const item of iter) {
     if (item instanceof Array) { map.set(item[0], item[1]); yield item; }
     else { map.set(item, value); yield [item, value]; }
   }
 });
 
-value_(function toMap(iter, map, value) {
+Iter.value_(function toMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   Iter.exec(Iter.appendMap.gen(iter, map, value));
   return map;
 });
 
-chain_(function *defaultsMap(iter, map, value) {
+Iter.chain_(function *defaultsMap(iter, map, value) {
   for (const item of iter) {
     if (item instanceof Array) {
       const key = item[0];
@@ -159,14 +158,14 @@ chain_(function *defaultsMap(iter, map, value) {
   }
 });
 
-value_(function toDefaultsMap(iter, map, value) {
+Iter.value_(function toDefaultsMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   Iter.exec(Iter.defaultsMap.gen(iter, map, value));
   return map;
 });
 
-chain_(function *appendXorMap(iter, map, value) {
+Iter.chain_(function *appendXorMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   for (const item of iter) {
@@ -181,34 +180,34 @@ chain_(function *appendXorMap(iter, map, value) {
   }
 });
 
-value_(function toXorMap(iter, map, value) {
+Iter.value_(function toXorMap(iter, map, value) {
   if (!(map instanceof Map)) { value = map; map = new Map(); }
 
   Iter.exec(Iter.appendXorMap.gen(iter, map, value));
   return map;
 });
 
-value_(function count(iter) {
+Iter.value_(function count(iter) {
   let c = 0;
   for (const item of iter) c++;
   return c;
 });
 
-value_(function exec(iter) {
+Iter.value_(function exec(iter) {
   for (const item of iter);
 });
 
-value_(function first(iter) {
+Iter.value_(function first(iter) {
   for (const item of iter) return item;
 });
 
-value_(function last(iter) {
+Iter.value_(function last(iter) {
   let last;
   for (const item of iter) last = item;
   return last;
 });
 
-value_(function reduce(iter, func, def, out) {
+Iter.chain_(function* reduceTo(iter, func, def, out) {
   const desc = {iter, ctx: this};
   let n = 0;
 
@@ -220,22 +219,44 @@ value_(function reduce(iter, func, def, out) {
   }
 
   if (func) {
-    for (const item of iter) { def = func.call(this, def, item, n, desc); n++; }
+    for (const item of iter) { def = func.call(this, def, item, n, desc); n++; yield item; }
   } else {
-    for (const item of iter) { def += item; n++; }
+    for (const item of iter) { def += item; n++; yield item; }
   }
 
   if (out) {
     out.count = n;
+    out.result = def;
   }
-
-  return def;
 });
 
-value_(function toIter(it) {
+Iter.value_(function reduce(iter, func, def, out = {}) {
+  const it = Iter.reduceTo.gen(iter, func, def, out);
+  for (const item of it);
+  return out.result;
+});
+
+Iter.value_(function stream(iter, to, opts = {}) {
+  const read = Readable.from(iter);
+  if (to) read.pipe(to, opts);
+  opts.stream = read;
+  return to || read;
+});
+
+Iter.value_(function streams(iter, to, opts = {}) {
+  if (!('end' in opts)) opts.end = false;
+  return Iter.stream.call(this, iter, to, opts);
+});
+
+Iter.value_(function toIter(it) {
   return new Iter(it);
 });
 
-value_($.feedback);
+Iter.value_($.feedback);
+
+Iter.value_(function to(iter, Class, ...args) {
+  const inst = new Class(iter, ...args);
+  return inst;
+});
 
 module.exports = Iter;

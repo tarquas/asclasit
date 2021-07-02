@@ -3,12 +3,10 @@ require('./object');
 require('./value');
 const $ = require('../func');
 
-const {value_} = Iter;
-
 $.sortMin = 0;
 $.sortMax = 2**32 - 1;
 
-value_(function toRecentGroup(iter, limit = Infinity, opts = {}) {
+Iter.value_(function toRecentGroup(iter, limit = Infinity, opts = {}) {
   if (typeof limit === 'object') { opts = limit; limit = Infinity; }
   let {to, group, skip, stopOnDropped, stopOnCond} = opts;
   if (!to) to = Object.create(null);
@@ -49,7 +47,7 @@ value_(function toRecentGroup(iter, limit = Infinity, opts = {}) {
   return to;
 });
 
-value_(function toOrderGroup(iter, limit = Infinity, opts = {}) {
+Iter.value_(function toOrderGroup(iter, limit = Infinity, opts = {}) {
   if (typeof limit === 'object') { opts = limit; limit = Infinity; }
   let {to, group, skip, stopOnDropped, stopOnCond} = opts;
   if (!to) to = Object.create(null);

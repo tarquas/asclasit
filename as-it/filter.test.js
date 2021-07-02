@@ -24,6 +24,17 @@ test('AsIt_.filter: several functionals', async () => {
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, [5, 1], false, 0n]);
 });
 
+test('AsIt_.call, AsIt_.debug: call external function', async () => {
+  const res = [];
+  const seq = [];
+  const wrapped = new AsIt(AsIt.getIter([1, 2, 3]));
+  wrapped.call(async x => x + 1, (x, y) => seq.push(x, y));
+  wrapped.debug(async x => res.push(x));
+  expect(await asItArray(wrapped)).toEqual([1, 2, 3]);
+  expect(res).toEqual([1, 2, 3]);
+  expect(seq).toEqual([2, 1, 3, 2, 4, 3]);
+});
+
 test('AsIt_.skip: shortcut for not filter', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.skip(o => o && o.x);

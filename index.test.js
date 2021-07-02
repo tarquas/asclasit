@@ -1,4 +1,6 @@
 const $ = require('./index');
+const cr = require('crypto');
+const cra = $.promisify(cr, ['createCipheriv']);
 
 async function asItArray(iter) {
   const res = [];
@@ -79,6 +81,20 @@ test('Iter_.toAsIt: convert from iter to asIt', async () => {
   expect(await asItArray(asIt)).toEqual([1, 2, 3]);
 });
 
+test('Iter_.pipe: pipe to duplex stream, continue with AsIt', async () => {
+  const crypted = await $(5).map($.string).pipe(cr.createCipheriv('bf-cbc', '1234', '12345678')).map($.string_('hex')).reduce();
+  expect(crypted).toBe('68422a8db6cd9371');
+});
+
+test('Iter_.pipes: partially pipe to duplex stream, continue with AsIt', async () => {
+  const cipher = cr.createCipheriv('bf-cbc', '1234', '12345678');
+  const out = $();
+  $(5).map($.string).pipes(cipher, out);
+  await $.finished(out.stream);
+  const crypted = await $(5).map($.string).pipe(cipher).map($.string_('hex')).reduce();
+  expect(crypted).toBe('7f04e1fa59d4c6b6e13fd4493d9d6c8a');
+});
+
 test('$.keys: shortcut to Iter.objectsKeys', () => {
   const keys = $.keys({a: 1, b: 2}, {c: 3}, null);
   expect(Array.from(keys)).toEqual(['a', 'b', 'c']);
@@ -104,6 +120,56 @@ test('$.pure: create null prototype', () => {
   const pure = $.pure(null, {a: 1}, {b: 2});
   expect(pure).toEqual({a: 1, b: 2});
   expect(Object.getPrototypeOf(pure)).toBe(null);
+});
+
+test('$.promisify: callback to promise', async () => {
+  const obj = { id: 'obj', method (arg1, arg2, cb) { cb(null, `${this.id} ${arg1} ${arg2} ok`); } };
+  expect(await $.promisify(obj, obj.method, 'a')(1)).toBe('obj a 1 ok');
+  expect(await $.promisify(obj, 'method', 'b')(2)).toBe('obj b 2 ok');
+  expect(await $.promisify(obj.method).call({id: 'ctx'}, 'c', 3)).toBe('ctx c 3 ok');
+  expect(await $.promisify(obj, ['method']).method.call({id: 'ctx'}, 'd', 4)).toBe('ctx d 4 ok');
+  expect(await $.promisify(obj, ['method'], false, 'e').method(5)).toBe('undefined e 5 ok');
+  expect(await $.promisify(obj, ['method'], true, 'f').method(6)).toBe('obj f 6 ok');
+  expect(await $.promisify(obj, ['method'], {id: 'ctx'}, 'g').method(7)).toBe('ctx g 7 ok');
+  expect(await $.promisify.call(obj, 'method', {id: 'ctx'}, 'h')(8)).toBe('ctx h 8 ok');
+  expect(await $.promisify.call(obj, null, obj.method, 'i')(9)).toBe('obj i 9 ok');
+  expect(await $.promisify.call(obj, null, 'method', 'j')(10)).toBe('obj j 10 ok');
+  expect(await $.promisify.call(obj, null, ['method'], true, 'k').method(11)).toBe('obj k 11 ok');
+
+  try {
+    await $.promisify({});
+    expect(true).toBe(false);
+  } catch (err) {
+    expect(err.constructor).toBe($.NotImplementedError);
+  }
+});
+
+test('$.finished: stream.finished', async () => {
+  const stream = $([1, 2, 3]).stream();
+  stream.resume();
+  await $.finished(stream);
+});
+
+test('Iter_.race: ', async () => {
+  const msec = $.AsIt.from([60, 40, 20]);
+
+  const arr = await msec.Iter.from(await msec.toArray()).map(async (msec) => {
+    await $.delayMsec(msec);
+    return msec;
+  }).concat(async () => { $.delayMsec(30); return 30; }).race(2).map($.inValue).toArray();
+
+  expect(arr).toEqual([40, 20, 30, 60]);
+});
+
+test('Iter_.map: _mappingFuncs', () => {
+  const m = new Map([[1, 'a'], [2, 'b'], [3, 'c']]);
+  const s = new Set([1, 3]);
+  const o = {1: 'a', 2: 'b', 3: 'c'};
+  expect($([1, 2, 3]).map(true).toArray()).toEqual([true, true, true]);
+  expect($([1, 2, 3]).map(m).toArray()).toEqual(['a', 'b', 'c']);
+  expect($([1, 2, 3]).map(s).toArray()).toEqual([true, false, true]);
+  expect($([1, 2, 3]).map(o).toArray()).toEqual(['a', 'b', 'c']);
+  expect($([1, 2, 3]).map(2, '1').toArray()).toEqual([1, 2, 3]);
 });
 
 test('$: async class', () => {

@@ -1,9 +1,8 @@
 const Iter = require('./object');
-const {make_, chain_, value_} = Iter;
 
-chain_(function* voidIter() { }, 'void');
+Iter.chain_(function* voidIter() { }, 'void');
 
-chain_(function* from(arg, strOk) {
+Iter.chain_(function* from(arg, strOk) {
   const iter = Iter.getIter(arg, strOk);
 
   if (iter) yield* iter;
@@ -11,23 +10,24 @@ chain_(function* from(arg, strOk) {
   else yield arg;
 });
 
-chain_(function* concat(...args) {
+Iter.chain_(function* concat(...args) {
   for (const arg of args) {
     yield* Iter.from.gen(arg);
   }
 });
 
-chain_(Iter.concat.gen, 'append');
+Iter.chain_(Iter.concat.gen, 'append');
 
-chain_(function* prepend(...args) {
+Iter.chain_(function* prepend(...args) {
   for (let i = args.length - 1; i >= 0; i--) {
     yield* Iter.from.gen(args[i]);
   }
 });
 
-make_(function* range(from, to, step) {
+Iter.make_(function* range(from, to, step) {
   if (to == null) { to = from; from = 0; }
-  if (!step) step = from > to ? -1 : 1;
+  if (!step) step = 1;
+  if ((from < to) ^ (step > 0)) step = -step;
 
   if (step > 0) {
     for (let v = from; v < to; v += step) yield v;
@@ -82,7 +82,7 @@ function* _fork(iter, limit, i) {
   }
 }
 
-value_(function fork(iter, limit) {
+Iter.value_(function fork(iter, limit) {
   if (iter.forkSrc) iter = iter.forkSrc;
 
   let o = iter.forkObj;

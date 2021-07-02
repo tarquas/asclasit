@@ -1,8 +1,6 @@
 const AsIt = require('./map');
 const $ = require('../func');
 
-const {chain_} = AsIt;
-
 async function* chunkByCount(iter, count) {
   let buf = [];
 
@@ -21,32 +19,27 @@ async function* chunkByCountFunc(iter, msec, count, ...funcs) {
   let desc = {buf: [], idx: 0, snap, iter, ctx: this};
 
   for await (const item of iter) {
-    let newChunk = chunkByCountFunc;
+    let newChunk = 0;
 
     for (const func of funcs) {
-      if (!func) continue;
-      if (newChunk === chunkByCountFunc) newChunk = await func.call(this, item, item, desc);
-      else newChunk = await func.call(this, newChunk, item, desc);
+      if (func) newChunk = await func.call(this, item, desc, newChunk);
     }
 
-    if (newChunk === chunkByCountFunc) newChunk = false;
-
-    if (msec && !newChunk && $.upMsec(desc.snap) > msec) {
-      newChunk = true;
+    if (msec && newChunk <= 0 && $.upMsec(desc.snap) > msec) {
+      newChunk = 1;
     }
 
-    if (newChunk && desc.buf.length) {
+    if (newChunk > 0 && desc.buf.length) {
       yield desc.buf;
       desc.buf = [];
     }
 
     if (msec) {
-      if (newChunk) desc.snap = snap;
+      if (newChunk > 0) desc.snap = snap;
       snap = $.upMsec();
     }
 
-    if (desc.buf.push(item) === count) {
-      newChunk = true;
+    if (desc.buf.push(item) === count || newChunk < 0) {
       yield desc.buf;
       desc.buf = [];
       desc.snap = snap;
@@ -58,18 +51,18 @@ async function* chunkByCountFunc(iter, msec, count, ...funcs) {
   if (desc.buf.length) yield desc.buf;
 }
 
-chain_(async function* chunk(iter, count, func, ...funcs) {
+AsIt.chain_(async function* chunk(iter, count, func, ...funcs) {
   if (typeof count === 'function') yield* chunkByCountFunc(iter, 0, 0, count, func, ...funcs);
   else if (typeof func === 'function') yield* chunkByCountFunc(iter, 0, count, func, ...funcs);
   else yield* chunkByCount(iter, count);
 });
 
-chain_(async function* chunkMsec(iter, msec, count, func, ...funcs) {
+AsIt.chain_(async function* chunkMsec(iter, msec, count, func, ...funcs) {
   if (typeof count === 'function') yield* chunkByCountFunc(iter, msec, 0, count, func, ...funcs);
   yield* chunkByCountFunc(iter, msec, count, func, ...funcs);
 });
 
-chain_(async function* flatten(iter, depth) {
+AsIt.chain_(async function* flatten(iter, depth) {
   if (depth == null) { depth = 1; }
   else if (depth === 0) { yield* iter; return; }
 
@@ -94,7 +87,7 @@ function countIter(sum, i2) {
   return sum;
 }
 
-chain_(async function* cut(iter, n) {
+AsIt.chain_(async function* cut(iter, n) {
   if (!n || !Number.isInteger(n)) return yield* iter;
   let cutted;
 
@@ -109,7 +102,7 @@ chain_(async function* cut(iter, n) {
   yield* cutted;
 });
 
-chain_(async function* zipt(...iters) {
+AsIt.chain_(async function* zipt(...iters) {
   const l = iters.length;
   if (!l) return;
 
@@ -169,7 +162,7 @@ chain_(async function* zipt(...iters) {
   }
 });
 
-chain_(async function* zip(...iters) {
+AsIt.chain_(async function* zip(...iters) {
   const l = iters.length;
   if (!l) return;
 
@@ -193,7 +186,7 @@ async function *partialDim(pfx, dim1, dim2, ...dims) {
   }
 };
 
-chain_(async function *dim(...dims) {
+AsIt.chain_(async function *dim(...dims) {
   const pfx = [];
   yield* partialDim.call(this, pfx, ...dims);
 });

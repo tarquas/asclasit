@@ -1,9 +1,7 @@
 const Iter = require('./base');
 const $ = require('../func');
 
-const {chain_} = Iter;
-
-chain_(function* filter(iter, ...funcs) {
+Iter.chain_(function* filter(iter, ...funcs) {
   const l = $._predicateFuncs(funcs);
 
   if (!l) {
@@ -35,11 +33,25 @@ chain_(function* filter(iter, ...funcs) {
   }
 });
 
-chain_(function* skip(iter, ...funcs) {
+Iter.chain_(function* call(iter, ...funcs) {
+  yield* Iter.filter.gen.call(this, iter, ...funcs, true);
+});
+
+Iter.chain_(function* debug(iter, ...funcs) {
+  $._predicateFuncs(funcs);
+
+  funcs = funcs.map((func) => function (item) {
+    return func.call(this, item);
+  });
+
+  yield* Iter.filter.gen.call(this, iter, ...funcs, true);
+});
+
+Iter.chain_(function* skip(iter, ...funcs) {
   yield* Iter.filter.gen.call(this, iter, ...funcs, $.not);
 });
 
-chain_(function* take(iter, ...funcs) {
+Iter.chain_(function* take(iter, ...funcs) {
   const l = $._predicateFuncs(funcs);
   if (!l) return yield* iter;
 

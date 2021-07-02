@@ -1,9 +1,7 @@
 const AsIt = require('./base');
 const $ = require('../func');
 
-const {chain_} = AsIt;
-
-chain_(async function* filter(iter, ...funcs) {
+AsIt.chain_(async function* filter(iter, ...funcs) {
   const l = $._predicateFuncs(funcs);
 
   if (!l) {
@@ -35,11 +33,25 @@ chain_(async function* filter(iter, ...funcs) {
   }
 });
 
-chain_(async function* skip(iter, ...funcs) {
+AsIt.chain_(async function* call(iter, ...funcs) {
+  yield* AsIt.filter.gen.call(this, iter, ...funcs, true);
+});
+
+AsIt.chain_(async function* debug(iter, ...funcs) {
+  $._predicateFuncs(funcs);
+
+  funcs = funcs.map((func) => function (item) {
+    return func.call(this, item);
+  });
+
+  yield* AsIt.filter.gen.call(this, iter, ...funcs, true);
+});
+
+AsIt.chain_(async function* skip(iter, ...funcs) {
   yield* AsIt.filter.gen.call(this, iter, ...funcs, $.not);
 });
 
-chain_(async function* take(iter, ...funcs) {
+AsIt.chain_(async function* take(iter, ...funcs) {
   const l = $._predicateFuncs(funcs);
   if (!l) return yield* iter;
 

@@ -92,6 +92,32 @@ test('AsIt_.mapKeys: map key in entries', async () => {
 
 test('AsIt_.mapValues: map value in entries', async () => {
   const wrapped = new AsIt(AsIt.getIter([[4, 1], [8, 2]]));
-  wrapped.mapValues(([, value]) => value.toString());
+  wrapped.mapValues(async ([, value]) => value.toString());
   expect(await asItArray(wrapped)).toEqual([[4, '1'], [8, '2']]);
+});
+
+test('AsIt_.mapKey: map key in entries', async () => {
+  const wrapped = new AsIt(AsIt.getIter([[4, 1], [8, 2]]));
+  wrapped.mapKey(async (key) => key.toString());
+  expect(await asItArray(wrapped)).toEqual([['4', 1], ['8', 2]]);
+});
+
+test('AsIt_.mapValue: map value in entries', async () => {
+  const wrapped = new AsIt(AsIt.getIter([[4, 1], [8, 2]]));
+  wrapped.mapValue((value) => value.toString());
+  expect(await asItArray(wrapped)).toEqual([[4, '1'], [8, '2']]);
+});
+
+test('AsIt_.gen: apply generator', async () => {
+  const wrapped = new AsIt(AsIt.getIter([1, 2, 3]));
+  wrapped.gen(async function* (iter, arg) { for await (const item of iter) yield `${arg}${item}`; }, 'z');
+  expect(await asItArray(wrapped)).toEqual(['z1', 'z2', 'z3']);
+});
+
+test('AsIt_.save, AsIt_.load: save/load items', async () => {
+  const wrap = new AsIt(AsIt.getIter([1, 2, 3]));
+  const strs = [];
+  const sqrs = await asItArray(wrap.save(1).map(v => v.toString()).map(v => strs.push(v)).load(1).map(v => v*v));
+  expect(strs).toEqual(['1', '2', '3']);
+  expect(sqrs).toEqual([1, 4, 9]);
 });

@@ -1,7 +1,6 @@
 const Iter = require('./base');
-const {make_} = Iter;
 
-make_(function* objectKeys(obj) {
+Iter.make_(function* objectKeys(obj) {
   if (obj == null) return;
 
   for (const key in obj) if (Object.hasOwnProperty.call(obj, key)) {
@@ -9,7 +8,7 @@ make_(function* objectKeys(obj) {
   }
 });
 
-make_(function* objectEntries(obj) {
+Iter.make_(function* objectEntries(obj) {
   if (obj == null) return;
 
   for (const key in obj) if (Object.hasOwnProperty.call(obj, key)) {
@@ -17,25 +16,25 @@ make_(function* objectEntries(obj) {
   }
 });
 
-make_(function* objectValues(obj) {
+Iter.make_(function* objectValues(obj) {
   for (const [, value] of Iter.objectEntries(obj)) yield value;
 });
 
-make_(function* objectsKeys(...objs) {
+Iter.make_(function* objectsKeys(...objs) {
   for (const obj of objs) yield* Iter.objectKeys.gen(obj);
 });
 
-make_(function* objectsEntries(...objs) {
+Iter.make_(function* objectsEntries(...objs) {
   for (const obj of objs) yield* Iter.objectEntries.gen(obj);
 });
 
-make_(function* objectsValues(...objs) {
+Iter.make_(function* objectsValues(...objs) {
   for (const obj of objs) yield* Iter.objectValues.gen(obj);
 });
 
 Iter.builtinEntries = new Set([Array, Set, Map]);
 
-make_(function* keys(...objs) {
+Iter.make_(function* keys(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = obj.call(this);
     if (obj == null) continue;
@@ -62,7 +61,7 @@ make_(function* keys(...objs) {
   }
 });
 
-make_(function* entries(...objs) {
+Iter.make_(function* entries(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = obj.call(this);
     if (obj == null) continue;
@@ -89,7 +88,7 @@ make_(function* entries(...objs) {
   }
 });
 
-make_(function* values(...objs) {
+Iter.make_(function* values(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = obj.call(this);
     if (obj == null) continue;

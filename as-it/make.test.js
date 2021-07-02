@@ -60,11 +60,11 @@ test('AsIt_.fork: 3*3 forks', async () => {
   const src = AsIt.from([1, 2, 3]);
   const fork = () => src.fork();
 
-  await Iter.range(9).map(fork).chunk(3).map(async (f) => {
+  await Promise.all(Iter.range(9).map(fork).chunk(3).map(async (f) => {
     for (const s of f) {
       expect(await asItArray(s)).toEqual([1, 2, 3]);
     }
-  }).all();
+  }).toArray());
 
   expect(await asItArray(src)).toEqual([]);
 });

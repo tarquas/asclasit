@@ -45,6 +45,8 @@ func_(function timeoutSec(sec, err) {
   return $.timeoutMsec(sec * 1000, err);
 });
 
+func_($.timeoutMsec, 'timeout');
+
 func_(function upNsec(prev) {
   const snap = process.hrtime.bigint();
   if (!prev) return snap;

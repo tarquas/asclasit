@@ -1,6 +1,11 @@
+const cr = require('crypto');
+
 const AsIt = require('./value');
 const Iter = require('../iter');
 const $ = require('../func');
+
+require('./make');
+require('./map');
 
 async function asItArray(iter) {
   const res = [];
@@ -244,7 +249,7 @@ test('AsIt_.last: get only last item', async () => {
 test('AsIt_.reduce: add nothing', async () => {
   const wrapped = new AsIt([][Symbol.iterator]());
   const out = Object.create(null);
-  expect(await wrapped.reduce($.sum, null, out)).toEqual(null);
+  expect(await wrapped.reduce($.sum, null, out)).toEqual(undefined);
   expect(out).toEqual({});
 });
 
@@ -252,14 +257,14 @@ test('AsIt_.reduce: multiply numbers', async () => {
   const wrapped = new AsIt([1, 2, 3, 4, 5][Symbol.iterator]());
   const out = Object.create(null);
   expect(await wrapped.reduce($.prod, null, out)).toEqual(120);
-  expect(out).toEqual({count: 5});
+  expect(out).toEqual({count: 5, result: 120});
 });
 
 test('AsIt_.reduce: concat strings', async () => {
   const wrapped = new AsIt(['a', 'b', 'c', 'hello'][Symbol.iterator]());
   const out = Object.create(null);
   expect(await wrapped.reduce(null, null, out)).toEqual('abchello');
-  expect(out).toEqual({count: 4});
+  expect(out).toEqual({count: 4, result: 'abchello'});
 });
 
 test('AsIt_.toAsIt: duplicate asIt', async () => {
@@ -277,6 +282,35 @@ test('AsIt_.toIter: convert from asIt to iter', async () => {
   expect(Array.from(iter)).toEqual([1, 2, 3]);
 });
 
+class Quoter extends AsIt {
+  async *$empty_() {
+    yield '""';
+  }
+
+  async *$_quote_(iter) {
+    for await (const item of iter) {
+      yield `"${item}"`;
+    }
+  }
+
+  async *$_tick_(iter) {
+    for await (const item of iter) {
+      yield `'${item}'`;
+    }
+  }
+}
+
+test('AsIt_.to: cast to subclass', async () => {
+  const from = new AsIt([1, 2, 3][Symbol.iterator]());
+  const to = from.to(Quoter);
+  expect(to !== from).toBe(true);
+  expect(to instanceof AsIt).toBe(true);
+  expect(to instanceof Quoter).toBe(true);
+  expect(to.$).toBe(Quoter);
+  expect(await asItArray(Quoter.empty())).toEqual(['""']);
+  expect(await asItArray(to.quote().tick())).toEqual([`'"1"'`, `'"2"'`, `'"3"'`]);
+});
+
 test('AsIt_.feedback: ', async () => {
   const iter = new AsIt(async function* () { let a = 1; while (a & 1) a = yield a + 1; } ());
 
@@ -286,4 +320,39 @@ test('AsIt_.feedback: ', async () => {
 
   const used = new AsIt(use(iter, [1, 3, 9, -1, 2, 3]));
   expect(await used.toArray()).toEqual([2, 2, 4, 10, 0]);
+});
+
+test('AsIt_.stream: pipe to duplex stream', async () => {
+  const stream = AsIt.from(Iter.range(5)).map($.string).stream(cr.createCipheriv('bf-cbc', '1234', '12345678'));
+  const crypted = await AsIt.from(stream).map(v => v.toString('hex')).reduce();
+  expect(stream.constructor.name).toBe('Cipheriv');
+  expect(crypted).toBe('68422a8db6cd9371');
+});
+
+test('AsIt_.streams: partially pipe to duplex stream', async () => {
+  const cipher = cr.createCipheriv('bf-cbc', '1234', '12345678');
+  const out = Object.create(null);
+  const stream = AsIt.from(Iter.range(5)).map($.string).streams(cipher, out);
+  await $.finishedRead(out.stream);
+  const stream2 = AsIt.from(Iter.range(5)).map($.string).stream().pipe(cipher);
+  await $.finishedWrite(stream2);
+  const crypted = await AsIt.from(stream2).map($.string_('hex')).reduce();
+  expect(crypted).toBe('7f04e1fa59d4c6b6e13fd4493d9d6c8a');
+  expect(stream).toBe(cipher);
+  expect(stream2).toBe(cipher);
+});
+
+test('AsIt_.pipe: pipe to duplex stream, continue with AsIt', async () => {
+  const crypted = await AsIt.from(Iter.range(5)).map($.string)
+    .pipe(cr.createCipheriv('bf-cbc', '1234', '12345678')).map($.string_('hex')).reduce();
+  expect(crypted).toBe('68422a8db6cd9371');
+});
+
+test('AsIt_.pipes: partially pipe to duplex stream, continue with AsIt', async () => {
+  const cipher = cr.createCipheriv('bf-cbc', '1234', '12345678');
+  const out = Object.create(null);
+  AsIt.from(Iter.range(5)).map($.string).pipes(cipher, out);
+  await $.finished(out.stream);
+  const crypted = await AsIt.from(Iter.range(5)).map($.string).pipe(cipher).map($.string_('hex')).reduce();
+  expect(crypted).toBe('7f04e1fa59d4c6b6e13fd4493d9d6c8a');
 });

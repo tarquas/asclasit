@@ -1,11 +1,30 @@
+const Design = require('../design');
+
 const wrapped = Symbol('$.AsIt.wrapped');
 
 const AsIt = function(iter) {
+  if (!iter) throw new TypeError('not iterable');
+  if (!iter[Symbol.iterator] && !iter[Symbol.asyncIterator]) throw new TypeError('not iterable');
   this[wrapped] = iter;
-  this.cur = 0;
+
+  Object.defineProperties(this, {
+    $: {value: this.constructor, configurable: true},
+    $_: {value: this.constructor.prototype, configurable: true},
+    cur: {value: 0, writable: true},
+  });
+
+  this[wrapped] = iter;
+  Design.$itApply.call(this.constructor);
 };
 
+AsIt.wrapped = wrapped;
+
 const {prototype: AsIt_} = AsIt;
+
+Object.defineProperties(AsIt, {
+  $: { get() { return this; } },
+  $_: { get() { return this.prototype; } },
+});
 
 AsIt.getGen = function getGen(itrb, strOk, ...args) {
   if (typeof itrb === 'function') return itrb.bind(this, ...args);
@@ -53,47 +72,52 @@ AsIt.valueWrap = (func) => function valueWrap(...args) {
   return res;
 };
 
-const make_ = function make_(gen, name) {
-  const wrap = AsIt.makeWrap(gen);
+AsIt.make_ = AsIt_.make_ = function make_(gen, name) {
+  const wrap = this.$.makeWrap(gen);
   wrap.gen = gen;
-  AsIt[name || gen.name] = wrap;
+  Object.defineProperty(this.$, name || gen.name, {value: wrap});
+  return this;
 };
 
-const chain_ = function chain_(gen, name) {
+AsIt.chain_ = AsIt_.chain_ = function chain_(gen, name) {
   const n = name || gen.name;
-  const wrap = AsIt.makeWrap(gen);
+  const wrap = this.$.makeWrap(gen);
   wrap.gen = gen;
-  AsIt[n] = wrap;
-  AsIt_[n] = AsIt.chainWrap(gen);
+  Object.defineProperty(this.$, n, {value: wrap});
+  this.$_[n] = this.$.chainWrap(gen);
+  return this;
 };
 
-const value_ = function value_(func, name) {
+AsIt.value_ = AsIt_.value_ = function value_(func, name) {
   const n = name || func.name;
-  AsIt[n] = func;
-  AsIt_[n] = AsIt.valueWrap(func);
+  Object.defineProperty(this.$, n, {value: func});
+  this.$_[n] = this.$.valueWrap(func);
+  return this;
 };
+
+AsIt_.$applied = true;
 
 AsIt_[Symbol.asyncIterator] = function asyncIterator() {
   const cur = this[wrapped];
   return cur;
 };
 
-value_((iter, err) => { if (iter.throw) return iter.throw(err); }, 'throw');
-value_((iter, value) => { if (iter.return) return iter.return(value); }, 'return');
+AsIt.value_((iter, err) => { if (iter.throw) return iter.throw(err); }, 'throw');
+AsIt.value_((iter, value) => { if (iter.return) return iter.return(value); }, 'return');
 
-value_(async function next(iter, value) {
+AsIt.value_(async function next(iter, value) {
   const item = await iter.next(value);
-  if (this.constructor !== AsIt) return item;
+  if (!(this instanceof AsIt)) return item;
   if (item.done) this.cur = null; else this.cur++;
   return item;
 });
 
-value_(async function read(iter, value) {
-  const item = await AsIt.next.call(this, iter, value);
+AsIt.value_(async function read(iter, value) {
+  const item = await this.$.next.call(this, iter, value);
   return item.value;
 });
 
-value_(async function ffwd(iter, count, value) {
+AsIt.value_(async function ffwd(iter, count, value) {
   let last;
   let n = count;
 
@@ -110,7 +134,7 @@ value_(async function ffwd(iter, count, value) {
   return last;
 });
 
-value_(async function affwd(iter, count, value) {
+AsIt.value_(async function affwd(iter, count, value) {
   const proms = [];
   let n = count;
 
@@ -129,6 +153,17 @@ value_(async function affwd(iter, count, value) {
   return last;
 });
 
-Object.assign(AsIt, {wrapped, make_, chain_, value_});
+AsIt.chain_(async function* save(iter, id) {
+  for await (const item of iter) {
+    this[id] = item;
+    yield item;
+  }
+});
+
+AsIt.chain_(async function* load(iter, id) {
+  for await (const item of iter) {
+    yield this[id];
+  }
+});
 
 module.exports = AsIt;

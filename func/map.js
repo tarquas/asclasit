@@ -143,10 +143,32 @@ func_(function stretch_(count, iterOut) {
 
 func_($.stretch_(), 'entry');
 
+func_(function counter_(from, to, step) {
+  if (to == null) to = Infinity;
+  if (!step) step = 1;
+  if ((from < to) ^ (step > 0)) step = -step;
+
+  if (step > 0) {
+    return function _counter() {
+      const v = from;
+      if (v >= to) return null;
+      from += step;
+      return v;
+    }
+  } else {
+    return function _counter() {
+      const v = from;
+      if (v <= to) return null;
+      from += step;
+      return v;
+    }
+  }
+});
+
 func_(function times_(n) {
   let i = 0;
 
-  return function _times(v) {
+  return function _times() {
     return i++ < n;
   };
 });
@@ -162,15 +184,17 @@ func_(function lag_(n, buf) {
 
 func_($.lag_(), 'lag');
 
-func_(function _predicateFuncs(funcs) {
-  const l = funcs.length;
+func_(function save_(id) {
+  return function _save(value) {
+    this[id] = value;
+    return value;
+  };
+});
 
-  for (let i = 0; i < l; i++) {
-    const a = funcs[i];
-    if (typeof a === 'number') funcs[i] = $.times_(a);
-  }
-
-  return l;
+func_(function load_(id) {
+  return function _load() {
+    return this[id];
+  };
 });
 
 func_(function _mappingFuncs(funcs, iterOut) {
@@ -179,8 +203,26 @@ func_(function _mappingFuncs(funcs, iterOut) {
   for (let i = 0; i < l; i++) {
     const a = funcs[i];
     if (typeof a === 'number') funcs[i] = a < 0 ? $.lag_(-a) : $.stretch_(a, iterOut);
+    else if (typeof a === 'boolean') funcs[i] = () => a;
+    else if (a instanceof Map || a instanceof WeakMap) funcs[i] = item => a.get(item);
+    else if (a instanceof Set || a instanceof WeakSet) funcs[i] = item => a.has(item);
+    else if (typeof a === 'object') funcs[i] = item => a[item];
+    else if (typeof a === 'string' || typeof a === 'symbol') funcs[i] = item => item[a];
   }
 
+  return l;
+});
+
+func_(function _predicateFuncs(funcs) {
+  const l = funcs.length;
+
+  for (let i = 0; i < l; i++) {
+    const a = funcs[i];
+    if (typeof a === 'number') funcs[i] = $.times_(a);
+    else if (typeof a === 'boolean') funcs[i] = () => a;
+  }
+
+  $._mappingFuncs(funcs);
   return l;
 });
 
