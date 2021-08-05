@@ -175,4 +175,24 @@ Iter.chain_(function *dim(...dims) {
   yield* partialDim.call(this, pfx, ...dims);
 });
 
+Iter.chain_(function* sep(iter, gen, ...funcs) {
+  const desc = {iter, ctx: this};
+  let idx = 0;
+
+  for (item of iter) {
+    if (idx) {
+      let v = true;
+      for (const func of funcs) v = func.call(this, v, item, idx, desc);
+
+      if (v) {
+        const it = Iter.getIter.call(this, gen, false, item, idx, desc);
+        if (it) yield* it; else yield gen;
+      }
+    }
+
+    yield item;
+    idx++;
+  }
+});
+
 module.exports = Iter;

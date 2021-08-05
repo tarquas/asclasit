@@ -33,7 +33,7 @@
         "--runInBand",
         "--logHeapUsage",
 
-        "index"
+        "class"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

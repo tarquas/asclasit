@@ -173,5 +173,5 @@ test('Iter_.map: _mappingFuncs', () => {
 });
 
 test('$: async class', () => {
-  expect(() => new $()).toThrow('not yet implemented');
+  expect(() => new $()).toThrow($.AbstractClassError);
 });

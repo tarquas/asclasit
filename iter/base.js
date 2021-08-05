@@ -5,25 +5,16 @@ const wrapped = Symbol('$.Iter.wrapped');
 const Iter = function(iter) {
   if (!iter || !iter[Symbol.iterator]) throw new TypeError('not iterable');
   this[wrapped] = iter;
+  this.cur = 0;
 
-  Object.defineProperties(this, {
-    cur: { value: 0, writable: true },
-    $: {value: this.constructor, configurable: true},
-    $_: {value: this.constructor.prototype, configurable: true},
-  });
-
-  this[wrapped] = iter;
-  Design.$itApply.call(this.constructor);
+  Design.$itApply(this);
 };
+
+Design.$classApply(Iter);
 
 Iter.wrapped = wrapped;
 
 const {prototype: Iter_} = Iter;
-
-Object.defineProperties(Iter, {
-  $: { get() { return this; } },
-  $_: { get() { return this.prototype; } },
-});
 
 Iter.getGen = function getGen(itrb, strOk, ...args) {
   if (typeof itrb === 'function') return itrb.bind(this, ...args);
@@ -77,14 +68,14 @@ Iter.chain_ = Iter_.chain_ = function chain_(gen, name) {
   const wrap = this.$.makeWrap(gen);
   wrap.gen = gen;
   Object.defineProperty(this.$, n, {value: wrap});
-  this.$_[n] = this.$.chainWrap(gen);
+  this.$$[n] = this.$.chainWrap(gen);
   return this;
 };
 
 Iter.value_ = Iter_.value_ = function value_(func, name) {
   const n = name || func.name;
   Object.defineProperty(this.$, n, {value: func});
-  this.$_[n] = this.$.valueWrap(func);
+  this.$$[n] = this.$.valueWrap(func);
   return this;
 };
 

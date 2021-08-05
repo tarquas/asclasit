@@ -8,25 +8,33 @@ func_(async function tick(value) {
 });
 
 func_(function delayMsec(msec) {
-  if (msec) return new Promise(resolve => setTimeout(resolve, msec));
-  return new Promise(resolve => setImmediate(resolve));
+  if (!msec) return new Promise(resolve => setImmediate(resolve));
+  let cancel;
+  const promise = new Promise((resolve) => {
+    const tm = setTimeout(resolve, msec);
+    cancel = () => { clearTimeout(tm); resolve(); };
+  });
+  promise.cancel = cancel;
+  return promise;
 });
 
 func_(function delaySec(sec) {
   return $.delayMsec(sec * 1000);
 });
 
-func_(function delayMsec_(msec) {
+func_(function delayMsec_(msec, out) {
   if (!msec) return $.tick;
 
   return async function delayed(value) {
-    await $.delayMsec(msec);
+    const promise = $.delayMsec(msec);
+    if (out) out.cancel = promise.cancel;
+    await promise;
     return value;
   };
 });
 
-func_(function delaySec_(sec) {
-  return $.delayMsec_(sec * 1000);
+func_(function delaySec_(sec, out) {
+  return $.delayMsec_(sec * 1000, out);
 });
 
 func_($.delayMsec, 'delay');
@@ -37,8 +45,24 @@ Object.assign($, {TimeoutError});
 
 func_(function timeoutMsec(msec, err) {
   if (!err) err = new TimeoutError();
-  if (msec) return new Promise((resolve, reject) => setTimeout(reject, msec, err));
-  return new Promise((resolve, reject) => setImmediate(reject, err));
+
+  if (msec) {
+    let cancel;
+    const promise = new Promise((resolve, reject) => {
+      const tm = setTimeout(
+        err => typeof err === 'function' ? reject(err()) : reject(err),
+        msec, err
+      );
+      cancel = () => { clearTimeout(tm); resolve(); };
+    });
+    promise.cancel = cancel;
+    return promise;
+  }
+
+  return new Promise((resolve, reject) => setImmediate(
+    err => typeof err === 'function' ? reject(new err()) : reject(err),
+    err
+  ));
 });
 
 func_(function timeoutSec(sec, err) {

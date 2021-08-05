@@ -1,7 +1,7 @@
 const Iter = require('./base');
 const $ = require('../func');
 
-Iter.chain_(function* filter(iter, ...funcs) {
+function* filterGen(iter, double, ...funcs) {
   const l = $._predicateFuncs(funcs);
 
   if (!l) {
@@ -13,28 +13,59 @@ Iter.chain_(function* filter(iter, ...funcs) {
   }
 
   const desc = {iter, ctx: this};
+  let pass = false;
 
   if (l === 1) {
     const func = funcs[0];
 
     for (const item of iter) {
-      if (func.call(this, item, desc)) yield item;
+      if (pass) { yield item; continue; }
+
+      let v = func.call(this, item, item, desc);
+      if (v === $.stop) break;
+      if (v === $.pass) { pass = true; yield item; continue; }
+
+      if (v) yield item;
+      if (!double) continue;
+
+      v = func.call(this, item, item, desc);
+      if (v === $.stop) break;
+      if (v === $.pass) { pass = true; yield item; continue; }
     }
   } else {
     for (const item of iter) {
-      let v = item;
+      if (pass) { yield item; continue; }
 
+      let v = item;
       for (const func of funcs) {
         v = func.call(this, v, item, desc);
       }
+      if (v === $.stop) break;
+      if (v === $.pass) { pass = true; yield item; continue; }
 
       if (v) yield item;
+      if (!double) continue;
+
+      v = item;
+      for (const func of funcs) {
+        v = func.call(this, v, item, desc);
+      }
+      if (v === $.stop) break;
+      if (v === $.pass) { pass = true; yield item; continue; }
     }
   }
+}
+
+Iter.chain_(function* filter(iter, ...funcs) {
+  yield* filterGen.call(this, iter, false, ...funcs);
+});
+
+Iter.chain_(function* dfilter(iter, ...funcs) {
+  yield* filterGen.call(this, iter, true, ...funcs);
 });
 
 Iter.chain_(function* call(iter, ...funcs) {
-  yield* Iter.filter.gen.call(this, iter, ...funcs, true);
+  yield* filterGen.call(this, iter, false, ...funcs, $.true);
 });
 
 Iter.chain_(function* debug(iter, ...funcs) {
@@ -44,58 +75,19 @@ Iter.chain_(function* debug(iter, ...funcs) {
     return func.call(this, item);
   });
 
-  yield* Iter.filter.gen.call(this, iter, ...funcs, true);
+  yield* filterGen.call(this, iter, false, ...funcs, $.true);
 });
 
 Iter.chain_(function* skip(iter, ...funcs) {
-  yield* Iter.filter.gen.call(this, iter, ...funcs, $.not);
+  yield* filterGen.call(this, iter, false, ...funcs, $.cond_(false, $.pass));
 });
-
-function* takeWhile(iter, double, ...funcs) {
-  const l = $._predicateFuncs(funcs);
-  if (!l) return yield* iter;
-
-  const desc = {iter, ctx: this};
-
-  if (l === 1) {
-    const func = funcs[0];
-
-    for (const item of iter) {
-      if (!func.call(this, item, item, desc)) break;
-      yield item;
-      if (double && !func.call(this, item, item, desc)) break;
-    }
-  } else {
-    for (const item of iter) {
-      let v = item;
-      for (const func of funcs) {
-        v = func.call(this, v, item, desc);
-      }
-      if (!v) break;
-
-      yield item;
-
-      if (!double) continue;
-
-      v = item;
-      for (const func of funcs) {
-        v = func.call(this, v, item, desc);
-      }
-      if (!v) break;
-    }
-  }
-}
 
 Iter.chain_(function* take(iter, ...funcs) {
-  yield* takeWhile.call(this, iter, false, ...funcs);
-});
-
-Iter.chain_(function* dtake(iter, ...funcs) {
-  yield* takeWhile.call(this, iter, true, ...funcs);
+  yield* filterGen.call(this, iter, false, ...funcs, $.cond_(true, $.stop));
 });
 
 Iter.chain_(function* stop(iter, ...funcs) {
-  yield* takeWhile.call(this, iter, true, ...funcs, $.not);
+  yield* filterGen.call(this, iter, true, ...funcs, $.cond_($.stop, true));
 });
 
 module.exports = Iter;

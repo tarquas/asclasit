@@ -30,13 +30,13 @@ test('Iter_.call, AsIt_.debug: call external function', () => {
   expect(seq).toEqual([2, 1, 3, 2, 4, 3]);
 });
 
-test('Iter_.skip: shortcut for not filter', () => {
+test('Iter_.skip: skip first items', () => {
   const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.skip(o => o && o.x);
-  expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null, NaN, [5, 1], false, 0n]);
+  wrapped.skip(o => o && o.x, v => !v);
+  expect(Array.from(wrapped)).toEqual([{x: 1}, [5, 1], false, 0n]);
 });
 
-test('Iter_.skip: skip number of items', () => {
+test('Iter_.skip: skip first number of items', () => {
   const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.skip(5);
   expect(Array.from(wrapped)).toEqual([NaN, {x: 1}, [5, 1], false, 0n]);
@@ -58,12 +58,6 @@ test('Iter_.take: multi arg', () => {
   const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.take(o => o && o.x, v => !v);
   expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null, NaN]);
-});
-
-test('Iter_.dtake: one arg', () => {
-  const wrapped = new Iter(Iter.getIter([1, 2, 3, 4, 5, 4, 3, 2, 1]));
-  wrapped.dtake($.times_(7));
-  expect(Array.from(wrapped)).toEqual([1, 2, 3, 4]);
 });
 
 test('Iter_.stop: multi arg', () => {

@@ -6,25 +6,16 @@ const AsIt = function(iter) {
   if (!iter) throw new TypeError('not iterable');
   if (!iter[Symbol.iterator] && !iter[Symbol.asyncIterator]) throw new TypeError('not iterable');
   this[wrapped] = iter;
+  this.cur = 0;
 
-  Object.defineProperties(this, {
-    $: {value: this.constructor, configurable: true},
-    $_: {value: this.constructor.prototype, configurable: true},
-    cur: {value: 0, writable: true},
-  });
-
-  this[wrapped] = iter;
-  Design.$itApply.call(this.constructor);
+  Design.$itApply(this);
 };
+
+Design.$classApply(AsIt);
 
 AsIt.wrapped = wrapped;
 
 const {prototype: AsIt_} = AsIt;
-
-Object.defineProperties(AsIt, {
-  $: { get() { return this; } },
-  $_: { get() { return this.prototype; } },
-});
 
 AsIt.getGen = function getGen(itrb, strOk, ...args) {
   if (typeof itrb === 'function') return itrb.bind(this, ...args);
@@ -84,14 +75,14 @@ AsIt.chain_ = AsIt_.chain_ = function chain_(gen, name) {
   const wrap = this.$.makeWrap(gen);
   wrap.gen = gen;
   Object.defineProperty(this.$, n, {value: wrap});
-  this.$_[n] = this.$.chainWrap(gen);
+  this.$$[n] = this.$.chainWrap(gen);
   return this;
 };
 
 AsIt.value_ = AsIt_.value_ = function value_(func, name) {
   const n = name || func.name;
   Object.defineProperty(this.$, n, {value: func});
-  this.$_[n] = this.$.valueWrap(func);
+  this.$$[n] = this.$.valueWrap(func);
   return this;
 };
 

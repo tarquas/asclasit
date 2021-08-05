@@ -42,4 +42,6 @@ $.func_(function pure(obj, ...parts) {
 
 Object.assign($, {Iter, AsIt});
 
+require('./func2');
+
 module.exports = $;

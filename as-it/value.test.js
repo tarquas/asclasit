@@ -3,6 +3,7 @@ const cr = require('crypto');
 const AsIt = require('./value');
 const Iter = require('../iter');
 const $ = require('../func');
+require('../func2/promise');
 
 require('./make');
 require('./map');

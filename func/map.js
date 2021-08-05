@@ -16,12 +16,27 @@ func_(async function aecho(value) {
   return value;
 });
 
-func_(function nullMap(value) {
+func_(function nullMap() {
   return null;
 }, 'null');
 
 func_(async function anull(value) {
   return null;
+});
+
+func_(function trueMap() {
+  return true;
+}, 'true');
+
+func_(function falseMap() {
+  return false;
+}, 'false');
+
+func_(function cond_(ifTrue, ifFalse) {
+  return function _cond(value) {
+    if (value) return ifTrue;
+    return ifFalse;
+  };
 });
 
 func_(function not(value) {
@@ -197,13 +212,21 @@ func_(function load_(id) {
   };
 });
 
+func_(function debug_(func) {
+  return function _debug(value) {
+    func.call(this, value);
+    return value;
+  };
+});
+
 func_(function _mappingFuncs(funcs, iterOut) {
   const l = funcs.length;
 
   for (let i = 0; i < l; i++) {
     const a = funcs[i];
-    if (typeof a === 'number') funcs[i] = a < 0 ? $.lag_(-a) : $.stretch_(a, iterOut);
-    else if (typeof a === 'boolean') funcs[i] = () => a;
+    if (a == null) funcs[i] = item => item == null;
+    else if (typeof a === 'number') funcs[i] = a < 0 ? $.lag_(-a) : $.stretch_(a, iterOut);
+    else if (typeof a === 'boolean') funcs[i] = item => a ? item != null : !item;
     else if (a instanceof Map || a instanceof WeakMap) funcs[i] = item => a.get(item);
     else if (a instanceof Set || a instanceof WeakSet) funcs[i] = item => a.has(item);
     else if (typeof a === 'object') funcs[i] = item => a[item];
@@ -219,11 +242,13 @@ func_(function _predicateFuncs(funcs) {
   for (let i = 0; i < l; i++) {
     const a = funcs[i];
     if (typeof a === 'number') funcs[i] = $.times_(a);
-    else if (typeof a === 'boolean') funcs[i] = () => a;
   }
 
   $._mappingFuncs(funcs);
   return l;
 });
+
+$.stop = Symbol('$.stop');
+$.pass = Symbol('$.pass');
 
 module.exports = $;

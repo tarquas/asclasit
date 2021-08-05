@@ -5,6 +5,7 @@ require('./make');
 require('./map');
 require('./object');
 const $ = require('../func');
+require('../func2/promise');
 
 test('Iter_.appendArray: tee to array', () => {
   const wrapped = new Iter([2, 6, 7, 6][Symbol.iterator]());

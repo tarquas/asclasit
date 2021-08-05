@@ -1,8 +1,9 @@
-const util = require('util');
-const streams = require('stream/promises');
+const Design = require('./design');
+
+const symbol = Symbol('$');
 
 const $ = function $(...args) {
-  if (this !== global && this instanceof $) throw new NotImplementedError();
+  if (this !== global && this instanceof $) return $.ctor.call(this, ...args);
   if (!args.length) return Object.create(null);
 
   const type = guessType(args);
@@ -10,7 +11,11 @@ const $ = function $(...args) {
   return res;
 };
 
-const symbol = Symbol('$');
+Object.setPrototypeOf($, null);
+$.prototype = Object.create(null);
+
+Design.$classApply($);
+
 $.symbol = symbol;
 
 const func_ = function func_(func, name) {

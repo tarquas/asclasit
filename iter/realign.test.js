@@ -158,3 +158,15 @@ test('Iter_.dim: unwrap to dimensions', async () => {
     [2, 'b', 'b', 'ok', 'good'],
   ]);
 });
+
+test('Iter_.sep: separate items: literal', () => {
+  const iter = new Iter(Iter.getIter(['apple', 'orange', 'melon']));
+  iter.sep(', ');
+  expect(Array.from(iter)).toEqual(['apple', ', ', 'orange', ', ', 'melon']);
+});
+
+test('Iter_.sep: separate items: gen + condition', () => {
+  const iter = new Iter(Iter.getIter(['apple', 'orange', 'melon', ' - good', 'not bad']));
+  iter.sep([';', ' '], (p, item) => item[0] !== ' ');
+  expect(Array.from(iter)).toEqual(['apple', ';', ' ', 'orange', ';', ' ', 'melon', ' - good', ';', ' ', 'not bad']);
+});

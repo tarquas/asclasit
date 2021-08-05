@@ -1,7 +1,7 @@
 const Iter = require('./base');
 require('./object');
 require('./value');
-const $ = require('../func');
+const $ = require('../func2/acc');
 
 $.sortMin = 0;
 $.sortMax = 2**32 - 1;

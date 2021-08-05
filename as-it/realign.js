@@ -186,9 +186,29 @@ async function *partialDim(pfx, dim1, dim2, ...dims) {
   }
 };
 
-AsIt.chain_(async function *dim(...dims) {
+AsIt.chain_(async function* dim(...dims) {
   const pfx = [];
   yield* partialDim.call(this, pfx, ...dims);
+});
+
+AsIt.chain_(async function* sep(iter, gen, ...funcs) {
+  const desc = {iter, ctx: this};
+  let idx = 0;
+
+  for await (item of iter) {
+    if (idx) {
+      let v = true;
+      for (const func of funcs) v = await func.call(this, v, item, idx, desc);
+
+      if (v) {
+        const it = AsIt.getIter.call(this, gen, false, item, idx, desc);
+        if (it) yield* it; else yield gen;
+      }
+    }
+
+    yield item;
+    idx++;
+  }
 });
 
 module.exports = AsIt;

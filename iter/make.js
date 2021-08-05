@@ -36,6 +36,12 @@ Iter.make_(function* range(from, to, step) {
   }
 });
 
+Iter.make_(function* reverse(arr) {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    yield arr[i];
+  }
+});
+
 class ForkBufferLimitExceededError extends Error { message = 'fork buffer limit exceeded'; }
 Object.assign(Iter, {ForkBufferLimitExceededError});
 

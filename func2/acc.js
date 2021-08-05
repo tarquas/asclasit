@@ -67,4 +67,6 @@ func_(function accumulate(to, ...from) {
   return to;
 });
 
+func_($.accumulate, 'acc');
+
 module.exports = $;

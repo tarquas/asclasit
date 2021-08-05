@@ -1,7 +1,7 @@
 const AsIt = require('./promise');
 const Iter = require('../iter');
 require('./make');
-const $ = require('../func');
+const $ = require('../func2/promise');
 
 test('AsIt_.race: race promises', async () => {
   const src = {

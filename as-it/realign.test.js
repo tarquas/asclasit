@@ -179,3 +179,15 @@ test('AsIt_.dim: unwrap to dimensions', async () => {
     [2, 'b', 'b', 'ok', 'good'],
   ]);
 });
+
+test('AsIt_.sep: separate items: literal', async () => {
+  const iter = new AsIt(AsIt.getIter(['apple', 'orange', 'melon']));
+  iter.sep(', ');
+  expect(await asItArray(iter)).toEqual(['apple', ', ', 'orange', ', ', 'melon']);
+});
+
+test('AsIt_.sep: separate items: gen + condition', async () => {
+  const iter = new AsIt(AsIt.getIter(['apple', 'orange', 'melon', ' - good', 'not bad']));
+  iter.sep([';', ' '], (p, item) => item[0] !== ' ');
+  expect(await asItArray(iter)).toEqual(['apple', ';', ' ', 'orange', ';', ' ', 'melon', ' - good', ';', ' ', 'not bad']);
+});

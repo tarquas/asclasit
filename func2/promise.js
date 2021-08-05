@@ -1,6 +1,5 @@
-const $ = require('../base');
-require('./object');
-require('./map');
+const $ = require('../func');
+require('./acc');
 
 const util = require('util');
 const streams = require('stream/promises');
@@ -194,5 +193,162 @@ $.RaceError = class RaceError extends Error {
     this.error = error;
   }
 }
+
+const eventMethods = {
+  once: ['once'],
+  on: ['on', 'addListener', 'addEventListener'],
+  off: ['off', 'removeListener', 'removeEventListener'],
+};
+
+func_(function grabEvents(from, events, {
+  methods = eventMethods,
+  limit = Infinity,
+} = {}) {
+  let on, off;
+  for (const method of methods.on) if (typeof from[on] === 'function') { on = method; break; }
+  if (!on) return null;
+  for (const method of methods.off) if (typeof from[off] === 'function') { off = method; break; }
+  if (!off) return null;
+
+  const subs = Object.create(null);
+  const grabbed = [];
+  if (typeof events === 'string') events = events.split(',');
+  if (!(events instanceof Set)) events = new Set(events);
+
+  let report;
+  const wait = new Promise(resolve => report = resolve);
+
+  const stop = () => {
+    if (!subs) return grabbed;
+
+    for (const event of events) {
+      const func = subs[event];
+      delete subs[event];
+      from[off](event, func);
+    }
+
+    subs = null;
+    report(grabbed);
+    return grabbed;
+  };
+
+  wait.stop = stop;
+  let n = 0;
+
+  const grab = (event, ...args) => {
+    if (n >= limit) return;
+    grabbed.push({event, args, at: new Date()});
+    if (++n >= limit) stop();
+  };
+
+  for (const event of events) {
+    const func = grab.bind(this, event);
+    from[on](event, func);
+    subs[event] = func;
+  }
+
+  return wait;
+});
+
+func_(async function firstEvent(from, resolves, rejects, opts = {}) {
+  if (!rejects) rejects = ['error'];
+  if (typeof resolves === 'string') resolves = resolves.split(',');
+  if (typeof rejects === 'string') rejects = rejects.split(',');
+  if (!(rejects instanceof Set)) rejects = new Set(rejects);
+  const [grabbed] = await $.grabEvents(from, new Set([...resolves, ...rejects]), {...opts, limit: 1});
+  opts.grabbed = grabbed;
+  const {event, args} = grabbed;
+  if (rejects.has(event)) throw args[0];
+  return args;
+});
+
+const callOnceMap = new WeakMap();
+
+func_(function once(fn, ...args) {
+  const map = callOnceMap;
+  const has = map.get(fn);
+  if (has) return has.promise;
+
+  const promise = (async () => {
+    try {
+      const res = await fn.call(this, ...args);
+      return res;
+    } finally {
+      map.delete(fn);
+    }
+  })();
+
+  map.set(fn, {promise});
+  return promise;
+});
+
+const throttleMap = new WeakMap();
+
+func_(function timeCall(fn, obj, msec) {
+  const cur = throttleMap.get(fn);
+  const acc = cur ? cur.acc : obj instanceof Array ? [] : Object.create(null);
+  $.accumulate(acc, obj);
+
+  if (cur) {
+    if (msec) cur.time = msec;
+    return cur.finaled;
+  }
+
+  const newCur = {acc, time: msec > 0 ? msec : 1000};
+  throttleMap.set(fn, newCur);
+  return timeThrottleTimeout(fn);
+});
+
+async function timeThrottleTimeout(fn) {
+  const cur = throttleMap.get(fn);
+  const {acc, time} = cur;
+
+  for (const key in acc) {
+    cur.acc = acc instanceof Array ? [] : Object.create(null);
+
+    try {
+      delete cur.result;
+      delete cur.error;
+      const res = await fn(acc);
+      cur.result = res;
+      if (cur.ok) cur.ok(res); else return res;
+    } catch (err) {
+      cur.error = err;
+      if (cur.nok) cur.nok(err); else throw err;
+    } finally {
+      cur.finaled = new Promise((ok, nok) => {
+        cur.ok = ok;
+        cur.nok = nok;
+      });
+
+      if (time) {
+        setTimeout(timeThrottleTimeout, time, fn);
+      } else {
+        setImmediate(timeThrottleTimeout, fn);
+      }
+    }
+
+    return;
+  }
+
+  throttleMap.delete(fn);
+  if (cur.ok) cur.ok(null); else return null;
+}
+
+func_(function timeCachedCall(fn, obj, msec) {
+  const pending = throttleMap.get(fn);
+  const promise = $.timeCall(obj, msec, fn);
+  if (!pending) return promise;
+  if (pending.error) throw pending.error;
+  return pending.result;
+});
+
+func_(function throw_(title) {
+  return function _throw(err) {
+    let out = !err ? err : err.stack || err.message || err.type || err.code || err;
+    if (title) out = `${title}\n${out}`;
+    console.error(out);
+  }
+});
 
 module.exports = $;

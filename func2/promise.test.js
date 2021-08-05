@@ -1,5 +1,4 @@
 const $ = require('./promise');
-require('./time');
 
 test('$.bind: bind function', async () => {
   const func = async function (arg) { return arg + this.a; }
