@@ -3,6 +3,15 @@ const $ = require('../base');
 
 const {func_} = $;
 
+$.asyncFunction = async function () {};
+$.AsyncFunction = $.asyncFunction.constructor;
+
+$.generatorFunction = function* () {};
+$.GeneratorFunction = $.generatorFunction.constructor;
+
+$.asyncGeneratorFunction = async function* () {};
+$.AsyncGeneratorFunction = $.asyncGeneratorFunction.constructor;
+
 func_(function number(value) {
   return Number(value);
 });

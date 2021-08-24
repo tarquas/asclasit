@@ -20,22 +20,37 @@ test('$.delaySec: delay execution in 1 eventloop spin', async () => {
   await testTick($.delaySec);
 });
 
-test('$.delayMsec, $.upSec: delay execution in msec, uptime in sec', async () => {
+test('$.delayMsec, $.upSec, $.upSec_: delay execution in msec, uptime in sec', async () => {
   const snap = $.upSec();
+  const up = $.upSec_();
   await $.delayMsec(200);
   expect($.upSec(snap).toPrecision(1)).toBe('0.2');
+  expect(up().toPrecision(1)).toBe('0.2');
 });
 
-test('$.delayMsec, $.upNsec: delay execution in msec, uptime in nsec', async () => {
+test('$.delayMsec, $.upNsec, $.upNsec_: delay execution in msec, uptime in nsec', async () => {
   const snap = $.upNsec();
+  const up = $.upNsec_();
   await $.delayMsec(100);
   expect(Number($.upNsec(snap)).toPrecision(1)).toBe('1e+8');
+  expect(Number(up()).toPrecision(1)).toBe('1e+8');
 });
 
-test('$.delaySec, $.upMsec: delay execution in sec, uptime in msec', async () => {
+test('$.delaySec: cancel', async () => {
+  let done = false;
+  const delayed = $.delaySec(100);
+  delayed.then(() => done = true);
+  delayed.cancel();
+  await $.tick();
+  expect(done).toBe(true);
+});
+
+test('$.delaySec, $.upMsec, $.upMsec_: delay execution in sec, uptime in msec', async () => {
   const snap = $.upMsec();
+  const up = $.upMsec_();
   await $.delaySec(0.3);
   expect($.upMsec(snap).toPrecision(1)).toBe('3e+2');
+  expect(up().toPrecision(1)).toBe('3e+2');
 });
 
 test('$.delaySec_: delay execution of func in tick', async () => {
@@ -43,11 +58,13 @@ test('$.delaySec_: delay execution of func in tick', async () => {
 });
 
 test('$.delaySec_: delay execution of func in sec', async () => {
-  const msec = $.delaySec_(0.1);
+  const out = {};
+  const msec = $.delaySec_(0.1, out);
   const snap = $.upMsec();
   const promises = [1, 2, 3].map(msec);
   await Promise.all(promises);
   expect($.upMsec(snap).toPrecision(1)).toBe('1e+2');
+  expect(typeof out.cancel).toBe('function');
 });
 
 test('$.timeoutMsec: timeout execution in msec', async () => {
@@ -76,6 +93,14 @@ test('$.timeoutSec: sync timeout', async () => {
   expect(ticked).toBe(null);
   await $.tick();
   expect(ticked instanceof $.TimeoutError).toBe(true);
+});
+
+test('$.timeoutSec: sync timeout: custom error', async () => {
+  let ticked = null;
+  $.timeoutSec(0, () => new EvalError()).catch((err) => { ticked = err; });
+  expect(ticked).toBe(null);
+  await $.tick();
+  expect(ticked instanceof EvalError).toBe(true);
 });
 
 test('$.msec_: execution time exceeds given maximum msec', async () => {

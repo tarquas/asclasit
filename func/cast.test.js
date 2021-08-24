@@ -1,5 +1,9 @@
 const $ = require('./cast');
 
+$.asyncFunction();
+$.generatorFunction();
+$.asyncGeneratorFunction();
+
 test('$.number: convert to Number', () => {
   const mapped = [undefined, true, 3, 5n, '87', 9.1, {a: 5}, [43], Infinity].map($.number);
   expect(mapped).toEqual([NaN, 1, 3, 5, 87, 9.1, NaN, 43, Infinity]);

@@ -1,3 +1,4 @@
+const Emitter = require('events');
 const $ = require('./promise');
 
 test('$.bind: bind function', async () => {
@@ -67,4 +68,191 @@ test('$.race: object', async () => {
   });
 
   expect(first).toEqual(['c', 'C']);
+});
+
+test('$.throw_: format error message', () => {
+  const orig = console.error;
+  let out;
+  console.error = (err) => out = err;
+  $.throw_('my title')(null);
+  expect(out).toBe('my title\nnull');
+  $.throw_('my title')('error');
+  expect(out).toBe('my title\nerror');
+  console.error = orig;
+});
+
+test('$.grabEvents: listen and store events', async () => {
+  const ev = new Emitter();
+  const events = [];
+  const handler = (event) => events.push(event);
+  const grabbing = $.grabEvents(ev, 'event1,event2', {limit: 3, handler});
+  ev.emit('event2', {arg2: 2});
+  ev.emit('event1', {arg1: 1});
+  ev.emit('event0', {arg0: 0});
+  ev.emit('event2', {arg2: 2});
+  ev.emit('event1', {arg1: 1});
+  ev.emit('event0', {arg0: 0});
+  const grabbed = await grabbing;
+
+  expect(grabbed.map(({event, args}) => [event, args])).toEqual([
+    ['event2', [{arg2: 2}]],
+    ['event1', [{arg1: 1}]],
+    ['event2', [{arg2: 2}]],
+  ]);
+
+  expect(events).toEqual(['event2', 'event1', 'event2']);
+  expect(grabbing.stop()).toEqual(grabbed);
+});
+
+test('$.grabEvents: zero limit', async () => {
+  const ev = new Emitter();
+  const grabbing = $.grabEvents(ev, 'event1,event2', {limit: 0});
+  ev.emit('event2', {arg2: 2});
+  ev.emit('event1', {arg1: 1});
+  const grabbed = await grabbing;
+  expect(grabbed).toEqual([]);
+});
+
+test('$.grabEvents: broken remover', async () => {
+  const ev = {
+    on(event, handler) {
+      this.handler = handler;
+    },
+    off() { },
+  };
+
+  const grabbing = $.grabEvents(ev, 'event1,event2', {limit: 1});
+  ev.handler('event1', {arg1: 1});
+  ev.handler('event2', {arg2: 2});
+  const grabbed = await grabbing;
+  expect(grabbed.length).toBe(1);
+});
+
+test('$.grabEvents: no listener adder', async () => {
+  const ev = {};
+  const grabbing = $.grabEvents(ev, 'event1,event2', {limit: 1});
+  expect(grabbing).toBe(null);
+});
+
+test('$.grabEvents: no listener remover', async () => {
+  const ev = { on() { } };
+  const grabbing = $.grabEvents(ev, 'event1,event2', {limit: 1});
+  expect(grabbing).toBe(null);
+});
+
+test('$.firstEvent: resolve', async () => {
+  const ev = new Emitter();
+  const grabbing = $.firstEvent(ev, 'event1', 'event2');
+  ev.emit('event1', {arg1: 1});
+  ev.emit('event2', {arg2: 2});
+  const grabbed = await grabbing;
+  expect(grabbed).toEqual({arg1: 1});
+});
+
+test('$.firstEvent: reject', async () => {
+  const ev = new Emitter();
+  const grabbing = $.firstEvent(ev, 'event');
+  ev.emit('error', {arg1: 1});
+  ev.emit('event', {arg2: 2});
+
+  try {
+    await grabbing;
+    throw $;
+  } catch (err) {
+    expect(err).toEqual({arg1: 1});
+  }
+});
+
+test('$.firstEvent: stop', async () => {
+  const ev = new Emitter();
+  const out = {};
+  const grabbing = $.firstEvent(ev, 'event1', 'event2', out);
+  out.stop();
+  const grabbed = await grabbing;
+  expect(grabbed).toEqual(null);
+});
+
+test('$.once: deduplicate time-throttled function call and reuse pending result', async () => {
+  let n = 0;
+  const res = [];
+
+  const bumper = {async bump() {
+    await $.delayMsec(20);
+    return n++;
+  }};
+
+  for (let i = 0; i < 9; i++) {
+    $.once.call(bumper, 'bump', i ? 10 : 0).then(n => res.push(n));
+    await $.delay(10);
+  }
+
+  expect(res).toEqual([0, 0, 1, 1, 1, 2, 2, 2]);
+});
+
+test('$.only: delay until previous call finished', async () => {
+  let n = 0;
+  const res = [];
+
+  const bumper = {async bump() {
+    await $.delayMsec(50);
+    if (n++ > 2) throw res;
+  }};
+
+  const up = $.upMsec_();
+  let last;
+
+  for (let i = 0; i < 6; i++) {
+    last = $.only.call(bumper, 'bump', i ? 50 : 0).catch($.echo).then(() => res.push((up() / 100) | 0));
+    await $.delay(30);
+  }
+
+  await last;
+  expect(res).toEqual([0, 1, 1, 1, 2, 2]);
+});
+
+test('$.accCall: debounce time-throttled function call with accumulating input parameter', async () => {
+  let n = 0;
+  const res = [];
+  const errs = [];
+
+  const bumper = {async bump(pack) {
+    await $.delayMsec(40);
+    res.push(pack);
+    if (n++ > 1) throw n;
+  }};
+
+  const up = $.upMsec_();
+  let last;
+
+  for (let i = 0; i < 9; i++) {
+    last = $.accCall.call(bumper, 'bump', i ? 100 : 0, [i]).catch(pack => errs.push(pack));
+    await $.delay(40);
+  }
+
+  await last;
+  expect(res).toEqual([[0], [1], [2, 3, 4], [5, 6, 7], [8]]);
+  expect(errs).toEqual([3, 3, 3, 4, 4, 4, 5]);
+  expect($.accCallCached.call(bumper, 'bump')).toEqual([]);
+});
+
+test('$.accCall, $.accCallCached: first reject', async () => {
+  async function thrower(acc) { throw acc; };
+
+  try {
+    await $.accCall(thrower, 0, {a: 1});
+    throw $;
+  } catch (err) {
+    expect(err).toEqual({a: 1});
+  }
+
+  expect($.accCallCached(thrower)).toEqual({});
+  await $.tick(); // expire throttling
+  expect($.accCallCached(thrower)).toEqual(null);
+
+  try {
+    await $.accCall(thrower, 0, {a: 2});
+    throw $;
+  } catch (err) {
+    expect(err).toEqual({a: 2});
+  }
 });

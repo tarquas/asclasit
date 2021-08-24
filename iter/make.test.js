@@ -52,14 +52,20 @@ test('Iter.range: 3 args desc (x, y, d): [x ... +d ... y)', () => {
   expect(Array.from(wrapped)).toEqual([14, 11]);
 });
 
-test('AsIt.fork: 1 fork', () => {
+test('Iter.fork: 1 fork', () => {
   const src = Iter.from([1, 2, 3]);
   const fork1 = src.fork();
   expect(Array.from(fork1)).toEqual([1, 2, 3]);
   expect(Array.from(src)).toEqual([]);
 });
 
-test('AsIt.fork: 2 forks', () => {
+test('Iter.reverse: iterate backwards', () => {
+  const src = [1, 2, 3, 4, 5];
+  const rev = Iter.from(src).reverse();
+  expect(Array.from(rev)).toEqual([5, 4, 3, 2, 1]);
+});
+
+test('Iter.fork: 2 forks', () => {
   const src = Iter.from([1, 2, 3]);
   const fork1 = src.fork();
   const fork2 = src.fork();
@@ -68,7 +74,7 @@ test('AsIt.fork: 2 forks', () => {
   expect(Array.from(src)).toEqual([]);
 });
 
-test('AsIt.fork: 3 forks with 1 chained', () => {
+test('Iter.fork: 3 forks with 1 chained', () => {
   const src = Iter.from([1, 2, 3]);
   const fork1 = src.fork();
   const fork2 = src.fork();
@@ -79,7 +85,7 @@ test('AsIt.fork: 3 forks with 1 chained', () => {
   expect(Array.from(src)).toEqual([]);
 });
 
-test('AsIt.fork: 2 forks: mixed pipeline', () => {
+test('Iter.fork: 2 forks: mixed pipeline', () => {
   const src = Iter.from([1, 2, 3]);
   const fork1 = src.fork();
   const fork2 = src.fork();
@@ -89,7 +95,7 @@ test('AsIt.fork: 2 forks: mixed pipeline', () => {
   expect(Array.from(src)).toEqual([]);
 });
 
-test('AsIt.fork: 3 forks: one broken', () => {
+test('Iter.fork: 3 forks: one broken', () => {
   const src = Iter.from([1, 2, 3]);
   const fork1 = src.fork();
   const fork2 = src.fork();
@@ -101,14 +107,14 @@ test('AsIt.fork: 3 forks: one broken', () => {
   expect(Array.from(src)).toEqual([]);
 });
 
-test('AsIt.fork: 1 fork: break limit ok', () => {
+test('Iter.fork: 1 fork: break limit ok', () => {
   const src = Iter.from([1, 2, 3]);
   const fork1 = src.fork(2);
   expect(Array.from(fork1)).toEqual([1, 2, 3]);
   expect(Array.from(src)).toEqual([]);
 });
 
-test('AsIt.fork: 2 forks', () => {
+test('Iter.fork: 2 forks', () => {
   const src = Iter.from([1, 2, 3]);
   const fork1 = src.fork(2);
   const fork2 = src.fork(2);
@@ -124,7 +130,7 @@ test('AsIt.fork: 2 forks', () => {
   expect(Array.from(src)).toEqual([3]);
 });
 
-test('AsIt.fork: 2 raw forks', () => {
+test('Iter.fork: 2 raw forks', () => {
   const src = function* () { yield 1; yield 2; yield 3; } ();
   const fork1 = Iter.fork(src);
   const fork2 = Iter.fork(src);

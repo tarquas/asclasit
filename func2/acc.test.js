@@ -74,3 +74,15 @@ test('$.accInit: initializers', () => {
   expect($.accInit.get(WeakMap)() instanceof WeakMap).toEqual(true);
   expect($.accInit.get(Date)() instanceof Date).toEqual(true);
 });
+
+test('$.initAcc: initialize accumulator from parameter', () => {
+  expect($.initAcc(new Error())).toEqual({});
+  expect($.initAcc(null) instanceof Set).toBe(true);
+  expect($.initAcc({x: 1})).toEqual({});
+  expect($.initAcc([1, 2, 3])).toEqual([]);
+  expect($.initAcc(new Set([1, 2])) instanceof Set).toBe(true);
+  expect($.initAcc(new Map([[1, 2]])) instanceof Map).toBe(true);
+  expect($.initAcc(new WeakSet([{}, {}])) instanceof WeakSet).toBe(true);
+  expect($.initAcc(new WeakMap([[{}, {}]])) instanceof WeakMap).toBe(true);
+  expect($.initAcc(new Date()) instanceof Date).toBe(true);
+});

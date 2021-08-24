@@ -14,6 +14,7 @@ function* filterGen(iter, double, ...funcs) {
 
   const desc = {iter, ctx: this};
   let pass = false;
+  const pass1 = double ? false : null;
 
   if (l === 1) {
     const func = funcs[0];
@@ -21,16 +22,16 @@ function* filterGen(iter, double, ...funcs) {
     for (const item of iter) {
       if (pass) { yield item; continue; }
 
-      let v = func.call(this, item, item, desc);
+      let v = func.call(this, item, item, desc, pass1);
       if (v === $.stop) break;
       if (v === $.pass) { pass = true; yield item; continue; }
 
       if (v) yield item;
       if (!double) continue;
 
-      v = func.call(this, item, item, desc);
+      v = func.call(this, item, item, desc, true);
       if (v === $.stop) break;
-      if (v === $.pass) { pass = true; yield item; continue; }
+      if (v === $.pass) { pass = true; continue; }
     }
   } else {
     for (const item of iter) {
@@ -38,7 +39,7 @@ function* filterGen(iter, double, ...funcs) {
 
       let v = item;
       for (const func of funcs) {
-        v = func.call(this, v, item, desc);
+        v = func.call(this, v, item, desc, pass1);
       }
       if (v === $.stop) break;
       if (v === $.pass) { pass = true; yield item; continue; }
@@ -48,10 +49,10 @@ function* filterGen(iter, double, ...funcs) {
 
       v = item;
       for (const func of funcs) {
-        v = func.call(this, v, item, desc);
+        v = func.call(this, v, item, desc, true);
       }
       if (v === $.stop) break;
-      if (v === $.pass) { pass = true; yield item; continue; }
+      if (v === $.pass) { pass = true; continue; }
     }
   }
 }

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "diff": "gitdiff () { git diff $* -- . ':!package-lock.json'; }; gitdiff",
-    "test": "jest"
+    "test": "node --inspect --expose-gc --trace-warnings --trace-deprecation --unhandled-rejections=throw node_modules/.bin/jest --runInBand --logHeapUsage"
   },
   "repository": {
     "type": "git",

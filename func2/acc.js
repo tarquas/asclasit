@@ -59,6 +59,14 @@ $.accInit = new Map([
   [Date, () => new Date()],
 ]);
 
+func_(function initAcc(obj) {
+  if (obj == null || typeof obj !== 'object') return new Set();
+  const ctor = obj.constructor;
+  const init = $.accInit.get(ctor);
+  if (init) return init();
+  return Object.create(null);
+});
+
 func_(function accumulate(to, ...from) {
   if (to == null || typeof to !== 'object') return to;
   const ctor = to.constructor;

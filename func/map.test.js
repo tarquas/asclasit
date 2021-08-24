@@ -38,7 +38,7 @@ test('$.neg: map negative', () => {
   expect([1, undefined, 0, 'a', null, {a: 1}, [5]].map($.neg)).toEqual([-1, NaN, -0, NaN, -0, NaN, -5]);
 });
 
-test('$.anot: map negative', async () => {
+test('$.aneg: map negative', async () => {
   const promises = [1, 2].map($.aneg);
   expect(promises[0] instanceof Promise).toBe(true);
   expect(await Promise.all(promises)).toEqual([-1, -2]);
@@ -52,6 +52,18 @@ test('$.abound: map bound context async', async () => {
   const promises = [1, 2].map($.abound.bind({a: 2}));
   expect(promises[0] instanceof Promise).toBe(true);
   expect(await Promise.all(promises)).toEqual([{a: 2}, {a: 2}]);
+});
+
+test('$.false: map false', () => {
+  expect($.false('smth')).toBe(false);
+});
+
+test('$.debug_: tee to function', () => {
+  let captured;
+  const f = (v) => { captured = v; };
+  const debug = $.debug_(f);
+  expect(debug('smth')).toBe('smth');
+  expect(captured).toBe('smth');
 });
 
 const deep = [

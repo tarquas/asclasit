@@ -50,7 +50,7 @@ func_(function timeoutMsec(msec, err) {
     let cancel;
     const promise = new Promise((resolve, reject) => {
       const tm = setTimeout(
-        err => typeof err === 'function' ? reject(err()) : reject(err),
+        err => typeof err === 'function' ? reject(err.call(this)) : reject(err),
         msec, err
       );
       cancel = () => { clearTimeout(tm); resolve(); };
@@ -60,7 +60,7 @@ func_(function timeoutMsec(msec, err) {
   }
 
   return new Promise((resolve, reject) => setImmediate(
-    err => typeof err === 'function' ? reject(new err()) : reject(err),
+    err => typeof err === 'function' ? reject(err.call(this)) : reject(err),
     err
   ));
 });
@@ -70,6 +70,29 @@ func_(function timeoutSec(sec, err) {
 });
 
 func_($.timeoutMsec, 'timeout');
+
+func_(function upNsec_(scale, out = {}) {
+  const start = process.hrtime.bigint();
+  out.start = start;
+
+  return function _up() {
+    const snap = process.hrtime.bigint();
+    out.last = snap;
+    const nsec = snap - start;
+    if (scale) return Number(nsec) / scale;
+    return nsec;
+  }
+});
+
+func_(function upMsec_(out) {
+  return $.upNsec_(1e6, out);
+});
+
+func_(function upSec_(out) {
+  return $.upNsec_(1e9, out);
+});
+
+func_($.upMsec_, 'up_');
 
 func_(function upNsec(prev) {
   const snap = process.hrtime.bigint();

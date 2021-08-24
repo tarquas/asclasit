@@ -48,9 +48,9 @@ const boundOnce = new WeakMap();
 
 func_(function bindOnce__(to) {
   return function (wrapper, ofn, obj, ...args) {
+    const byRef = to && (typeof to === 'object' || typeof to === 'function');
     let funcBinds = boundOnce.get(ofn);
     let func, map;
-    const byRef = to && typeof to === 'object';
 
     if (!funcBinds) {
       funcBinds = Object.create(null);
@@ -196,22 +196,25 @@ $.RaceError = class RaceError extends Error {
 
 const eventMethods = {
   once: ['once'],
-  on: ['on', 'addListener', 'addEventListener'],
-  off: ['off', 'removeListener', 'removeEventListener'],
+  on: ['addListener', 'addEventListener', 'on'],
+  off: ['removeListener', 'removeEventListener', 'off'],
 };
 
 func_(function grabEvents(from, events, {
   methods = eventMethods,
   limit = Infinity,
+  grabbed = [],
+  handler,
 } = {}) {
+  if (!(limit > 0)) return grabbed;
+
   let on, off;
-  for (const method of methods.on) if (typeof from[on] === 'function') { on = method; break; }
+  for (const method of methods.on) if (typeof from[method] === 'function') { on = method; break; }
   if (!on) return null;
-  for (const method of methods.off) if (typeof from[off] === 'function') { off = method; break; }
+  for (const method of methods.off) if (typeof from[method] === 'function') { off = method; break; }
   if (!off) return null;
 
-  const subs = Object.create(null);
-  const grabbed = [];
+  let subs = Object.create(null);
   if (typeof events === 'string') events = events.split(',');
   if (!(events instanceof Set)) events = new Set(events);
 
@@ -235,10 +238,11 @@ func_(function grabEvents(from, events, {
   wait.stop = stop;
   let n = 0;
 
-  const grab = (event, ...args) => {
-    if (n >= limit) return;
+  const grab = function (event, ...args) {
+    if (!subs || n >= limit) return;
     grabbed.push({event, args, at: new Date()});
     if (++n >= limit) stop();
+    if (handler) return handler.call(this, event, ...args);
   };
 
   for (const event of events) {
@@ -255,92 +259,138 @@ func_(async function firstEvent(from, resolves, rejects, opts = {}) {
   if (typeof resolves === 'string') resolves = resolves.split(',');
   if (typeof rejects === 'string') rejects = rejects.split(',');
   if (!(rejects instanceof Set)) rejects = new Set(rejects);
-  const [grabbed] = await $.grabEvents(from, new Set([...resolves, ...rejects]), {...opts, limit: 1});
-  opts.grabbed = grabbed;
+  const promise = $.grabEvents(from, new Set([...resolves, ...rejects]), {...opts, limit: 1});
+  opts.stop = promise.stop;
+  const [grabbed] = await promise;
+  if (!grabbed) return null;
+  Object.assign(opts, grabbed);
   const {event, args} = grabbed;
   if (rejects.has(event)) throw args[0];
-  return args;
+  return args[0];
 });
 
 const callOnceMap = new WeakMap();
 
-func_(function once(fn, ...args) {
+func_(async function once(fn, msec, ...args) {
+  if (typeof fn !== 'function') fn = this[fn];
   const map = callOnceMap;
   const has = map.get(fn);
-  if (has) return has.promise;
+
+  if (has) {
+    return await has.promise;
+  }
 
   const promise = (async () => {
     try {
       const res = await fn.call(this, ...args);
       return res;
     } finally {
-      map.delete(fn);
+      if (msec) setTimeout(() => map.delete(fn), msec);
+      else map.delete(fn);
     }
   })();
 
   map.set(fn, {promise});
-  return promise;
+  return await promise;
+});
+
+func_(async function only(fn, msec, ...args) {
+  if (typeof fn !== 'function') fn = this[fn];
+  const map = callOnceMap;
+  const has = map.get(fn);
+
+  if (has) try {
+    await has.promise;
+  } catch (err) { }
+
+  const promise = (async () => {
+    try {
+      const res = await fn.call(this, ...args);
+      return res;
+    } finally {
+      if (msec) setTimeout(() => map.delete(fn), msec);
+      else map.delete(fn);
+    }
+  })();
+
+  map.set(fn, {promise});
+  return await promise;
 });
 
 const throttleMap = new WeakMap();
 
-func_(function timeCall(fn, obj, msec) {
+func_(function accCall(fn, msec, obj) {
+  if (typeof fn !== 'function') fn = this[fn];
   const cur = throttleMap.get(fn);
-  const acc = cur ? cur.acc : obj instanceof Array ? [] : Object.create(null);
-  $.accumulate(acc, obj);
+
+  let acc;
 
   if (cur) {
+    acc = cur.acc;
+    $.accumulate(acc, obj);
     if (msec) cur.time = msec;
     return cur.finaled;
+  } else {
+    acc = $.initAcc(obj);
+    $.accumulate(acc, obj);
   }
 
-  const newCur = {acc, time: msec > 0 ? msec : 1000};
+  const newCur = {acc, time: msec, ctx: this};
   throttleMap.set(fn, newCur);
   return timeThrottleTimeout(fn);
 });
 
 async function timeThrottleTimeout(fn) {
   const cur = throttleMap.get(fn);
-  const {acc, time} = cur;
+  const {acc, time, ctx, ok, nok} = cur;
 
-  for (const key in acc) {
-    cur.acc = acc instanceof Array ? [] : Object.create(null);
+  let has = false;
+  const iter = acc[Symbol.iterator];
 
-    try {
-      delete cur.result;
-      delete cur.error;
-      const res = await fn(acc);
-      cur.result = res;
-      if (cur.ok) cur.ok(res); else return res;
-    } catch (err) {
-      cur.error = err;
-      if (cur.nok) cur.nok(err); else throw err;
-    } finally {
-      cur.finaled = new Promise((ok, nok) => {
-        cur.ok = ok;
-        cur.nok = nok;
-      });
-
-      if (time) {
-        setTimeout(timeThrottleTimeout, time, fn);
-      } else {
-        setImmediate(timeThrottleTimeout, fn);
-      }
-    }
-
-    return;
+  if (iter) {
+    for (const key of iter.call(acc)) { has = true; break; }
+  } else {
+    for (const key in acc) { has = true; break; }
   }
 
-  throttleMap.delete(fn);
-  if (cur.ok) cur.ok(null); else return null;
+  if (!has) {
+    throttleMap.delete(fn);
+    if (cur.ok) cur.ok(null);
+    return null;
+  }
+
+  cur.acc = $.initAcc(acc);
+
+  try {
+    cur.finaled = new Promise((ok, nok) => {
+      cur.ok = ok;
+      cur.nok = nok;
+    });
+
+    cur.finaled.catch($.null);
+
+    delete cur.result;
+    delete cur.error;
+    const res = await fn.call(ctx, acc);
+    cur.result = res;
+    if (ok) ok(res); else return res;
+  } catch (err) {
+    cur.error = err;
+    if (nok) nok(err); else throw err;
+  } finally {
+    if (time) {
+      setTimeout(timeThrottleTimeout, time, fn);
+    } else {
+      setImmediate(timeThrottleTimeout, fn);
+    }
+  }
 }
 
-func_(function timeCachedCall(fn, obj, msec) {
+func_(function accCallCached(fn) {
+  if (typeof fn !== 'function') fn = this[fn];
   const pending = throttleMap.get(fn);
-  const promise = $.timeCall(obj, msec, fn);
-  if (!pending) return promise;
-  if (pending.error) throw pending.error;
-  return pending.result;
+  if (!pending) return null;
+  return pending.acc;
 });
 
 func_(function throw_(title) {

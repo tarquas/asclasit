@@ -36,9 +36,11 @@ Iter.make_(function* range(from, to, step) {
   }
 });
 
-Iter.make_(function* reverse(arr) {
-  for (let i = arr.length - 1; i >= 0; i--) {
-    yield arr[i];
+Iter.chain_(function* reverse(iter) {
+  if (!(iter instanceof Array)) iter = Array.from(iter);
+
+  for (let i = iter.length - 1; i >= 0; i--) {
+    yield iter[i];
   }
 });
 

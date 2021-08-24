@@ -19,7 +19,43 @@ test('Iter_.filter: several functionals', () => {
   expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null, NaN, [5, 1], false, 0n]);
 });
 
-test('Iter_.call, AsIt_.debug: call external function', () => {
+test('Iter_.dfilter: one arg', () => {
+  const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter($.times_(5));
+  expect(Array.from(wrapped)).toEqual(['a', '', 1]);
+});
+
+test('Iter_.dfilter: stop', () => {
+  const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter(v => v != null ? true : $.stop);
+  expect(Array.from(wrapped)).toEqual(['a', '', 1, 0]);
+});
+
+test('Iter_.dfilter: post stop', () => {
+  const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter((v, a, d, p) => !p ? true : v != null ? true : $.stop);
+  expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null]);
+});
+
+test('Iter_.dfilter: pass', () => {
+  const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter(v => v != null ? false : $.pass);
+  expect(Array.from(wrapped)).toEqual([null, NaN, {x: 1}, [5, 1], false, 0n]);
+});
+
+test('Iter_.dfilter: post pass', () => {
+  const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter((v, a, d, p) => !p ? true : v != null ? true : $.pass);
+  expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
+});
+
+test('Iter_.dfilter: post pass multiple', () => {
+  const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter($.echo, (v, a, d, p) => !p ? true : v != null ? true : $.pass);
+  expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
+});
+
+test('Iter_.call, Iter_.debug: call external function', () => {
   const res = [];
   const seq = [];
   const wrapped = new Iter(Iter.getIter([1, 2, 3]));
@@ -58,6 +94,12 @@ test('Iter_.take: multi arg', () => {
   const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.take(o => o && o.x, v => !v);
   expect(Array.from(wrapped)).toEqual(['a', '', 1, 0, null, NaN]);
+});
+
+test('Iter_.stop: one arg', () => {
+  const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.stop($.eq_(null));
+  expect(Array.from(wrapped)).toEqual(['a', '', 1, 0]);
 });
 
 test('Iter_.stop: multi arg', () => {

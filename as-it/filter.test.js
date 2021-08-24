@@ -25,6 +25,42 @@ test('AsIt_.filter: several functionals', async () => {
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, [5, 1], false, 0n]);
 });
 
+test('AsIt_.dfilter: one arg', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter($.times_(5));
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1]);
+});
+
+test('AsIt_.dfilter: stop', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter(v => v != null ? true : $.stop);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0]);
+});
+
+test('AsIt_.dfilter: post stop', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter((v, a, d, p) => !p ? true : v != null ? true : $.stop);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null]);
+});
+
+test('AsIt_.dfilter: pass', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter(v => v != null ? false : $.pass);
+  expect(await asItArray(wrapped)).toEqual([null, NaN, {x: 1}, [5, 1], false, 0n]);
+});
+
+test('AsIt_.dfilter: post pass', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter((v, a, d, p) => !p ? true : v != null ? true : $.pass);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
+});
+
+test('AsIt_.dfilter: post pass multiple', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.dfilter($.echo, (v, a, d, p) => !p ? true : v != null ? true : $.pass);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
+});
+
 test('AsIt_.call, AsIt_.debug: call external function', async () => {
   const res = [];
   const seq = [];
@@ -64,6 +100,12 @@ test('AsIt_.take: multi arg', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.take(o => o && o.x, v => !v);
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN]);
+});
+
+test('AsIt_.stop: one arg', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.stop($.eq_(null));
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0]);
 });
 
 test('AsIt_.stop: multi arg', async () => {

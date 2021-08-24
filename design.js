@@ -22,7 +22,7 @@ const Design = {
     value: /^\$_(.*[^_])$/,
   },
 
-  rxClMethodTemplate: /^\$_(.*[^_])$/,
+  rxClMethodTemplate: /^\$_(.*)$/,
 
   $instApply(inst) {
     const {from} = inst;
@@ -34,8 +34,17 @@ const Design = {
       const names = Object.getOwnPropertyNames(o);
 
       for (const name of names) {
+        let n = name;
         const ents = name.match(rxClMethodTemplate);
-        if (ents) inst.method_(o, name, ents[1]);
+        if (ents) inst.method_(o, name, n = ents[1]);
+
+        const funcDesc = Object.getOwnPropertyDescriptor(o, n);
+        const func = funcDesc.value;
+
+        if (typeof func === 'function' && n.endsWith('$')) {
+          const nn = n.substr(0, n.length - 1);
+          if (!Object.hasOwnProperty.call(from, nn)) Object.defineProperty(from, nn, {value: func.bind(from)});
+        }
       }
 
       Object.defineProperty(o, $clApplied, {value: true});
@@ -54,13 +63,24 @@ const Design = {
 
       for (const name of names) {
         const chainEnts = name.match(chain);
-        if (chainEnts) { o.chain_($$[name], chainEnts[1]); continue; }
+
+        if (chainEnts) {
+          o.chain_($$[name], chainEnts[1]);
+          continue;
+        }
 
         const valueEnts = name.match(value);
-        if (valueEnts) { o.value_($$[name], valueEnts[1]); continue; }
+
+        if (valueEnts) {
+          o.value_($$[name], valueEnts[1]);
+          continue;
+        }
 
         const makeEnts = name.match(make);
-        if (makeEnts) { o.make_($$[name], makeEnts[1]); }
+
+        if (makeEnts) {
+          o.make_($$[name], makeEnts[1]);
+        }
       }
 
       Object.defineProperty($$, $itApplied, {value: true});

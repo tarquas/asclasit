@@ -33,6 +33,7 @@ class AbstractClassError extends Error {
 Object.assign($, {WakeTimeoutError, WakeFailedError, SleepTimeoutError, AbstractClassError});
 
 $.defaultOnSleepError = $.throw_('Async class instance finalization failed');
+$.defaultEmitError = $.throw_('Event handler exception');
 
 //const instsWoke = new Set();
 //let instsShutdown = null;
@@ -88,114 +89,143 @@ class $inst {
     return wrap[name];
   }
 
-  async wake(up, ctx, ...args) {
+  async #waitWake() {
     //if (this.#shutdown) throw new InstShutdownError();
 
     let ready = this.#waking;
     if (ready) await ready;
-    this.#waking = ready = this.#wake();
-    await ready;
-    
-    try {
-      if (typeof up === 'function') {
-        const promise = up.apply(ctx, args);
 
-        if (promise instanceof Promise) {
-          try {
-            this.#running.add(promise);
-            const result = await promise;
-            return result;
-          } finally {
-            this.#running.delete(promise);
-          }
-        } else {
-          return promise;
-        }
-      } else {
-        return up;
-      }
+    try {
+      this.#waking = ready = this.#wake();
+      await ready;
     } finally {
-      if (this.sleepImmediate) {
-        this.sleep();
-      } else if (this.sleepIdle) {
-        if (this.#sleepTimer) clearTimeout(this.#sleepTimer);
-        this.#sleepTimer = setTimeout(this.#sleepBound, this.sleepIdle);
-      }
+      this.#waking = null;
+    }
+
+    this.#awake = true;
+  }
+
+  #planSleep() {
+    if (this.#running.size) return;
+    if (this.sleepImmediate) return this.sleep();
+    if (!this.sleepIdle) return;
+    //if (this.#sleepTimer) clearTimeout(this.#sleepTimer);
+    this.#sleepTimer = setTimeout(this.#sleepBound, this.sleepIdle);
+  }
+
+  async #wakeValue(up) {
+    await this.#waitWake();
+    await this.#planSleep();
+    return up;
+  }
+
+  wake(up, ctx, ...args) {
+    if (typeof up !== 'function') return this.#wakeValue(up);
+    const fnctor = up.constructor;
+    if (fnctor === $.GeneratorFunction || fnctor === $.AsyncGeneratorFunction) return this.#wakeGen(up, ctx, ...args);
+    return this.#wakeAsync(up, ctx, ...args);
+  }
+
+  async #wakeAsync(up, ctx, ...args) {
+    let finished;
+    const promise = new Promise(ok => finished = ok);
+    this.#running.add(promise);
+    await this.#waitWake();
+
+    try {
+      const result = up.apply(ctx, args);
+      if (!(result instanceof Promise)) return result;
+      return await result;
+    } finally {
+      this.#running.delete(promise);
+      finished();
+      this.#planSleep();
+    }
+  }
+
+  async* #wakeGen(up, ctx, ...args) {
+    let finished;
+    const promise = new Promise(ok => finished = ok);
+    this.#running.add(promise);
+    await this.#waitWake();
+
+    try {
+      const iter = up.apply(ctx, args);
+      yield* iter;
+    } finally {
+      this.#running.delete(promise);
+      finished();
+      this.#planSleep();
     }
   }
 
   async #wake() {
-    try {
-      if (this.#sleeping) await this.#sleeping;
+    if (this.#sleeping) await this.#sleeping;
 
-      if (this.#sleepTimer) {
-        clearTimeout(this.#sleepTimer);
-        this.#sleepTimer = null;
-      }
-
+    if (this.#sleepTimer) {
+      clearTimeout(this.#sleepTimer);
       this.#sleepTimer = null;
+    }
 
-      outer: for (const o of Iter.reverse.gen(this.#protos)) {
-        let retr = this.wakeRetries, tries = 1;
+    this.#sleepTimer = null;
 
-        while (true) {
-          try {
-            let life, ready;
+    outer: for (const o of Iter.reverse.gen(this.#protos)) {
+      let retr = this.wakeRetries, tries = 1;
 
-            life = this.#life.get(o);
+      while (true) {
+        try {
+          let life, ready;
 
-            if (!life) {
-              life = Object.getOwnPropertyDescriptor(o, symbol);
+          life = this.#life.get(o);
 
-              if (life && typeof life.value === 'function') {
-                life = life.value.call(this.from, tries);
-                this.#life.set(o, life);
-              } else {
-                continue outer;
-              }
+          if (!life) {
+            life = Object.getOwnPropertyDescriptor(o, symbol);
+
+            if (life && typeof life.value === 'function') {
+              life = life.value.call(this.from, tries);
+              this.#life.set(o, life);
+            } else {
+              continue outer;
             }
-
-            ready = life.next();
-
-            if (ready.constructor === Promise) {
-              let tm;
-              if (this.wakeTimeout) ready = Promise.race([ready, tm = $.timeoutMsec(this.wakeTimeout, () => new WakeTimeoutError())]);
-              ready = await ready;
-              if (tm) tm.cancel();
-            }
-
-            if (ready.done) throw WakeFailedError;
-
-            ready = ready.value;
-
-            if (ready && ready.constructor === Promise) {
-              let tm;
-              if (this.wakeTimeout) ready = Promise.race([ready, tm = $.timeoutMsec(this.wakeTimeout, () => new WakeTimeoutError())]);
-              ready = await ready;
-              if (tm) tm.cancel();
-            }
-          } catch (err) {
-            for (const u of this.#protos) {
-              this.#life.delete(u);
-              if (u === o) break;
-            }
-
-            if (retr--) {
-              tries++;
-              if (this.wakeRetryDelay) await $.delayMsec(this.wakeRetryDelay);
-              continue;
-            }
-
-            if (err === WakeFailedError) throw new WakeFailedError();
-            throw err;
           }
 
-          break;
+          ready = life.next();
+
+          if (ready.constructor === Promise) {
+            let tm;
+            if (this.wakeTimeout) ready = Promise.race([ready, tm = $.timeoutMsec(this.wakeTimeout, () => new WakeTimeoutError())]);
+            ready = await ready;
+            if (tm) tm.cancel();
+          }
+
+          if (ready.done) throw WakeFailedError;
+
+          ready = ready.value;
+
+          if (ready && ready.constructor === Promise) {
+            let tm;
+            if (this.wakeTimeout) ready = Promise.race([ready, tm = $.timeoutMsec(this.wakeTimeout, () => new WakeTimeoutError())]);
+            ready = await ready;
+            if (tm) tm.cancel();
+          }
+        } catch (err) {
+          for (const u of this.#protos) {
+            this.#life.delete(u);
+            if (u === o) break;
+          }
+
+          if (retr--) {
+            tries++;
+            if (this.wakeRetryDelay) await $.delayMsec(this.wakeRetryDelay);
+            continue;
+          }
+
+          if (err === WakeFailedError) throw new WakeFailedError();
+          throw err;
         }
+
+        break;
       }
-    } finally {
-      this.#waking = null;
-      this.#awake = true;
     }
   }
 
@@ -203,7 +233,7 @@ class $inst {
     const errHandler = (this.onSleepError || $.defaultOnSleepError).bind(this.from);
 
     try {
-      if (this.#running.size) await Promise.all(this.#running).catch($.null);
+      while (this.#running.size) await Promise.all(this.#running).catch($.null);
 
       if (this.#sleepTimer) clearTimeout(this.#sleepTimer);
       this.#sleepTimer = null;
@@ -251,6 +281,119 @@ class $inst {
     this.#shutdown = true;
     return this.sleep();
   }*/
+
+  #events = Object.create(null);
+
+  on(event, handler, {pre, once} = {}) {
+    if (!event) return false;
+    if (typeof handler !== 'function') return false;
+    let handlers = this.#events[event];
+
+    if (handlers) {
+      if (handlers.pre.has(handler)) return false;
+      if (handlers.post.has(handler)) return false;
+    } else {
+      this.#events[event] = handlers = {
+        pre: new Set(),
+        post: new Set(),
+        once: new Set(),
+      };
+
+      handlers.emit = this.#emit.bind(this, handlers);
+    }
+
+    if (pre) handlers.pre.add(handler);
+    else handlers.post.add(handler);
+
+    if (once) handlers.once.add(handler);
+
+    return true;
+  }
+
+  once(event, handler, opts) {
+    return this.on(event, handler, {...opts, once: true});
+  }
+
+  offEvent(event) {
+    const handlers = this.#events[event];
+    if (!handlers) return false;
+
+    handlers.pre.clear();
+    handlers.post.clear();
+    handlers.once.clear();
+    delete this.#events[event];
+    return true;
+  }
+
+  offAll() {
+    let has = 0;
+
+    for (const event in this.#events) {
+      has |= this.offEvent(event);
+    }
+
+    return !!has;
+  }
+
+  off(event, handler) {
+    if (!handler) {
+      if (event) return this.offEvent(event);
+      else return this.offAll();
+    }
+
+    const handlers = this.#events[event];
+    if (!handlers) return false;
+
+    handlers.once.delete(handler);
+
+    if (handlers.pre.delete(handler)) {
+      if (!handlers.pre.size && !handlers.post.size) delete this.#events[event];
+      return true;
+    }
+
+    if (handlers.post.delete(handler)) {
+      if (!handlers.pre.size && !handlers.post.size) delete this.#events[event];
+      return true;
+    }
+
+    return false;
+  }
+
+  async emit(event, ...args) {
+    const handlers = this.#events[event];
+    if (!handlers) return;
+    return await $.only(handlers.emit, 0, args);
+  }
+
+  async #emit(handlers, args) {
+    const errHandler = this.throw || $.defaultEmitError;
+
+    for (const handler of Iter.from(handlers.pre).reverse()) {
+      if (!handlers.pre.has(handler)) continue;
+      if (handlers.once.has(handler)) { handlers.pre.delete(handler); handlers.once.delete(handler); }
+
+      try {
+        const handled = await handler.call(this.from, ...args);
+        if (handled === true) return true;
+      } catch (err) {
+        errHandler.call(this, err, 'emit');
+      }
+    }
+
+    for (const handler of handlers.post) {
+      //if (!handlers.post.has(handler)) continue;
+      if (handlers.once.has(handler)) { handlers.post.delete(handler); handlers.once.delete(handler); }
+
+      try {
+        const handled = await handler.call(this.from, ...args);
+        if (handled === true) return true;
+      } catch (err) {
+        errHandler.call(this, err, 'emit');
+      }
+    }
+
+    return false;
+  }
 }
 
 Design.$classApply($inst);
@@ -291,6 +434,6 @@ func_(function ctor() {
   setImmediate(asyncCtor.bind(this));
 });
 
-$.$inst = $inst;
+$.Inst = $inst;
 
 module.exports = $;
