@@ -15,7 +15,7 @@ AsIt.make_(Iter.objectsValues.gen);
 
 AsIt.builtinEntries = Iter.builtinEntries;
 
-AsIt.make_(async function* keys(...objs) {
+AsIt.chain_(async function* keys(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = await obj.call(this);
     if (obj == null) continue;
@@ -42,7 +42,7 @@ AsIt.make_(async function* keys(...objs) {
   }
 });
 
-AsIt.make_(async function* entries(...objs) {
+AsIt.chain_(async function* entries(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = await obj.call(this);
     if (obj == null) continue;
@@ -69,7 +69,7 @@ AsIt.make_(async function* entries(...objs) {
   }
 });
 
-AsIt.make_(async function* values(...objs) {
+AsIt.chain_(async function* values(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = await obj.call(this);
     if (obj == null) continue;

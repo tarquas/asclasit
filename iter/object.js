@@ -34,7 +34,7 @@ Iter.make_(function* objectsValues(...objs) {
 
 Iter.builtinEntries = new Set([Array, Set, Map]);
 
-Iter.make_(function* keys(...objs) {
+Iter.chain_(function* keys(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = obj.call(this);
     if (obj == null) continue;
@@ -61,7 +61,7 @@ Iter.make_(function* keys(...objs) {
   }
 });
 
-Iter.make_(function* entries(...objs) {
+Iter.chain_(function* entries(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = obj.call(this);
     if (obj == null) continue;
@@ -88,7 +88,7 @@ Iter.make_(function* entries(...objs) {
   }
 });
 
-Iter.make_(function* values(...objs) {
+Iter.chain_(function* values(...objs) {
   for (let obj of objs) {
     while (typeof obj === 'function') obj = obj.call(this);
     if (obj == null) continue;

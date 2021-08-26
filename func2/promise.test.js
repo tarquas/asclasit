@@ -194,7 +194,7 @@ test('$.only: delay until previous call finished', async () => {
   const res = [];
 
   const bumper = {async bump() {
-    await $.delayMsec(50);
+    await $.delayMsec(25);
     if (n++ > 2) throw res;
   }};
 
@@ -202,12 +202,33 @@ test('$.only: delay until previous call finished', async () => {
   let last;
 
   for (let i = 0; i < 6; i++) {
-    last = $.only.call(bumper, 'bump', i ? 50 : 0).catch($.echo).then(() => res.push((up() / 100) | 0));
-    await $.delay(30);
+    last = $.only.call(bumper, 'bump', i ? 25 : 0).catch($.echo).then(() => res.push((up() / 50) | 0));
+    await $.delay(15);
   }
 
   await last;
-  expect(res).toEqual([0, 1, 1, 1, 2, 2]);
+  expect(res).toEqual([0, 1, 2, 3, 4, 5]);
+});
+
+test('$.only: atomics', async () => {
+  const bumped = [];
+
+  async function bump(bumpy) {
+    await $.delayMsec(20);
+    bumped.push(bumpy);
+  }
+
+  const bump2 = bump.bind($);
+
+  $.only(bump, 0, 1);
+  $.only(bump, 0, 2);
+  $.only(bump, 0, 3);
+  await $.delayMsec(10);
+  $.only(bump2, 0, 4);
+  $.only(bump2, 0, 5);
+  await $.only(bump2, 0, 6);
+
+  expect(bumped).toEqual([1, 4, 2, 5, 3, 6]);
 });
 
 test('$.accCall: debounce time-throttled function call with accumulating input parameter', async () => {
@@ -255,4 +276,84 @@ test('$.accCall, $.accCallCached: first reject', async () => {
   } catch (err) {
     expect(err).toEqual({a: 2});
   }
+});
+
+test('$.lockCall: atomics', async () => {
+  const bumped = [];
+
+  async function bump(bumpy) {
+    await $.delayMsec(20);
+    bumped.push(bumpy);
+  }
+
+  const bump2 = bump.bind($);
+
+  $.lockCall(bump, 1);
+  $.lockCall(bump, 2);
+  $.lockCall(bump, 3);
+  await $.delayMsec(10);
+  $.lockCall(bump2, 4);
+  $.lockCall(bump2, 5);
+  await $.lockCall(bump2, 6);
+
+  expect(bumped).toEqual([1, 4, 2, 5, 3, 6]);
+});
+
+test('$.delayShutdown: process exit', async () => {
+  const bumped = [];
+
+  async function bump(bumpy) {
+    await $.delayMsec(20);
+    bumped.push(bumpy);
+  }
+
+  expect($.unlock(bump)).toBe(false);
+
+  const origExit = process.exit;
+  process.exit = (code) => bumped.push(`exit ${code}`);
+
+  try {
+    $.delayShutdown(50, {
+      before(sig, code) { bumped.push(`before ${sig} ${code}`); },
+      after(sig, code) { bumped.push(`after ${sig} ${code}`); },
+    });
+
+    let last;
+    for (let i = 0; i < 5; i++) last = $.lockCall(bump, i);
+    process.exit();
+    await last;
+    $.delayShutdown(0);
+  } finally {
+    process.exit = origExit;
+  }
+
+  expect(bumped).toEqual(['before undefined 2', 0, 1, 'exit 2', 2, 3, 4]);
+});
+
+test('$.delayShutdown: double signal', async () => {
+  const bumped = [];
+
+  async function bump(bumpy) {
+    await $.delayMsec(20);
+    bumped.push(bumpy);
+  }
+
+  expect($.unlock(bump)).toBe(false);
+
+  const origExit = process.exit;
+  process.exit = () => bumped.push('exit');
+
+  try {
+    $.delayShutdown(50);
+    let last;
+    for (let i = 0; i < 5; i++) last = $.lockCall(bump, i);
+    process.exit(1);
+    process.exit();
+    await last;
+    $.delayShutdown(0);
+  } finally {
+    process.exit = origExit;
+  }
+
+  expect(bumped).toEqual(['exit', 'exit', 0, 1, 2, 3, 4]);
 });

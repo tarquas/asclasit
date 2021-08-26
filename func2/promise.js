@@ -1,5 +1,6 @@
 const $ = require('../func');
 require('./acc');
+const Iter = require('../iter');
 
 const util = require('util');
 const streams = require('stream/promises');
@@ -271,50 +272,51 @@ func_(async function firstEvent(from, resolves, rejects, opts = {}) {
 
 const callOnceMap = new WeakMap();
 
+async function callOnceExpire(fn, msec) {
+  await $.delayMsec(msec);
+  callOnceMap.delete(fn);
+}
+
+async function callOnceTimer(obj, fn, msec, ...args) {
+  obj.promise = fn.call(this, ...args);
+  await obj.promise.catch($.null);
+
+  if (msec) {
+    obj.timer = callOnceExpire(fn, msec);
+  } else {
+    callOnceMap.delete(fn);
+  }
+}
+
+function callOnceSet(fn, msec, ...args) {
+  const obj = {};
+  obj.timer = callOnceTimer.call(this, obj, fn, msec, ...args);
+  callOnceMap.set(fn, obj);
+  return obj.promise;
+}
+
 func_(async function once(fn, msec, ...args) {
   if (typeof fn !== 'function') fn = this[fn];
-  const map = callOnceMap;
-  const has = map.get(fn);
+  const has = callOnceMap.get(fn);
+  if (has) return await has.promise;
 
-  if (has) {
-    return await has.promise;
-  }
-
-  const promise = (async () => {
-    try {
-      const res = await fn.call(this, ...args);
-      return res;
-    } finally {
-      if (msec) setTimeout(() => map.delete(fn), msec);
-      else map.delete(fn);
-    }
-  })();
-
-  map.set(fn, {promise});
-  return await promise;
+  const promise = callOnceSet.call(this, fn, msec, ...args);
+  const res = await promise;
+  return res;
 });
 
 func_(async function only(fn, msec, ...args) {
   if (typeof fn !== 'function') fn = this[fn];
-  const map = callOnceMap;
-  const has = map.get(fn);
 
-  if (has) try {
-    await has.promise;
-  } catch (err) { }
+  while (true) {
+    const has = callOnceMap.get(fn);
+    if (!has) break;
+    await has.timer;
+  }
 
-  const promise = (async () => {
-    try {
-      const res = await fn.call(this, ...args);
-      return res;
-    } finally {
-      if (msec) setTimeout(() => map.delete(fn), msec);
-      else map.delete(fn);
-    }
-  })();
-
-  map.set(fn, {promise});
-  return await promise;
+  const promise = callOnceSet.call(this, fn, msec, ...args);
+  const res = await promise;
+  return res;
 });
 
 const throttleMap = new WeakMap();
@@ -398,6 +400,104 @@ func_(function throw_(title) {
     let out = !err ? err : err.stack || err.message || err.type || err.code || err;
     if (title) out = `${title}\n${out}`;
     console.error(out);
+  }
+});
+
+const locks = new Map();
+
+func_(async function lock(to) {
+  while (true) {
+    const ex = locks.get(to);
+    if (!ex) break;
+    await ex.promise;
+  }
+
+  let unlock;
+  const promise = new Promise(resolve => unlock = resolve);
+  locks.set(to, {promise, unlock});
+});
+
+func_(function unlock(to) {
+  const ex = locks.get(to);
+  if (!ex) return false;
+  locks.delete(to);
+  ex.unlock();
+  return true;
+});
+
+func_(async function lockCall(fn, ...args) {
+  await $.lock(fn);
+
+  try {
+    return await fn.call(this, ...args);
+  } finally {
+    $.unlock(fn);
+  }
+});
+
+func_(async function waitLocks() {
+  while (locks.size) {
+    const promises = Iter.values(locks).map('promise');
+    await Promise.all(promises);
+  }
+});
+
+const exitSignals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
+let signalCaught = false;
+let signalBound = null;
+let originalProcessExit = null;
+
+const signalExitCodes = Object.assign(Object.create(null), {
+  SIGHUP: 129,
+  SIGINT: 130,
+  SIGTERM: 143,
+});
+
+$.onShutdownError = $.throw_('Error in shutdown');
+
+const getSignalFunc = (msec, after = $.aecho, before = $.aecho) => async function (signal) {
+  const code = typeof signal === 'number' ? signal : signalExitCodes[signal] || 2;
+
+  if (!signalCaught) {
+    signalCaught = true;
+    const args = [signal, code, msec];
+
+    await Promise.race([
+      (async () => {
+        await before.call(this, ...args);
+        await $.waitLocks();
+        await after.call(this, ...args)
+      })().catch($.onShutdownError),
+      $.delayMsec(msec)
+    ]);
+  }
+
+  $.delayShutdown(0);
+  return process.exit(code);
+}
+
+func_(function delayShutdown(msec, {after, before} = {}) {
+  if (originalProcessExit) {
+    process.exit = originalProcessExit;
+    originalProcessExit = null;
+  }
+
+  if (signalBound) {
+    for (const signal of exitSignals) {
+      process.off(signal, signalBound);
+    }
+
+    signalBound = null;
+  }
+
+  if (!(msec > 0)) return;
+
+  originalProcessExit = process.exit;
+  signalBound = getSignalFunc(msec, after, before);
+  process.exit = signalBound;
+
+  for (const signal of exitSignals) {
+    process.on(signal, signalBound);
   }
 });
 

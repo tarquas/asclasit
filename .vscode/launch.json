@@ -33,7 +33,7 @@
         "--runInBand",
         "--logHeapUsage",
 
-        "func2/class"
+        "func2/promise"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
