@@ -237,7 +237,7 @@ test('$.accCall: debounce time-throttled function call with accumulating input p
   const errs = [];
 
   const bumper = {async bump(pack) {
-    await $.delayMsec(40);
+    await $.delayMsec(38);
     res.push(pack);
     if (n++ > 1) throw n;
   }};
