@@ -226,6 +226,11 @@ class Delayed extends $ {
   async $_method() {
     await $.delay(40);
   }
+
+  async *$_iterMethod() {
+    yield 1;
+    yield 2;
+  }
 }
 
 test('class: waking/running/sleeping', async () => {
@@ -234,7 +239,8 @@ test('class: waking/running/sleeping', async () => {
   //await $.tick();
   expect(a[$].sleep()).toBe(null);
 
-  await a[$].wake();
+  //await a[$].wake();
+  expect(await AsIt.from(a.iterMethod()).toArray()).toEqual([1, 2]);
   expect(await a[$].sleep()).toBe(true);
 
   a.method();
@@ -345,7 +351,7 @@ test('class: delayed sleeping: wake while sleeping', async () => {
   await st[$].sleep();
 });
 
-class MethodBound extends $ {
+/*class MethodBound extends $ {
   marker = 'native';
 
   async bound$() {
@@ -380,7 +386,8 @@ test('class: method bound', async () => {
   expect(await AsIt.from(my.wakeIterBound.call(ctx)).toArray()).toEqual(['native', 2, 3]);
   expect(await my[$].sleep()).toBe(true);
   expect(await my[$].sleep()).toBe(null);
-});
+});*/
+
 class MyEvents extends $ {
   static [$] = class extends $.Inst {
     throwed = [];

@@ -74,14 +74,18 @@ func_($.timeoutMsec, 'timeout');
 func_(function upNsec_(scale, out = {}) {
   const start = process.hrtime.bigint();
   out.start = start;
+  out.last = start;
 
-  return function _up() {
+  const ret = function _up(last) {
     const snap = process.hrtime.bigint();
+    const nsec = snap - (last ? out.last : start);
     out.last = snap;
-    const nsec = snap - start;
     if (scale) return Number(nsec) / scale;
     return nsec;
-  }
+  };
+
+  ret.last = ret.bind(null, true);
+  return ret;
 });
 
 func_(function upMsec_(out) {

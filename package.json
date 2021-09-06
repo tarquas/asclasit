@@ -1,7 +1,7 @@
 {
   "name": "asclasit",
   "version": "0.0.1",
-  "description": "ASync CLASses and ITerators",
+  "description": "ASync CLasses + ASync ITerators",
   "main": "index.js",
   "scripts": {
     "diff": "gitdiff () { git diff $* -- . ':!package-lock.json'; }; gitdiff",

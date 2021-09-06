@@ -86,6 +86,8 @@ func_($.log_(), 'ln');
 
 func_(w => v => v === w, 'eq_');
 func_(w => v => v < w, 'lt_');
+func_(w => v => v <= w, 'lte_');
 func_(w => v => v > w, 'gt_');
+func_(w => v => v >= w, 'gte_');
 
 module.exports = $;

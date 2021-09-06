@@ -28,6 +28,10 @@ test('$.not: map boolean not', () => {
   expect([1, undefined, 0, 'a', null, {a: 1}, [5]].map($.not)).toEqual([false, true, true, false, true, false, false]);
 });
 
+test('$.not_: not func result', () => {
+  expect([1, '2', false].map($.not_(v => typeof v === 'string'))).toEqual([true, false, true]);
+});
+
 test('$.anot: map boolean not async', async () => {
   const promises = [1, undefined, 0, 'a', null, {a: 1}, [5]].map($.anot);
   expect(promises[0] instanceof Promise).toBe(true);
@@ -36,6 +40,10 @@ test('$.anot: map boolean not async', async () => {
 
 test('$.neg: map negative', () => {
   expect([1, undefined, 0, 'a', null, {a: 1}, [5]].map($.neg)).toEqual([-1, NaN, -0, NaN, -0, NaN, -5]);
+});
+
+test('$.neg_: negate func result', () => {
+  expect([1, 2, 3].map($.neg_(v => v * 2))).toEqual([-2, -4, -6]);
 });
 
 test('$.aneg: map negative', async () => {

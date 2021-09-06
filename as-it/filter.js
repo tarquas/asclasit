@@ -79,6 +79,10 @@ AsIt.chain_(async function* debug(iter, ...funcs) {
   yield* filterGen.call(this, iter, false, ...funcs, $.true);
 });
 
+AsIt.chain_(async function* dbglog(iter, ...pre) {
+  yield* AsIt.debug.gen.call(this, iter, v => console.log(...pre, v));
+});
+
 AsIt.chain_(async function* skip(iter, ...funcs) {
   yield* filterGen.call(this, iter, false, ...funcs, $.cond_(false, $.pass));
 });

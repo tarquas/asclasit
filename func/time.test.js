@@ -23,8 +23,11 @@ test('$.delaySec: delay execution in 1 eventloop spin', async () => {
 test('$.delayMsec, $.upSec, $.upSec_: delay execution in msec, uptime in sec', async () => {
   const snap = $.upSec();
   const up = $.upSec_();
-  await $.delayMsec(200);
-  expect($.upSec(snap).toPrecision(1)).toBe('0.2');
+  await $.delayMsec(100);
+  expect($.upSec(snap).toPrecision(1)).toBe('0.1');
+  expect(up().toPrecision(1)).toBe('0.1');
+  await $.delayMsec(100);
+  expect(up.last().toPrecision(1)).toBe('0.1');
   expect(up().toPrecision(1)).toBe('0.2');
 });
 

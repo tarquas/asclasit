@@ -1,4 +1,5 @@
 const Iter = require('./realign');
+const $ = require('../func');
 
 const toChunk = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -34,7 +35,7 @@ test('Iter_.chunk: by condition limited to 2', () => {
 
 test('Iter_.chunk: by conditions, limited to 2', () => {
   const wrapped = new Iter(Iter.getIter(toChunk));
-  wrapped.chunk(2, item => item & 2, (item, desc, v) => !v);
+  wrapped.chunk(2, item => item & 2, v => !v);
   expect(Array.from(wrapped)).toEqual([[1, 2], [3], [4], [5, 6], [7], [8], [9]]);
 });
 
@@ -169,4 +170,84 @@ test('Iter_.sep: separate items: gen + condition', () => {
   const iter = new Iter(Iter.getIter(['apple', 'orange', 'melon', ' - good', 'not bad']));
   iter.sep([';', ' '], (p, item) => item[0] !== ' ');
   expect(Array.from(iter)).toEqual(['apple', ';', ' ', 'orange', ';', ' ', 'melon', ' - good', ';', ' ', 'not bad']);
+});
+
+test('Iter_.sortedWith: mix in from external sorted iterator', () => {
+  const a1 = [1, 4, 9, 10];
+  const a2 = [0, 2, 5, 6, 7, 12, 13, 16];
+  const a = Iter.from(a1).sortedWith(a2, $.numSort);
+  expect(Array.from(a)).toEqual([0, 1, 2, 4, 5, 6, 7, 9, 10, 12, 13, 16]);
+});
+
+test('Iter_.sortedWith: mix in from external sorted iterator', () => {
+  const a1 = [8, 5, 2, 1];
+  const a2 = [7, 6, 3];
+  const a = Iter.from(a1).sortedWith(a2, $.neg_($.numSort));
+  expect(Array.from(a)).toEqual([8, 7, 6, 5, 3, 2, 1]);
+});
+
+test('Iter_.sortedWith: emergency stop', () => {
+  const a1 = {
+    [Symbol.iterator]() { return this },
+    next() { return {value: 2}; },
+    return() { throw 3; }
+  };
+
+  const a2 = {
+    [Symbol.iterator]() { return this },
+    next() { if (this.a) throw 1; this.a = 1; return {value: 0}; },
+  };
+
+  const a = new Iter(a1).sortedWith(a2, $.numSort);
+
+  try {
+    Array.from(a);
+    expect(true).toBe(false);
+  } catch (err) {
+    expect(err).toEqual(1);
+  }
+
+  a2.a = 0;
+  const b = new Iter(a2).sortedWith(a1, $.numSort);
+
+  try {
+    Array.from(b);
+    expect(true).toBe(false);
+  } catch (err) {
+    expect(err).toEqual(1);
+  }
+});
+
+test('Iter_.sort: return sorted array', () => {
+  const from = Iter.from([8, 2, 6, 1, 0, -1, 8]);
+  expect(from.sort()).toEqual([-1, 0, 1, 2, 6, 8, 8]);
+});
+
+test('Iter_.sort: zero limit', () => {
+  const from = Iter.from([8, 2, 6, 1, 0, -1, 8]);
+  expect(from.sort(0)).toEqual([]);
+  expect(Array.from(from)).toEqual([]);
+});
+
+test('Iter_.sort: paging example', () => {
+  const src = [8, 2, 6, 1, 1, 0, -1, 8];
+
+  const p1 = Iter.from(src);
+  const p1a = p1.sort(3);
+  expect(p1a).toEqual([-1, 0, 1]);
+
+  // not optimal: additional memory for `skip`:
+  const p2 = Iter.from(src);
+  const p2a = p2.sort({skip: 3, limit: 3});
+  expect(p2a).toEqual([1, 2, 6]);
+
+  // optimal alternative to above: filter, then use skip=1:
+  const p2x = Iter.from(src);
+  const p2xa = p2x.sort({skip: 1, limit: 3, filter: $.gte_($.lastElem(p1a))});
+  expect(p2xa).toEqual([1, 2, 6]);
+
+  // several filters:
+  const p2y = Iter.from(src);
+  const p2ya = p2y.sort({skip: 1, limit: 3, filters: [$.lt_($.lastElem(p1a)), $.not]});
+  expect(p2ya).toEqual([1, 2, 6]);
 });

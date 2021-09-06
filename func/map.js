@@ -39,8 +39,17 @@ func_(function cond_(ifTrue, ifFalse) {
   };
 });
 
+$.chunkEnds = $.cond_(-1, 0);
+
 func_(function not(value) {
   return !value;
+});
+
+func_(function not_(func) {
+  return function _not(...args) {
+    const v = func.call(this, ...args);
+    return !v;
+  };
 });
 
 func_(async function anot(value) {
@@ -49,6 +58,13 @@ func_(async function anot(value) {
 
 func_(function neg(value) {
   return -value;
+});
+
+func_(function neg_(func) {
+  return function _neg(...args) {
+    const v = func.call(this, ...args);
+    return -v;
+  };
 });
 
 func_(async function aneg(value) {
@@ -212,12 +228,14 @@ func_(function load_(id) {
   };
 });
 
-func_(function debug_(func) {
+func_(function debug_(func, ...pre) {
   return function _debug(value) {
-    func.call(this, value);
+    func.call(this, ...pre, value);
     return value;
   };
 });
+
+$.dbglog = $.debug_(console.log);
 
 func_(function _mappingFuncs(funcs, iterOut) {
   const l = funcs.length;

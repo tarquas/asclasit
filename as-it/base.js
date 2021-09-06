@@ -1,13 +1,11 @@
+const it = require('../it');
 const Design = require('../design');
 
 const wrapped = Symbol('$.AsIt.wrapped');
 
 const AsIt = function(iter) {
-  if (!iter) throw new TypeError('not iterable');
-  if (!iter[Symbol.iterator] && !iter[Symbol.asyncIterator]) throw new TypeError('not iterable');
-  this[wrapped] = iter;
+  if (iter != null) this.set(iter);
   this.cur = 0;
-
   Design.$itApply(this);
 };
 
@@ -43,22 +41,36 @@ AsIt.getIter = function getIter(itrb, strOk, ...args) {
   return null;
 };
 
+AsIt_.get = function get() {
+  return this[wrapped] || it.voidIter;
+};
+
+AsIt_.set = function set(itrb) {
+  if (this[wrapped] !== itrb) {
+    const iter = AsIt.getIter(itrb, true);
+    if (!iter) throw new TypeError('not iterable');
+    this[wrapped] = iter;
+  }
+
+  return this;
+};
+
 AsIt.makeWrap = (gen) => function makeWrap(...args) {
-  const iter = gen.call(this, ...args);
-  const wrapped = new AsIt(iter);
-  return wrapped;
+  const ctx = new this();
+  const iter = gen.call(ctx, ...args);
+  if (iter && iter !== ctx) { ctx.set(iter); ctx.cur = 0; }
+  return ctx;
 };
 
 AsIt.chainWrap = (gen) => function chainWrap(...args) {
-  const prev = this[wrapped];
+  const prev = this[wrapped] || it.voidIter;
   const iter = gen.call(this, prev, ...args);
-  this[wrapped] = iter;
-  this.cur = 0;
+  if (iter && iter !== this) { this.set(iter); this.cur = 0; }
   return this;
 };
 
 AsIt.valueWrap = (func) => function valueWrap(...args) {
-  const prev = this[wrapped];
+  const prev = this[wrapped] || it.voidIter;
   const res = func.call(this, prev, ...args);
   return res;
 };
@@ -89,7 +101,7 @@ AsIt.value_ = AsIt_.value_ = function value_(func, name) {
 AsIt_.$applied = true;
 
 AsIt_[Symbol.asyncIterator] = function asyncIterator() {
-  const cur = this[wrapped];
+  const cur = this[wrapped] || it.voidIter;
   return cur;
 };
 
@@ -105,6 +117,7 @@ AsIt.value_(async function next(iter, value) {
 
 AsIt.value_(async function read(iter, value) {
   const item = await this.$.next.call(this, iter, value);
+  if (item.done) return it.eof;
   return item.value;
 });
 

@@ -104,8 +104,8 @@ Iter.value_(function fork(iter, limit) {
   const forked = _fork.call(this, iter, limit, o.i);
   forked.forkSrc = iter;
 
-  if (this.constructor === Iter) {
-    const wrapped = new Iter(forked);
+  if (this instanceof Iter) {
+    const wrapped = new this.constructor(forked);
     return wrapped;
   } else {
     return forked;

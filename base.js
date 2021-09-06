@@ -1,8 +1,9 @@
+const it = require('./it');
 const Design = require('./design');
 
 const symbol = Symbol('$');
 
-const $ = function $(...args) {
+function $(...args) {
   if (this !== global && this instanceof $) return $.ctor.call(this, ...args);
   if (!args.length) return Object.create(null);
 
@@ -80,5 +81,5 @@ const guessActions = {
   [types.AsIt](...args) { return $.AsIt.concat(...args); },
 };
 
-Object.assign($, {func_, UnknownArgsError, NotImplementedError});
+Object.assign($, {...it, func_, UnknownArgsError, NotImplementedError});
 module.exports = $;

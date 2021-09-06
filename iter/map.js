@@ -1,4 +1,4 @@
-const Iter = require('./base');
+const Iter = require('./make');
 const $ = require('../func/map');
 
 Iter.chain_(function* map(iter, ...funcs) {

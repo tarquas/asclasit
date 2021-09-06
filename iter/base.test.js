@@ -1,7 +1,8 @@
+const $ = require('../base');
 const Iter = require('./base');
 
 test('new Iter: bad argument', () => {
-  expect(() => new Iter()).toThrow('not iterable');
+  expect(Array.from(new Iter())).toEqual([]);
   expect(() => new Iter({})).toThrow('not iterable');
 });
 
@@ -152,6 +153,11 @@ test('Iter_.read: read value', () => {
   expect(Array.from(wrapped)).toEqual([3, 2, 1, 0]);
 });
 
+test('AsIt_.read: read eof', () => {
+  const empty = new Iter();
+  expect(empty.read()).toBe($.eof);
+});
+
 test('Iter_.ffwd: fast forward values', () => {
   const myGen = function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new Iter(myGen());
@@ -173,4 +179,19 @@ test('Iter_.ffwd: fast forward generic iterator beyond', () => {
   const iter = myGen();
   expect(Iter.ffwd(iter, 10, true)).toEqual({done: true});
   expect(Array.from(iter)).toEqual([]);
+});
+
+test('Iter_.get, .set: get/set wrapped iterator', () => {
+  const iter = new Iter([1, 2]);
+  expect(iter.get() !== iter).toBe(true);
+  expect(Array.from(iter.get())).toEqual([1, 2]);
+  try { iter.set({}); expect(true).toBe(false); } catch(err) { expect(err.message).toBe('not iterable'); }
+  iter.set(function*() { yield 3; });
+  expect(Array.from(iter)).toEqual([3]);
+});
+
+test('Iter_.get, chain: void iterator', () => {
+  const iter = new Iter();
+  expect(Array.from(iter.get())).toEqual([]);
+  expect(Array.from(iter.load(1))).toEqual([]);
 });

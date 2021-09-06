@@ -1,4 +1,4 @@
-const AsIt = require('./base');
+const AsIt = require('./make');
 const $ = require('../func/map');
 
 AsIt.chain_(async function* map(iter, ...funcs) {

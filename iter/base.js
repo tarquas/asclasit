@@ -1,12 +1,11 @@
+const it = require('../it');
 const Design = require('../design');
 
 const wrapped = Symbol('$.Iter.wrapped');
 
 const Iter = function(iter) {
-  if (!iter || !iter[Symbol.iterator]) throw new TypeError('not iterable');
-  this[wrapped] = iter;
+  if (iter != null) this.set(iter);
   this.cur = 0;
-
   Design.$itApply(this);
 };
 
@@ -36,22 +35,36 @@ Iter.getIter = function getIter(itrb, strOk, ...args) {
   return null;
 };
 
+Iter_.get = function get() {
+  return this[wrapped] || it.voidIter;
+};
+
+Iter_.set = function set(itrb) {
+  if (this[wrapped] !== itrb) {
+    const iter = Iter.getIter(itrb, true);
+    if (!iter) throw new TypeError('not iterable');
+    this[wrapped] = iter;
+  }
+
+  return this;
+};
+
 Iter.makeWrap = (gen) => function makeWrap(...args) {
-  const iter = gen.call(this, ...args);
-  const wrapped = new this.$(iter);
-  return wrapped;
+  const ctx = new this();
+  const iter = gen.call(ctx, ...args);
+  if (iter && iter !== ctx) { ctx.set(iter); ctx.cur = 0; }
+  return ctx;
 };
 
 Iter.chainWrap = (gen) => function chainWrap(...args) {
-  const prev = this[wrapped];
+  const prev = this[wrapped] || it.voidIter;
   const iter = gen.call(this, prev, ...args);
-  this[wrapped] = iter;
-  this.cur = 0;
+  if (iter && iter !== this) { this.set(iter); this.cur = 0; }
   return this;
 };
 
 Iter.valueWrap = (func) => function valueWrap(...args) {
-  const prev = this[wrapped];
+  const prev = this[wrapped] || it.voidIter;
   const res = func.call(this, prev, ...args);
   return res;
 };
@@ -82,7 +95,7 @@ Iter.value_ = Iter_.value_ = function value_(func, name) {
 Iter_.$applied = true;
 
 Iter_[Symbol.iterator] = function iterator() {
-  const cur = this[wrapped];
+  const cur = this[wrapped] || it.voidIter;
   return cur;
 };
 
@@ -98,6 +111,7 @@ Iter.value_(function next(iter, value) {
 
 Iter.value_(function read(iter, value) {
   const item = this.$.next.call(this, iter, value);
+  if (item.done) return it.eof;
   return item.value;
 });
 

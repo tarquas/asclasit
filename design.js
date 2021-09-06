@@ -38,13 +38,13 @@ const Design = {
         const ents = name.match(rxClMethodTemplate);
         if (ents) inst.method_(o, name, n = ents[1]);
 
-        const funcDesc = Object.getOwnPropertyDescriptor(o, n);
+        /*const funcDesc = Object.getOwnPropertyDescriptor(o, n);
         const func = funcDesc.value;
 
         if (typeof func === 'function' && n.endsWith('$')) {
           const nn = n.substr(0, n.length - 1);
           if (!Object.hasOwnProperty.call(from, nn)) Object.defineProperty(from, nn, {value: func.bind(from)});
-        }
+        }*/
       }
 
       Object.defineProperty(o, $clApplied, {value: true});

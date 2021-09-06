@@ -1,4 +1,5 @@
 const Iter = require('./map');
+require('./filter');
 const $ = require('../func');
 
 function* chunkByCount(iter, count) {
@@ -15,13 +16,14 @@ function* chunkByCount(iter, count) {
 }
 
 function* chunkByCountFunc(iter, count, ...funcs) {
+  $._predicateFuncs(funcs);
   const desc = {buf: [], idx: 0, iter, ctx: this};
 
   for (const item of iter) {
-    let newChunk = 0;
+    let newChunk = item;
 
     for (const func of funcs) {
-      if (func) newChunk = func.call(this, item, desc, newChunk);
+      newChunk = func.call(this, newChunk, item, desc);
     }
 
     if (newChunk > 0 && desc.buf.length) {
@@ -40,10 +42,10 @@ function* chunkByCountFunc(iter, count, ...funcs) {
   if (desc.buf.length) yield desc.buf;
 }
 
-Iter.chain_(function* chunk(iter, count, func, ...funcs) {
-  if (typeof count === 'function') yield* chunkByCountFunc(iter, 0, count, func, ...funcs);
-  else if (typeof func === 'function') yield* chunkByCountFunc(iter, count, func, ...funcs);
-  else yield* chunkByCount(iter, count);
+Iter.chain_(function* chunk(iter, ...funcs) {
+  if (typeof funcs[0] === 'function') yield* chunkByCountFunc(iter, 0, ...funcs);
+  else if (funcs[1] !== undefined) yield* chunkByCountFunc(iter, ...funcs);
+  else yield* chunkByCount(iter, funcs[0]);
 });
 
 Iter.chain_(function* flatten(iter, depth) {
@@ -193,6 +195,53 @@ Iter.chain_(function* sep(iter, gen, ...funcs) {
     yield item;
     idx++;
   }
+});
+
+Iter.chain_(function* sortedWith(inA, inB, func) {
+  const A = Iter.from(inA);
+  const B = Iter.from(inB);
+  let a, b;
+
+  try {
+    a = A.read();
+    b = B.read();
+
+    while (a !== $.eof && b !== $.eof) {
+      if (func.call(this, a, b) > 0) { yield b; b = B.read(); }
+      else { yield a; a = A.read(); }
+    }
+
+    if (a === $.eof) while (b !== $.eof) { yield b; b = B.read(); }
+    else while (a !== $.eof) { yield a; a = A.read(); }
+  } finally {
+    try { if (a !== $.eof) A.return(); } catch (err) { }
+    try { if (b !== $.eof) B.return(); } catch (err) { }
+  }
+});
+
+Iter.value_(function sort(iter, func, opts = {}) {
+  const res = [];
+
+  if (typeof func !== 'function') { opts = func; func = $.numSort; }
+  if (typeof opts !== 'object') opts = {limit: opts};
+
+  if (opts.filters) iter = Iter.filter.gen.call(this, iter, ...opts.filters);
+  if (opts.filter !== undefined) iter = Iter.filter.gen.call(this, iter, opts.filter);
+
+  if (opts.limit === 0) {
+    for (const item of iter) break;
+    return res;
+  }
+
+  const skip = opts.skip | 0;
+  const limit = opts.limit == null ? Infinity : (opts.limit | 0) + skip;
+
+  for (const item of iter) {
+    $.insSort(res, item, func, limit);
+  }
+
+  if (skip) return res.slice(skip);
+  return res;
 });
 
 module.exports = Iter;

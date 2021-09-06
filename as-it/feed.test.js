@@ -55,7 +55,7 @@ test('AsIt_.prefetch: grab up to managed number of items in advance', async () =
   expect(prefetched).toEqual([6]);
   expect(await iter.read()).toBe(6);
   expect(prefetched).toEqual([]);
-  expect(await iter.read()).toBe(undefined);
+  expect(await iter.read()).toBe($.eof);
 });
 
 test('AsIt_.prefetch: throw', async () => {
@@ -89,7 +89,7 @@ test('AsIt_.prefetch: break', async () => {
   expect(prefetched).toEqual([2, 3]);
   expect(await iter.read()).toBe(2);
   await iter.return();
-  expect(await iter.read()).toBe(undefined);
+  expect(await iter.read()).toBe($.eof);
 });
 
 test('AsIt_.prefetch: by condition', async () => {

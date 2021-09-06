@@ -66,6 +66,12 @@ test('Iter_.call, Iter_.debug: call external function', () => {
   expect(seq).toEqual([2, 1, 3, 2, 4, 3]);
 });
 
+test('Iter_.dbglog: debug output to console.log', () => {
+  const wr = new Iter(['test']);
+  wr.dbglog('Iter.dbglog');
+  expect(Array.from(wr)).toEqual(['test']);
+});
+
 test('Iter_.skip: skip first items', () => {
   const wrapped = new Iter(Iter.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
   wrapped.skip(o => o && o.x, v => !v);

@@ -12,7 +12,7 @@ AsIt.chain_(async function* from(arg, strOk) {
 
 AsIt.chain_(async function* concat(...args) {
   for await (const arg of args) {
-    yield* AsIt.from.gen(arg);
+    yield* AsIt.from.gen.call(this, arg);
   }
 });
 
@@ -91,8 +91,8 @@ AsIt.value_(function fork(iter, limit) {
   const forked = _fork.call(this, iter, limit, o.i);
   forked.forkSrc = iter;
 
-  if (this.constructor === AsIt) {
-    const wrapped = new AsIt(forked);
+  if (this instanceof AsIt) {
+    const wrapped = new this.constructor(forked);
     return wrapped;
   } else {
     return forked;

@@ -79,13 +79,13 @@ const feedMethods = {
 
 AsIt.feed = function feed(...inits) {
   const feed = new Feed();
-  const iter = new AsIt(feed.mkiter());
+  const iter = new this(feed.mkiter());
   Object.assign(iter, {feed}, feedMethods);
   if (inits.length) iter.push(...inits);
   return iter;
 };
 
-$.feed = AsIt.feed;
+$.feed = AsIt.feed.bind(AsIt);
 
 async function prefetchWorker(iter, funcs) {
   const {feed} = this;

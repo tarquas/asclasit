@@ -1,3 +1,4 @@
+const $ = require('../base');
 const AsIt = require('./base');
 
 async function* asIt(iter) { yield* iter; }
@@ -8,8 +9,8 @@ async function asItArray(iter) {
   return res;
 }
 
-test('new AsIt: bad argument', () => {
-  expect(() => new AsIt()).toThrow('not iterable');
+test('new AsIt: bad argument', async () => {
+  expect(await asItArray(new AsIt())).toEqual([]);
   expect(() => new AsIt({})).toThrow('not iterable');
 });
 
@@ -166,6 +167,11 @@ test('AsIt_.read: read value', async () => {
   expect(await asItArray(wrapped)).toEqual([3, 2, 1, 0]);
 });
 
+test('AsIt_.read: read eof', async () => {
+  const empty = new AsIt();
+  expect(await empty.read()).toBe($.eof);
+});
+
 test('AsIt_.ffwd: fast forward values', async () => {
   const myGen = async function* () { let c = 7; while (c-- > 0) if (yield c) c--; };
   const wrapped = new AsIt(myGen());
@@ -203,4 +209,19 @@ test('AsIt_.affwd: async fast forward beyond', async () => {
   expect(await wrapped.affwd(10, true)).toEqual({done: true});
   expect(wrapped.cur).toEqual(null);
   expect(await asItArray(wrapped)).toEqual([]);
+});
+
+test('AsIt_.get, .set: get/set wrapped iterator', async () => {
+  const iter = new AsIt([1, 2]);
+  expect(iter.get() !== iter).toBe(true);
+  expect(await asItArray(iter.get())).toEqual([1, 2]);
+  try { iter.set({}); expect(true).toBe(false); } catch(err) { expect(err.message).toBe('not iterable'); }
+  iter.set(function*() { yield 3; });
+  expect(await asItArray(iter)).toEqual([3]);
+});
+
+test('AsIt_.get, chain: void iterator', async () => {
+  const iter = new AsIt();
+  expect(await asItArray(iter.get())).toEqual([]);
+  expect(await asItArray(iter.load(1))).toEqual([]);
 });

@@ -79,8 +79,20 @@ test('$.lt_: less than', () => {
   expect($.lt_(6)(5)).toBe(true);
 });
 
+test('$.lte_: less than', () => {
+  expect($.lte_(5)(5)).toBe(true);
+  expect($.lte_(5)(6)).toBe(false);
+  expect($.lte_(6)(5)).toBe(true);
+});
+
 test('$.gt_: greater than', () => {
   expect($.gt_(0)(0)).toBe(false);
   expect($.gt_(6)(4)).toBe(false);
   expect($.gt_(4)(5)).toBe(true);
+});
+
+test('$.gte_: greater than', () => {
+  expect($.gte_(0)(0)).toBe(true);
+  expect($.gte_(6)(4)).toBe(false);
+  expect($.gte_(4)(5)).toBe(true);
 });
