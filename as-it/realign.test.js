@@ -240,9 +240,14 @@ test('AsIt_.sortedWith: emergency stop', async () => {
   }
 });
 
-test('AsIt_.sort: return sorted array', async () => {
+test('AsIt_.sort: return sorted array: ascending', async () => {
   const from = AsIt.from([8, 2, 6, 1, 0, -1, 8]);
   expect(await from.sort()).toEqual([-1, 0, 1, 2, 6, 8, 8]);
+});
+
+test('AsIt_.sort: return sorted array: descending; skip', async () => {
+  const from = AsIt.from([8, 2, 6, 1, 0, -1, 8]);
+  expect(await from.sort({desc: true, skip: 2})).toEqual([6, 2, 1, 0, -1]);
 });
 
 test('AsIt_.sort: zero limit', async () => {

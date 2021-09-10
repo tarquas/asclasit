@@ -235,26 +235,38 @@ AsIt.chain_(async function* sortedWith(inA, inB, func = $.numSort) {
 });
 
 AsIt.value_(async function sort(iter, func, opts = {}) {
-  const res = [];
+  if (typeof func !== 'function') {
+    opts = func;
+    func = $.numSort;
+  }
 
-  if (typeof func !== 'function') { opts = func; func = $.numSort; }
   if (typeof opts !== 'object') opts = {limit: opts};
+  let {skip, limit, desc} = opts;
+  if (skip > 0 && limit > 0) limit += skip;
+
+  if (limit === 0) {
+    for await (const item of iter) break;
+    return [];
+  }
+
+  if (!(opts.limit > 0)) {
+    const res = [];
+    for await (const item of iter) res.push(item);
+
+    if (desc) res.sort($.neg_(func));
+    else res.sort(func);
+
+    if (skip) return res.slice(skip);
+    return res;
+  }
 
   if (opts.filters) iter = AsIt.filter.gen.call(this, iter, ...opts.filters);
   if (opts.filter !== undefined) iter = AsIt.filter.gen.call(this, iter, opts.filter);
 
-  if (opts.limit === 0) {
-    for await (const item of iter) break;
-    return res;
-  }
+  const pq = new $.PQ.Limited({sort: func, limit, reverse: !opts.desc});
+  for await (const item of iter) pq.pushOne(item);
 
-  const skip = opts.skip | 0;
-  const limit = opts.limit == null ? Infinity : (opts.limit | 0) + skip;
-
-  for await (const item of iter) {
-    $.insSort(res, item, func, limit);
-  }
-
+  const res = pq.toArray();
   if (skip) return res.slice(skip);
   return res;
 });

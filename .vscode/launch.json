@@ -33,7 +33,7 @@
         "--runInBand",
         "--logHeapUsage",
 
-        "func2/promise"
+        "as-it/realign."
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

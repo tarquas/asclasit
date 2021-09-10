@@ -218,9 +218,14 @@ test('Iter_.sortedWith: emergency stop', () => {
   }
 });
 
-test('Iter_.sort: return sorted array', () => {
+test('Iter_.sort: return sorted array: ascending', () => {
   const from = Iter.from([8, 2, 6, 1, 0, -1, 8]);
   expect(from.sort()).toEqual([-1, 0, 1, 2, 6, 8, 8]);
+});
+
+test('Iter_.sort: return sorted array: descending; skip', () => {
+  const from = Iter.from([8, 2, 6, 1, 0, -1, 8]);
+  expect(from.sort({desc: true, skip: 2})).toEqual([6, 2, 1, 0, -1]);
 });
 
 test('Iter_.sort: zero limit', () => {
