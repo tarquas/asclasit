@@ -4,7 +4,7 @@ const $ = require('../func');
 
 class Feed {
   active = true;
-  buf = [];
+  buf = new $.DQ();
 
   clwait() {
     this.wait = null;
@@ -106,7 +106,7 @@ async function prefetchWorker(iter, funcs) {
           if (typeof func === 'number') {
             if (stop = buf.length >= func) break;
           } else {
-            if (stop = await func.call(this, buf, desc)) break;
+            if (stop = await func.call(this, item, buf.first, desc)) break;
           }
         }
 

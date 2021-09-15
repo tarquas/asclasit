@@ -206,7 +206,7 @@ func_(function times_(n) {
 
 func_(function lag_(n, buf) {
   if (!Number.isInteger(n) || n <= 0) n = 1;
-  if (!buf) buf = [];
+  if (!buf) buf = new $.DQ();
 
   return function _lag(v) {
     if (buf.push(v) > n) return buf.shift();

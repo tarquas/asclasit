@@ -1,6 +1,6 @@
 {
   "name": "asclasit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ASync CLasses + ASync ITerators",
   "main": "index.js",
   "scripts": {

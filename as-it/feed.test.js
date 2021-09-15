@@ -41,20 +41,20 @@ test('AsIt.feed: taken trigger after end', async () => {
 test('AsIt_.prefetch: grab up to managed number of items in advance', async () => {
   const iter = AsIt.from([1, 2, 3, 4, 5, 6]);
   let prefetched;
-  const getPrefetched = (buf) => { prefetched = buf; }
+  const getPrefetched = (i, f, {buf}) => { prefetched = buf; }
   iter.prefetch(getPrefetched, 2);
   expect(await iter.read()).toBe(1);
   await $.tick();
-  expect(prefetched).toEqual([2, 3]);
+  expect(Array.from(prefetched)).toEqual([2, 3]);
   expect(await iter.read()).toBe(2);
-  expect(prefetched).toEqual([3, 4]);
+  expect(Array.from(prefetched)).toEqual([3, 4]);
   expect(await iter.affwd(2)).toEqual({done: false, value: 4});
   for (let i = 0; i < 10; i++) await $.tick();
-  expect(prefetched).toEqual([5, 6]);
+  expect(Array.from(prefetched)).toEqual([5, 6]);
   expect(await iter.read()).toBe(5);
-  expect(prefetched).toEqual([6]);
+  expect(Array.from(prefetched)).toEqual([6]);
   expect(await iter.read()).toBe(6);
-  expect(prefetched).toEqual([]);
+  expect(Array.from(prefetched)).toEqual([]);
   expect(await iter.read()).toBe($.eof);
 });
 
@@ -82,11 +82,11 @@ test('AsIt_.prefetch: empty', async () => {
 test('AsIt_.prefetch: break', async () => {
   const iter = AsIt.from([1, 2, 3, 4, 5, 6]);
   let prefetched;
-  const getPrefetched = (buf) => { prefetched = buf; }
+  const getPrefetched = (i, f, {buf}) => { prefetched = buf; }
   iter.prefetch(getPrefetched, 2);
   expect(await iter.read()).toBe(1);
   await $.tick();
-  expect(prefetched).toEqual([2, 3]);
+  expect(Array.from(prefetched)).toEqual([2, 3]);
   expect(await iter.read()).toBe(2);
   await iter.return();
   expect(await iter.read()).toBe($.eof);
@@ -95,11 +95,11 @@ test('AsIt_.prefetch: break', async () => {
 test('AsIt_.prefetch: by condition', async () => {
   const iter = AsIt.from([1, 2, 3, 4, 5]);
   let prefetched;
-  const getPrefetched = (buf) => { prefetched = buf; return buf.length >= 3; }
+  const getPrefetched = (i, f, {buf}) => { prefetched = buf; return buf.length >= 3; }
   iter.prefetch(getPrefetched);
   expect(await iter.read()).toBe(1);
   await $.tick();
-  expect(prefetched).toEqual([2, 3, 4]);
+  expect(Array.from(prefetched)).toEqual([2, 3, 4]);
   expect(await iter.read()).toBe(2);
   expect(await asItArray(iter)).toEqual([3, 4, 5]);
 });

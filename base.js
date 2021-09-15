@@ -1,5 +1,7 @@
 const it = require('./it');
 const Design = require('./design');
+const Deque = require('./algo/deque');
+const PriorityQueue = require('./algo/priority-queue');
 
 const symbol = Symbol('$');
 
@@ -81,5 +83,9 @@ const guessActions = {
   [types.AsIt](...args) { return $.AsIt.concat(...args); },
 };
 
-Object.assign($, {...it, func_, UnknownArgsError, NotImplementedError});
+Object.assign($, it);
+Object.assign($, {func_, UnknownArgsError, NotImplementedError});
+$.Deque = $.DQ = Deque;
+$.PriorityQueue = $.PQ = PriorityQueue;
+
 module.exports = $;

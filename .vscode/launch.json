@@ -33,7 +33,7 @@
         "--runInBand",
         "--logHeapUsage",
 
-        "as-it/realign."
+        "algo/deque."
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

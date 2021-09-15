@@ -1,5 +1,4 @@
 const $ = require('../base');
-const PriorityQueue = require('../algo/priority-queue');
 
 const {func_} = $;
 
@@ -35,7 +34,5 @@ func_(function lastElem(arr, back = 0) {
   if (arr instanceof Array) return arr[arr.length - back - 1];
   return null;
 });
-
-$.PriorityQueue = $.PQ = PriorityQueue;
 
 module.exports = $;
