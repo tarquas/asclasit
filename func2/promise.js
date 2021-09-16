@@ -3,7 +3,9 @@ require('./acc');
 const Iter = require('../iter');
 
 const util = require('util');
-const streams = require('stream/promises');
+
+const streams = require('../compat/stream');
+const streamFinished = streams.finished;
 
 const {func_} = $;
 
@@ -96,15 +98,15 @@ func_(function bindOnce(to, object, ...args) {
 //TODO: bindJob in ClAs
 
 func_(function finished(stream, opts) {
-  return streams.finished(stream, opts);
+  return streamFinished(stream, opts);
 });
 
 func_(function finishedRead(stream, opts) {
-  return streams.finished(stream, {writable: false, ...opts});
+  return streamFinished(stream, {writable: false, ...opts});
 });
 
 func_(function finishedWrite(stream, opts) {
-  return streams.finished(stream, {readable: false, ...opts});
+  return streamFinished(stream, {readable: false, ...opts});
 });
 
 func_(function all(promises) {
