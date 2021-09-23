@@ -9,9 +9,7 @@ const defComparator = (a, b) => a - b;
 const negComparator = (sort) => (a, b) => -sort(a, b);
 
 class PriorityQueue {
-  constructor({reverse, sort, revSort} = {}) {
-    this._heap = [];
-
+  constructor({reverse, sort, revSort} = {}, src) {
     if (reverse) {
       this._comparator = sort || defComparator;
       this._revComparator = revSort || negComparator(this._comparator);
@@ -19,6 +17,9 @@ class PriorityQueue {
       this._revComparator = sort || defComparator;
       this._comparator = revSort || negComparator(this._revComparator);
     }
+
+    if (src) this._heap = Array.from(src).sort(this._revComparator);
+    else this._heap = [];
   }
 
   get size() {
@@ -37,8 +38,11 @@ class PriorityQueue {
     return this._heap[0];
   }
 
-  toArray({reverse, sort, raw, keep} = {}) {
-    if (raw) return this._heap;
+  get raw() {
+    return this._heap;
+  }
+
+  toArray({reverse, sort, keep} = {}) {
     let res = this._heap;
 
     if (keep) res = res.slice();
@@ -122,6 +126,15 @@ class PriorityQueue {
 
   *[Symbol.iterator]() {
     while (this._heap.length) yield this.pop();
+  }
+
+  add(iter) {
+    for (const item of iter) this.pushOne(item);
+  }
+
+  static from(iter, opts) {
+    const pq = new this(opts, iter);
+    return pq;
   }
 }
 

@@ -114,8 +114,7 @@ test('class: Level2 instance', async () => {
     'l1use', 'l2use',
     'l1use',
     'l2method a',
-    'l1use',
-    'l2use', 'l2use',
+    'l2use',
     'l2method b',
     'l2method c',
   ]);
@@ -160,7 +159,7 @@ test('class: sleep-wake concurrency', async () => {
   await l1[$].sleep();
 
   expect(l1.events).toEqual([
-    'l1conn', 'l1use', 'l1use', 'l1use', 'l1use', 'l1dc',
+    'l1conn', 'l1use', 'l1use', 'l1dc',
   ]);
 });
 
@@ -182,7 +181,7 @@ test('class: wake-sleep concurrency', async () => {
 
   expect(l1.events).toEqual([
     'l1conn', 'l1use', 'l1dc',
-    'l1conn', 'l1use', 'l1use', 'l1use', 'l1use', 'l1dc',
+    'l1conn', 'l1use', 'l1use', 'l1dc',
   ]);
 });
 

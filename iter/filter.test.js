@@ -67,9 +67,21 @@ test('Iter_.call, Iter_.debug: call external function', () => {
 });
 
 test('Iter_.dbglog: debug output to console.log', () => {
-  const wr = new Iter(['test']);
-  wr.dbglog('Iter.dbglog');
-  expect(Array.from(wr)).toEqual(['test']);
+  let res;
+  const logs = [];
+  const origLog = console.log;
+  console.log = (...ents) => logs.push(...ents);
+
+  try {
+    const wr = new Iter(['test']);
+    wr.dbglog('Iter.dbglog');
+    res = Array.from(wr);
+  } finally {
+    console.log = origLog;
+  }
+
+  expect(res).toEqual(['test']);
+  expect(logs).toEqual(['Iter.dbglog', 'test']);
 });
 
 test('Iter_.skip: skip first items', () => {

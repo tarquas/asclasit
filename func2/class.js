@@ -182,19 +182,21 @@ class $inst {
             life = Object.getOwnPropertyDescriptor(o, symbol);
 
             if (life && typeof life.value === 'function') {
-              life = life.value.call(this.from, tries);
+              life = {iter: life.value.call(this.from, tries)};
               this.#life.set(o, life);
             } else {
               continue outer;
             }
           }
 
-          ready = life.next();
+          ready = life.cur || life.iter.next();
 
           if (ready.constructor === Promise) {
             let tm;
             if (this.wakeTimeout) ready = Promise.race([ready, tm = $.timeoutMsec(this.wakeTimeout, () => new WakeTimeoutError())]);
+            life.cur = ready;
             ready = await ready;
+            life.cur = null;
             if (tm) tm.cancel();
           }
 
@@ -205,7 +207,9 @@ class $inst {
           if (ready && ready.constructor === Promise) {
             let tm;
             if (this.wakeTimeout) ready = Promise.race([ready, tm = $.timeoutMsec(this.wakeTimeout, () => new WakeTimeoutError())]);
+            life.cur = ready;
             ready = await ready;
+            life.cur = null;
             if (tm) tm.cancel();
           }
         } catch (err) {
@@ -213,6 +217,8 @@ class $inst {
             this.#life.delete(u);
             if (u === o) break;
           }
+
+          this.#awake = false;
 
           if (retr--) {
             tries++;
@@ -245,11 +251,14 @@ class $inst {
         let wait;
 
         try {
-          wait = life.return();
+          //if (life.cur) await life.cur;
+          wait = life.iter.return();
 
           if (wait instanceof Promise) {
             if (this.#sleepTimeout) wait = Promise.race([wait, this.#sleepTimeout]);
+            life.cur = wait;
             await wait;
+            life.cur = null;
           }
         } catch (err) {
           errHandler(err);

@@ -71,14 +71,35 @@ test('$.race: object', async () => {
 });
 
 test('$.throw_: format error message', () => {
+  const outs = [];
   const orig = console.error;
-  let out;
-  console.error = (err) => out = err;
-  $.throw_('my title')(null);
-  expect(out).toBe('my title\nnull');
-  $.throw_('my title')('error');
-  expect(out).toBe('my title\nerror');
-  console.error = orig;
+  console.error = (err) => outs.push(err);
+
+  try {
+    $.throw_('my title')(null);
+    $.throw_('my title')('error');
+  } finally {
+    console.error = orig;
+  }
+
+  expect(outs).toEqual(['my title\nnull', 'my title\nerror']);
+});
+
+test('$.throw_: exit', () => {
+  const bumped = [];
+  const origExit = process.exit;
+  const origError = console.error;
+  process.exit = (code) => bumped.push(`exit ${code}`);
+  console.error = (...ents) => bumped.push(...ents);
+
+  try {
+    $.throw_('fatal', {exitCode: 1})('test');
+  } finally {
+    console.error = origError;
+    process.exit = origExit;
+  }
+
+  expect(bumped).toEqual(['fatal\ntest', 'exit 1']);
 });
 
 test('$.grabEvents: listen and store events', async () => {

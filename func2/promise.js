@@ -397,11 +397,12 @@ func_(function accCallCached(fn) {
   return pending.acc;
 });
 
-func_(function throw_(title) {
+func_(function throw_(title, {exitCode} = {}) {
   return function _throw(err) {
     let out = !err ? err : err.stack || err.message || err.type || err.code || err;
     if (title) out = `${title}\n${out}`;
     console.error(out);
+    if (exitCode) process.exit(exitCode);
   }
 });
 

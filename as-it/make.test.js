@@ -13,6 +13,14 @@ test('AsIt.void: void iterator', async () => {
   expect(await asItArray(wrapped)).toEqual([]);
 });
 
+test('AsIt.shim: compatible iterator', async () => {
+  const src = {arr: [1, 2, 3], async next() {
+    return {done: !this.arr.length, value: this.arr.pop()};
+  }};
+
+  expect(await asItArray(AsIt.shim(src))).toEqual([3, 2, 1]);
+});
+
 test('AsIt.concat: concatenate iterators', async () => {
   const i1 = ['a1', 'a2'];
   const i2 = async function* () { yield 'a4'; yield 'a5'; } ();

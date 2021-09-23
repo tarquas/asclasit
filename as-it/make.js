@@ -2,6 +2,17 @@ const AsIt = require('./object');
 
 AsIt.chain_(async function* voidIter() { }, 'void');
 
+function bound() { return this; }
+
+AsIt.chain_(async function* shim(iter) {
+  if (!iter[Symbol.asyncIterator] && !iter[Symbol.iterator]) {
+    iter = Object.create(iter);
+    iter[Symbol.asyncIterator] = bound;
+  }
+
+  for await (const item of iter) yield item;
+});
+
 AsIt.chain_(async function* from(arg, strOk) {
   const iter = AsIt.getIter(arg, strOk);
 

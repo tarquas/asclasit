@@ -73,9 +73,21 @@ test('AsIt_.call, AsIt_.debug: call external function', async () => {
 });
 
 test('AsIt_.dbglog: debug output to console.log', async () => {
-  const wr = new AsIt(['test']);
-  wr.dbglog('AsIt.dbglog');
-  expect(await asItArray(wr)).toEqual(['test']);
+  let res;
+  const logs = [];
+  const origLog = console.log;
+  console.log = (...ents) => logs.push(...ents);
+
+  try {
+    const wr = new AsIt(['test']);
+    wr.dbglog('AsIt.dbglog');
+    res = await asItArray(wr);
+  } finally {
+    console.log = origLog;
+  }
+
+  expect(res).toEqual(['test']);
+  expect(logs).toEqual(['AsIt.dbglog', 'test']);
 });
 
 test('AsIt_.skip: skip first items', async () => {

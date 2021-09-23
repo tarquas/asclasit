@@ -128,6 +128,25 @@ class Deque {
       chunk = chunk.prev;
     }
   }
+
+  append(iter) {
+    for (const item of iter) this.pushOne(item);
+    return this._length;
+  }
+
+  prepend(iter) {
+    for (const item of iter) this.unshiftOne(item);
+    return this._length;
+  }
+
+  static from(iter, opts = {}) {
+    const dq = new this(opts);
+
+    if (opts.reverse) dq.prepend(iter);
+    else dq.append(iter);
+
+    return dq;
+  }
 }
 
 module.exports = Deque;

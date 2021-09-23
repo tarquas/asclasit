@@ -2,6 +2,17 @@ const Iter = require('./object');
 
 Iter.chain_(function* voidIter() { }, 'void');
 
+function bound() { return this; }
+
+Iter.chain_(function* shim(iter) {
+  if (!iter[Symbol.iterator]) {
+    iter = Object.create(iter);
+    iter[Symbol.iterator] = bound;
+  }
+
+  for (const item of iter) yield item;
+});
+
 Iter.chain_(function* from(arg, strOk) {
   const iter = Iter.getIter(arg, strOk);
 

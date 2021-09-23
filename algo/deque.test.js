@@ -51,3 +51,17 @@ test('Deque: various', () => {
   expect(dq.pop()).toBe(undefined);
   expect(dq.shift()).toBe(undefined);
 });
+
+test('Deque: append, prepend', () => {
+  const dq = new Deque();
+  dq.append([1, 2, 3]);
+  dq.prepend([4, 5, 6]);
+  dq.append([7, 8, 9]);
+  dq.prepend([0, 'a']);
+  expect(Array.from(dq)).toEqual(['a', 0, 6, 5, 4, 1, 2, 3, 7, 8, 9]);
+});
+
+test('Deque: from', () => {
+  expect(Array.from(Deque.from([1, 2, 3]))).toEqual([1, 2, 3]);
+  expect(Array.from(Deque.from([1, 2, 3], {reverse: true}))).toEqual([3, 2, 1]);
+});

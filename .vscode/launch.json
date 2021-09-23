@@ -33,7 +33,7 @@
         "--runInBand",
         "--logHeapUsage",
 
-        "algo/deque."
+        "func2/class."
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

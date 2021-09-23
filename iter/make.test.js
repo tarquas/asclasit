@@ -6,6 +6,14 @@ test('Iter.void: void iterator', () => {
   expect(Array.from(wrapped)).toEqual([]);
 });
 
+test('Iter.shim: compatible iterator', () => {
+  const src = {arr: [1, 2, 3], next() {
+    return {done: !this.arr.length, value: this.arr.pop()};
+  }};
+
+  expect(Array.from(Iter.shim(src))).toEqual([3, 2, 1]);
+});
+
 test('Iter.concat: concatenate iterators', () => {
   const i1 = ['a1', 'a2'];
   const i2 = function* () { yield 'a4'; yield 'a5'; } ();

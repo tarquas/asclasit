@@ -12,6 +12,19 @@ test('$.PQ: priority queue', () => {
   expect(pq.toArray()).toEqual([]);
 });
 
+test('$.PQ: add', () => {
+  const pq = new PQ();
+  pq.add([6, 2, 1, 9, 0]);
+  expect(pq.toArray({reverse: true})).toEqual([0, 1, 2, 6, 9]);
+});
+
+
+test('$.PQ: from', () => {
+  const pq = PQ.from([6, 2, 1, 9, 0]);
+  pq.pushOne(-1);
+  expect(Array.from(pq)).toEqual([-1, 0, 1, 2, 6, 9]);
+});
+
 test('$.PQ.Limited: priority queue', () => {
   const pq = new PQ.Limited();
   expect(pq.pop()).toBe(undefined);
@@ -33,7 +46,7 @@ test('$.PQ.Limited: limited priority queue: ascending', () => {
   expect(pq.isEmpty).toBe(false);
   expect(pq.top).toBe(6);
   expect(pq.peek()).toBe(6);
-  expect(pq.toArray({raw: true})).toEqual([6, 2, 5, 0]);
+  expect(pq.raw).toEqual([6, 2, 5, 0]);
   expect(pq.toArray({reverse: true, keep: true})).toEqual([6, 5, 2, 0]);
   expect(pq.toArray({sort: (a, b) => a & 1 ? (b & 1 ? a - b : 1) : (b & 1 ? -1 : a - b), keep: true})).toEqual([0, 2, 6, 5]);
   expect(pq.toArray()).toEqual([0, 2, 5, 6]);
@@ -48,7 +61,7 @@ test('$.PQ.Limited: limited priority queue: descending', () => {
   expect(pq.isEmpty).toBe(false);
   expect(pq.top).toBe(5);
   expect(pq.peek()).toBe(5);
-  expect(pq.toArray({raw: true})).toEqual([5, 6, 8, 10]);
+  expect(pq.raw).toEqual([5, 6, 8, 10]);
   expect(pq.toArray({reverse: true, keep: true})).toEqual([5, 6, 8, 10]);
   expect(pq.toArray({sort: (a, b) => a & 1 ? (b & 1 ? a - b : 1) : (b & 1 ? -1 : a - b), keep: true})).toEqual([6, 8, 10, 5]);
   expect(pq.toArray()).toEqual([10, 8, 6, 5]);
