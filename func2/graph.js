@@ -28,7 +28,7 @@ class Graph {
     const used = new Set();
 
     const isNotUsed = (step) => !used.has(step);
-    const maxDist = (a, b) => b[1] - a[1];
+    const maxDist = (a, b) => b.dist - a.dist;
 
     const walk = $.PQ.from([{step: to, dist: 0, count: 0}], {revSort: maxDist});
     const arg = {froms, walk, cur: null};
