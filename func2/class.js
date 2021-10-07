@@ -413,6 +413,9 @@ Object.assign($inst.$$, {
   wakeRetries: 3,
   wakeRetryDelay: 500,
 
+  pingInterval: null, //TODO:
+  fatalErrors: [], //TODO: $_method_ -- idempotent method (retry on fatal error)
+
   sleepImmediate: false,
   sleepIdle: 120000,
   sleepTimeout: 3000,
@@ -444,5 +447,22 @@ func_(function ctor() {
 });
 
 $.Inst = $inst;
+
+const IoCs = new WeakMap();
+
+func_(function IoC(config, ...args) {
+  let ofClass = IoCs.get(this);
+
+  if (!ofClass) {
+    ofClass = new WeakMap();
+    IoCs.set(this, ofClass);
+  }
+
+  const exist = ofClass.get(config);
+  if (exist) return exist;
+  const inst = new this(config, ...args);
+  ofClass.set(config, inst);
+  return inst;
+});
 
 module.exports = $;

@@ -57,6 +57,14 @@ test('Iter_.appendSet: tee to set', () => {
   expect(Array.from(to)).toEqual([2, 6, 7]);
 });
 
+test('Iter_.unset: unset from Set or Map', () => {
+  const wrapped = new Iter([2, 6, 7, 6][Symbol.iterator]());
+  const to = new Set([1, 2, 6, 10]);
+  wrapped.unset(to);
+  expect(Array.from(wrapped)).toEqual([2, 6, 7, 6]);
+  expect(Array.from(to)).toEqual([1, 10]);
+});
+
 test('Iter_.toSet: grab to set', () => {
   const wrapped = new Iter([2, 6, 7, 6][Symbol.iterator]());
   const set = wrapped.toSet();
@@ -96,6 +104,14 @@ test('Iter_.appendObject: tee object from entries', () => {
   wrapped.appendObject(to, true);
   expect(Object.fromEntries(wrapped)).toEqual({a: 1, b: 2, c: true});
   expect(to).toEqual({a: 1, b: 2, c: true});
+});
+
+test('Iter_.omit: omit from object', () => {
+  const wrapped = new Iter(['a', 'b', 'c'][Symbol.iterator]());
+  const to = {a: 5, d: 8, x: 1, c: 2};
+  wrapped.omit(to);
+  expect(Array.from(wrapped)).toEqual(['a', 'b', 'c']);
+  expect(to).toEqual({d: 8, x: 1});
 });
 
 test('Iter_.toObject: get object from entries', () => {

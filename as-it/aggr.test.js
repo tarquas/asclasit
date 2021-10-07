@@ -1,5 +1,11 @@
 const AsIt = require('./aggr');
 
+async function asItArray(iter) {
+  const res = [];
+  for await (const item of iter) res.push(item);
+  return res;
+}
+
 test('AsIt_.toRecentGroup: default', async () => {
   const src = new AsIt(AsIt.getIter(['a', 'b', 'c', 'a', ['d', 'custom']]));
   expect(await src.toRecentGroup(3)).toEqual({a: {count: 2}, c: {count: 1}, d: {custom: 1}});
@@ -13,8 +19,9 @@ test('AsIt_.toRecentGroup: unlimited', async () => {
 test('AsIt_.toRecentGroup: stopOnDropped', async () => {
   const src = new AsIt(AsIt.getIter(['a', 'b', 'c', 'a', ['d', 'custom']]));
   const opts = {stopOnDropped: 1};
-  expect(await src.toRecentGroup(3, opts)).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}});
-  expect(opts).toEqual({stopOnDropped: 1, stopped: 'dropped', nKeys: 3, nDropped: 1, idx: 4});
+  const to = await src.toRecentGroup(3, opts);
+  expect(to).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}});
+  expect(opts).toEqual({stopOnDropped: 1, stopped: 'dropped', nKeys: 3, nDropped: 1, idx: 4, to});
 });
 
 test('AsIt_.toRecentGroup: stopOnCond', async () => {
@@ -59,8 +66,9 @@ test('AsIt_.toOrderGroup: Array', async () => {
 test('AsIt_.toOrderGroup: stopOnDropped', async () => {
   const src = new AsIt(AsIt.getIter(['a', 'b', 'c', 'a', ['d', 'custom']]));
   const opts = {stopOnDropped: 1};
-  expect(await src.toOrderGroup(3, opts)).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}});
-  expect(opts).toEqual({stopOnDropped: 1, stopped: 'dropped', nKeys: 3, nDropped: 1, idx: 4});
+  const to = await src.toOrderGroup(3, opts);
+  expect(to).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}});
+  expect(opts).toEqual({stopOnDropped: 1, stopped: 'dropped', nKeys: 3, nDropped: 1, idx: 4, to});
 });
 
 test('AsIt_.toOrderGroup: stopOnCond', async () => {
@@ -68,4 +76,17 @@ test('AsIt_.toOrderGroup: stopOnCond', async () => {
   const opts = {stopOnCond: group => group.count > 0};
   expect(await src.toOrderGroup(3, opts)).toEqual({a: {count: 1}, b: {count: 1}, c: {count: 1}});
   expect(opts.stopped).toEqual('cond');
+});
+
+test('AsIt_.recentGroup, orderGroup: nosort, sort', async () => {
+  const from = ['a', 'b', 'c', 'a', ['d', 'custom']];
+  const src = new AsIt(AsIt.getIter(from));
+  const recent = {};
+  const order = {};
+  const group = await asItArray(src.recentGroup(recent, {}).orderGroup(order, {}));
+  expect(group).toEqual(from);
+  expect(order).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}, d: {custom: 1}});
+  expect(Object.keys(order)).toEqual(['a', 'b', 'c', 'd']);
+  expect(recent).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}, d: {custom: 1}});
+  expect(Object.keys(recent)).toEqual(['b', 'c', 'a', 'd']);
 });

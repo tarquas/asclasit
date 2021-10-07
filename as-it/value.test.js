@@ -64,6 +64,14 @@ test('AsIt_.appendSet: tee to set', async () => {
   expect(Array.from(to)).toEqual([2, 6, 7]);
 });
 
+test('AsIt_.unset: unset from Set or Map', async () => {
+  const wrapped = new AsIt([2, 6, 7, 6][Symbol.iterator]());
+  const to = new Set([1, 2, 6, 10]);
+  wrapped.unset(to);
+  expect(await asItArray(wrapped)).toEqual([2, 6, 7, 6]);
+  expect(Array.from(to)).toEqual([1, 10]);
+});
+
 test('AsIt_.toSet: grab to set', async () => {
   const wrapped = new AsIt([2, 6, 7][Symbol.iterator]());
   const set = await wrapped.toSet();
@@ -103,6 +111,14 @@ test('AsIt_.appendObject: tee object from entries', async () => {
   wrapped.appendObject(to, true);
   expect(Object.fromEntries(await asItArray(wrapped))).toEqual({a: 1, b: 2, c: true});
   expect(to).toEqual({a: 1, b: 2, c: true});
+});
+
+test('AsIt_.omit: omit from object', async () => {
+  const wrapped = new AsIt(['a', 'b', 'c'][Symbol.iterator]());
+  const to = {a: 5, d: 8, x: 1, c: 2};
+  wrapped.omit(to);
+  expect(await asItArray(wrapped)).toEqual(['a', 'b', 'c']);
+  expect(to).toEqual({d: 8, x: 1});
 });
 
 test('AsIt_.toObject: get object from entries', async () => {

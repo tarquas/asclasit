@@ -38,6 +38,20 @@ Iter.chain_(function *appendSet(iter, to) {
   }
 });
 
+Iter.chain_(function *unset(iter, to) {
+  for (const item of iter) {
+    to.delete(item);
+    yield item;
+  }
+});
+
+Iter.chain_(function *omit(iter, to) {
+  for (const item of iter) {
+    delete to[item];
+    yield item;
+  }
+});
+
 Iter.value_(function toSet(iter, to) {
   if (to) {
     for (const item of iter) to.add(item);

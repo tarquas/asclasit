@@ -172,3 +172,15 @@ test('$.counter_: range counter: backward', () => {
   expect(ct()).toBe(1);
   expect(ct()).toBe(null);
 });
+
+test('$.relay_: sync func relay group', () => {
+  const relay = $.relay_(v => v + 1, v => v * 2);
+  expect(relay(4)).toBe(10);
+});
+
+test('$.arelay_: async func relay group', async () => {
+  const relay = $.arelay_(async v => v + 1, v => v * 2);
+  const relayed = relay(4);
+  expect(relayed instanceof Promise).toBe(true);
+  expect(await relayed).toBe(10);
+});

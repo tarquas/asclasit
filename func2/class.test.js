@@ -495,3 +495,12 @@ test('class: event support: throw default', async () => {
   expect(error).toBe(1);
   expect(reason).toBe('emit');
 });
+
+test('class: IoC', () => {
+  const config1 = $();
+  const config2 = $();
+  const inst1 = MyEmpty.IoC(config1);
+  const inst2 = MyEmpty.IoC(config2);
+  expect(MyEmpty.IoC(config1)).toBe(inst1);
+  expect(MyEmpty.IoC(config2)).toBe(inst2);
+});

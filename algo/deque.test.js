@@ -65,3 +65,28 @@ test('Deque: from', () => {
   expect(Array.from(Deque.from([1, 2, 3]))).toEqual([1, 2, 3]);
   expect(Array.from(Deque.from([1, 2, 3], {reverse: true}))).toEqual([3, 2, 1]);
 });
+
+test('Deque: locate, get, set, inc: random access', () => {
+  const dq = new Deque();
+  dq.unshift(1);
+  dq.push(2);
+  expect(dq.second).toBe(2);
+  expect(dq.get(-2)).toBe(1);
+  expect(dq.get(-3)).toBe(undefined);
+  expect(dq.locate(1)).toEqual({cur: dq._last, index: 0});
+  expect(dq.locate(2)).toEqual({cur: undefined, index: 0});
+  expect(dq.locate(-3)).toEqual({cur: undefined, index: -1});
+  expect(dq.set(1, -1)).toBe(-1);
+  expect(dq.set(2, -2)).toBe(undefined);
+  expect(dq.inc(1, -1)).toBe(-2);
+  expect(dq.inc(2, -3)).toBe(undefined);
+});
+
+test('Deque: slice', () => {
+  const dq = new Deque();
+  dq.unshift(-2, -1);
+  dq.push(1, 2);
+  expect(dq.slice(1, 2)).toEqual([-1, 1]);
+  expect(dq.slice(-2, 2)).toEqual([-1, 1]);
+  expect(dq.slice(-5, 2)).toEqual(undefined);
+});

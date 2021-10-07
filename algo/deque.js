@@ -83,6 +83,86 @@ class Deque {
     return this._last.chunk[this._last.chunk.length - 1];
   }
 
+  locate(index) {
+    if (index < 0) {
+      let cur = this._last;
+
+      while (cur) {
+        index += cur.chunk.length;
+        if (index >= cur.index) return {cur, index};
+        index -= cur.index;
+        cur = cur.prev;
+      }
+
+      return {cur, index};
+    } else {
+      let cur = this._first;
+
+      while (cur) {
+        index += cur.index;
+        if (index < cur.chunk.length) return {cur, index};
+        index -= cur.chunk.length;
+        cur = cur.next;
+      }
+
+      return {cur, index};
+    }
+  }
+
+  get(idx) {
+    const {cur, index} = this.locate(idx);
+    if (!cur) return;
+    return cur.chunk[index];
+  }
+
+  get second() {
+    return this.get(1);
+  }
+
+  set(idx, value) {
+    const {cur, index} = this.locate(idx);
+    if (!cur) return;
+    return cur.chunk[index] = value;
+  }
+
+  inc(idx, value) {
+    const {cur, index} = this.locate(idx);
+    if (!cur) return;
+    return cur.chunk[index] += value;
+  }
+
+  slice(idx, length) {
+    let {cur, index} = this.locate(idx);
+    if (!cur) return;
+    const chunks = [];
+
+    if (idx < 0) {
+      index++;
+
+      while (true) {
+        let len = index - cur.index;
+        if (len > length) len = length;
+        length -= len;
+        const slice = cur.chunk.slice(index - len, index);
+        chunks.push(slice);
+        cur = cur.prev;
+        if (!cur || !length) return chunks.reverse().flat();
+        index = cur.chunk.length;
+      }
+    } else {
+      while (true) {
+        let len = cur.chunk.length - index;
+        if (len > length) len = length;
+        length -= len;
+        const slice = cur.chunk.slice(index, index + len);
+        chunks.push(slice);
+        cur = cur.next;
+        if (!cur || !length) return chunks.flat();
+        index = cur.index;
+      }
+    }
+  }
+
   toArray({reverse} = {}) {
     const chunks = [];
 

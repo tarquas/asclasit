@@ -13,8 +13,9 @@ test('Iter_.toRecentGroup: unlimited', () => {
 test('Iter_.toRecentGroup: stopOnDropped', () => {
   const src = new Iter(Iter.getIter(['a', 'b', 'c', 'a', ['d', 'custom']]));
   const opts = {stopOnDropped: 1};
-  expect(src.toRecentGroup(3, opts)).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}});
-  expect(opts).toEqual({stopOnDropped: 1, stopped: 'dropped', nKeys: 3, nDropped: 1, idx: 4});
+  const to = {a: {count: 2}, b: {count: 1}, c: {count: 1}};
+  expect(src.toRecentGroup(3, opts)).toEqual(to);
+  expect(opts).toEqual({stopOnDropped: 1, stopped: 'dropped', nKeys: 3, nDropped: 1, idx: 4, to});
 });
 
 test('Iter_.toRecentGroup: stopOnCond', () => {
@@ -59,8 +60,9 @@ test('Iter_.toOrderGroup: Array', () => {
 test('Iter_.toOrderGroup: stopOnDropped', () => {
   const src = new Iter(Iter.getIter(['a', 'b', 'c', 'a', ['d', 'custom']]));
   const opts = {stopOnDropped: 1};
-  expect(src.toOrderGroup(3, opts)).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}});
-  expect(opts).toEqual({stopOnDropped: 1, stopped: 'dropped', nKeys: 3, nDropped: 1, idx: 4});
+  const to = {a: {count: 2}, b: {count: 1}, c: {count: 1}};
+  expect(src.toOrderGroup(3, opts)).toEqual(to);
+  expect(opts).toEqual({stopOnDropped: 1, stopped: 'dropped', nKeys: 3, nDropped: 1, idx: 4, to});
 });
 
 test('Iter_.toOrderGroup: stopOnCond', () => {
@@ -68,4 +70,17 @@ test('Iter_.toOrderGroup: stopOnCond', () => {
   const opts = {stopOnCond: group => group.count > 0};
   expect(src.toOrderGroup(3, opts)).toEqual({a: {count: 1}, b: {count: 1}, c: {count: 1}});
   expect(opts.stopped).toEqual('cond');
+});
+
+test('Iter_.recentGroup, orderGroup: nosort, sort', () => {
+  const from = ['a', 'b', 'c', 'a', ['d', 'custom']];
+  const src = new Iter(Iter.getIter(from));
+  const recent = {};
+  const order = {};
+  const group = Array.from(src.recentGroup(recent, {}).orderGroup(order, {}));
+  expect(group).toEqual(from);
+  expect(order).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}, d: {custom: 1}});
+  expect(Object.keys(order)).toEqual(['a', 'b', 'c', 'd']);
+  expect(recent).toEqual({a: {count: 2}, b: {count: 1}, c: {count: 1}, d: {custom: 1}});
+  expect(Object.keys(recent)).toEqual(['b', 'c', 'a', 'd']);
 });

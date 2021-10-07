@@ -36,6 +36,20 @@ AsIt.chain_(async function *appendSet(iter, to) {
   }
 });
 
+AsIt.chain_(async function *unset(iter, to) {
+  for await (const item of iter) {
+    to.delete(item);
+    yield item;
+  }
+});
+
+AsIt.chain_(async function *omit(iter, to) {
+  for await (const item of iter) {
+    delete to[item];
+    yield item;
+  }
+});
+
 AsIt.value_(async function toSet(iter, to) {
   if (!to) to = new Set();
   await AsIt.exec(AsIt.appendSet.gen(iter, to));

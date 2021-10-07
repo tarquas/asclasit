@@ -215,6 +215,18 @@ func_(function lag_(n, buf) {
 
 func_($.lag_(), 'lag');
 
+func_(function window_(n, buf) {
+  if (!Number.isInteger(n) || n <= 0) n = 2;
+  if (!buf) buf = new $.DQ();
+
+  return function _window(v) {
+    if (buf.push(v) > n) buf.shift();
+    return buf;
+  };
+});
+
+func_($.window_(), 'window');
+
 func_(function save_(id) {
   return function _save(value) {
     this[id] = value;
@@ -236,6 +248,36 @@ func_(function debug_(func, ...pre) {
 });
 
 $.dbglog = $.debug_(console.log);
+
+func_(function relay_(...funcs) {
+  const desc = {ctx: this};
+  $._mappingFuncs(funcs);
+
+  return function _relay(value) {
+    let v = value;
+
+    for (const func of funcs) {
+      v = func.call(this, v, value, desc);
+    }
+
+    return v;
+  };
+});
+
+func_(function arelay_(...funcs) {
+  const desc = {ctx: this};
+  $._mappingFuncs(funcs);
+
+  return async function _relay(value) {
+    let v = value;
+
+    for (const func of funcs) {
+      v = await func.call(this, v, value, desc);
+    }
+
+    return v;
+  };
+});
 
 func_(function _mappingFuncs(funcs, iterOut) {
   const l = funcs.length;

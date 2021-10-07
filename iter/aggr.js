@@ -6,15 +6,14 @@ const $ = require('../func2/acc');
 $.sortMin = 0;
 $.sortMax = 2**32 - 1;
 
-Iter.value_(function toRecentGroup(iter, limit = Infinity, opts = {}) {
-  if (typeof limit === 'object') { opts = limit; limit = Infinity; }
-  let {to, group, skip, stopOnDropped, stopOnCond} = opts;
-  if (!to) to = Object.create(null);
-  const st = {nKeys: 0, nDropped: 0, idx: -1};
+Iter.chain_(function *recentGroup(iter, to, limit = Infinity, opts = {}) {
+  if (typeof limit === 'object') { opts = limit; limit = opts.limit || Infinity; }
+  let {group, skip, stopOnDropped, stopOnCond} = opts;
+  Object.assign(opts, {nKeys: 0, nDropped: 0, idx: -1});
 
   for (const item of iter) {
-    st.idx++;
-    if (skip && skip--) continue;
+    opts.idx++;
+    if (skip && skip--) { yield item; continue; };
 
     let [k, v] = item instanceof Array ? item : [item, 'count'];
     k = String(k);
@@ -27,35 +26,39 @@ Iter.value_(function toRecentGroup(iter, limit = Infinity, opts = {}) {
     } else {
       ex = ($.accInit.get(group) || $)();
 
-      if (st.nKeys >= limit) {
-        if (++st.nDropped === stopOnDropped) { st.stopped = 'dropped'; break; }
+      if (opts.nKeys >= limit) {
+        if (++opts.nDropped === stopOnDropped) { opts.stopped = 'dropped'; break; }
         to[k] = ex;
         const first = Iter.objectKeys(to).first();
         delete to[first];
-        if (first === k) continue;
+        if (first === k) { yield item; continue; };
       } else {
         to[k] = ex;
-        st.nKeys++;
+        opts.nKeys++;
       }
     }
 
-    if (stopOnCond && stopOnCond.call(this, ex, k, v, st)) { st.stopped = 'cond'; break; }
+    if (stopOnCond && stopOnCond.call(this, ex, k, v, opts)) { opts.stopped = 'cond'; break; }
     $.accumulate(ex, v);
+    yield item;
   }
-
-  Object.assign(opts, st);
-  return to;
 });
 
-Iter.value_(function toOrderGroup(iter, limit = Infinity, opts = {}) {
-  if (typeof limit === 'object') { opts = limit; limit = Infinity; }
-  let {to, group, skip, stopOnDropped, stopOnCond} = opts;
-  if (!to) to = Object.create(null);
-  const st = {nKeys: 0, nDropped: 0, idx: -1};
+Iter.value_(function toRecentGroup(iter, limit = Infinity, opts = {}) {
+  if (typeof limit === 'object') { opts = limit; limit = opts.limit || Infinity; }
+  if (!opts.to) opts.to = Object.create(null);
+  for (const item of Iter.recentGroup.gen(iter, opts.to, limit, opts));
+  return opts.to;
+});
+
+Iter.chain_(function *orderGroup(iter, to, limit = Infinity, opts = {}) {
+  if (typeof limit === 'object') { opts = limit; limit = opts.limit || Infinity; }
+  let {group, skip, stopOnDropped, stopOnCond} = opts;
+  Object.assign(opts, {nKeys: 0, nDropped: 0, idx: -1});
 
   for (const item of iter) {
-    st.idx++;
-    if (skip && skip--) continue;
+    opts.idx++;
+    if (skip && skip--) { yield item; continue; };
 
     let [k, v] = item instanceof Array ? item : [item, 'count'];
     k = String(k);
@@ -65,24 +68,32 @@ Iter.value_(function toOrderGroup(iter, limit = Infinity, opts = {}) {
     if (!ex) {
       ex = ($.accInit.get(group) || $)();
 
-      if (st.nKeys >= limit) {
-        if (++st.nDropped === stopOnDropped) { st.stopped = 'dropped'; break; }
+      if (opts.nKeys >= limit) {
+        if (++opts.nDropped === stopOnDropped) { opts.stopped = 'dropped'; break; }
         to[k] = ex;
         const first = Iter.objectKeys(to).first();
         delete to[first];
-        if (first === k) continue;
+        if (first === k) { yield item; continue; };
       } else {
         to[k] = ex;
-        st.nKeys++;
+        opts.nKeys++;
       }
     }
 
-    if (stopOnCond && stopOnCond.call(this, ex, k, v, st)) { st.stopped = 'cond'; break; }
+    if (stopOnCond && stopOnCond.call(this, ex, k, v, opts)) { opts.stopped = 'cond'; break; }
     $.accumulate(ex, v);
+    yield item;
   }
 
-  Object.assign(opts, st);
+  Object.assign(opts, opts);
   return to;
+});
+
+Iter.value_(function toOrderGroup(iter, limit = Infinity, opts = {}) {
+  if (typeof limit === 'object') { opts = limit; limit = opts.limit || Infinity; }
+  if (!opts.to) opts.to = Object.create(null);
+  for (const item of Iter.orderGroup.gen(iter, opts.to, limit, opts));
+  return opts.to;
 });
 
 module.exports = Iter;
