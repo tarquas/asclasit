@@ -28,6 +28,14 @@ test('$.not: map boolean not', () => {
   expect([1, undefined, 0, 'a', null, {a: 1}, [5]].map($.not)).toEqual([false, true, true, false, true, false, false]);
 });
 
+test('$.isNullish: is null or undefined', () => {
+  expect([1, undefined, 0, 'a', null, {a: 1}, [5]].map($.isNullish)).toEqual([false, true, false, false, true, false, false]);
+});
+
+test('$.isNotNullish: is not null or undefined', () => {
+  expect([1, undefined, 0, 'a', null, {a: 1}, [5]].map($.isNotNullish)).toEqual([true, false, true, true, false, true, true]);
+});
+
 test('$.not_: not func result', () => {
   expect([1, '2', false].map($.not_(v => typeof v === 'string'))).toEqual([true, false, true]);
 });
@@ -183,4 +191,28 @@ test('$.arelay_: async func relay group', async () => {
   const relayed = relay(4);
   expect(relayed instanceof Promise).toBe(true);
   expect(await relayed).toBe(10);
+});
+
+test('$.has_: contained in', () => {
+  expect($.has_()('a')).toBe(null);
+  expect($.has_({a: 1, b: 2})('a')).toBe(true);
+  expect($.has_({a: 1, b: 2})('c')).toBe(false);
+  expect($.has_({a: 1, b: 2})('constructor')).toBe(true);
+  expect($.has_([, 2])(0)).toBe(false);
+  expect($.has_([, 2])(1)).toBe(true);
+  expect($.has_(new Set(['a', 'b']))('b')).toBe(true);
+  expect($.has_(new Set(['a', 'b']))('c')).toBe(false);
+  expect($.has_(new Map([['a', 1], ['b', 2]]))('a')).toBe(true);
+});
+
+test('$.hasOwn_: contained in', () => {
+  expect($.hasOwn_()('a')).toBe(null);
+  expect($.hasOwn_({a: 1, b: 2})('a')).toBe(true);
+  expect($.hasOwn_({a: 1, b: 2})('c')).toBe(false);
+  expect($.hasOwn_({a: 1, b: 2})('constructor')).toBe(false);
+  expect($.hasOwn_([, 2])(0)).toBe(false);
+  expect($.hasOwn_([, 2])(1)).toBe(true);
+  expect($.hasOwn_(new Set(['a', 'b']))('b')).toBe(true);
+  expect($.hasOwn_(new Set(['a', 'b']))('c')).toBe(false);
+  expect($.hasOwn_(new Map([['a', 1], ['b', 2]]))('a')).toBe(true);
 });

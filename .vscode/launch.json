@@ -13,7 +13,8 @@
         "--unhandled-rejections=throw",
         "${workspaceRoot}/node_modules/.bin/jest",
         "--runInBand",
-        "--logHeapUsage"
+        "--logHeapUsage",
+        "--colors"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
@@ -33,7 +34,7 @@
         "--runInBand",
         "--logHeapUsage",
 
-        "func2/cache."
+        "func2/object."
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

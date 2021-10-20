@@ -27,17 +27,17 @@ class Graph {
     const froms = new Map();
     const used = new Set();
 
-    const isNotUsed = (step) => !used.has(step);
+    const isNotUsed = ([step]) => !used.has(step);
     const maxDist = (a, b) => b.dist - a.dist;
 
     const walk = $.PQ.from([{step: to, dist: 0, count: 0}], {revSort: maxDist});
     const arg = {froms, walk, cur: null};
     const lessDist = this.lessDist.bind(this, arg);
 
-    while ((arg.cur = walk.pop()) && isNotUsed(arg.cur.step)) {
+    while ((arg.cur = walk.pop()) && !used.has(arg.cur.step)) {
       const node = this.tadj.get(arg.cur.step);
       if (!node) continue;
-      new Iter(node).filter('0', isNotUsed).call(lessDist).exec();
+      new Iter(node).filter(isNotUsed).call(lessDist).exec();
       used.add(arg.cur.step);
     }
 

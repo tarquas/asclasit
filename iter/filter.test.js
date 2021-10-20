@@ -70,18 +70,18 @@ test('Iter_.dbglog: debug output to console.log', () => {
   let res;
   const logs = [];
   const origLog = console.log;
-  console.log = (...ents) => logs.push(...ents);
+  console.log = (...ents) => logs.push(ents);
 
   try {
     const wr = new Iter(['test']);
-    wr.dbglog('Iter.dbglog');
+    wr.dbglog('Iter.dbglog').debug($.dbglog_('$.dbglog_'));
     res = Array.from(wr);
   } finally {
     console.log = origLog;
   }
 
   expect(res).toEqual(['test']);
-  expect(logs).toEqual(['Iter.dbglog', 'test']);
+  expect(logs).toEqual([['Iter.dbglog', 'test'], ['$.dbglog_', 'test']]);
 });
 
 test('Iter_.skip: skip first items', () => {

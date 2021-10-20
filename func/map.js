@@ -2,6 +2,10 @@ const $ = require('../base');
 
 const {func_} = $;
 
+func_(function getClass(obj) {
+  return Object.getPrototypeOf(obj)?.constructor ?? Object;
+});
+
 func_(function echo(value) {
   return value;
 });
@@ -40,6 +44,14 @@ func_(function cond_(ifTrue, ifFalse) {
 });
 
 $.chunkEnds = $.cond_(-1, 0);
+
+func_(function isNullish(value) {
+  return value == null;
+});
+
+func_(function isNotNullish(value) {
+  return value != null;
+});
 
 func_(function not(value) {
   return !value;
@@ -248,6 +260,7 @@ func_(function debug_(func, ...pre) {
 });
 
 $.dbglog = $.debug_(console.log);
+$.dbglog_ = (...args) => $.debug_(console.log, ...args);
 
 func_(function relay_(...funcs) {
   const desc = {ctx: this};
@@ -306,6 +319,20 @@ func_(function _predicateFuncs(funcs) {
 
   $._mappingFuncs(funcs);
   return l;
+});
+
+const hasProtos = new Set([Map.prototype, WeakMap.prototype, Set.prototype, WeakSet.prototype]);
+
+func_(function has_(where) {
+  if (where == null) return $.null;
+  if (hasProtos.has(Object.getPrototypeOf(where))) return value => where.has(value);
+  return value => value in where;
+});
+
+func_(function hasOwn_(where) {
+  if (where == null) return $.null;
+  if (hasProtos.has(Object.getPrototypeOf(where))) return value => where.has(value);
+  return value => Object.hasOwnProperty.call(where, value);
 });
 
 $.stop = Symbol('$.stop');

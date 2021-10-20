@@ -20,7 +20,15 @@ module.exports = {
   collectCoverage: true,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  //collectCoverageFrom: [],
+  // collectCoverageFrom: [
+  //   'algo/**/*.js',
+  //   'as-it/**/*.js',
+  //   'func/**/*.js',
+  //   'func2/**/*.js',
+  //   'iter/**/*.js',
+  //   'base.js',
+  //   'index.js',
+  // ],
 
   // The directory where Jest should output its coverage files
   coverageDirectory: "coverage",
@@ -155,6 +163,7 @@ module.exports = {
   testPathIgnorePatterns: [
     "<rootDir>/node_modules/",
     "<rootDir>/\.local/",
+    "<rootDir>/\.vscode/",
   ],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files

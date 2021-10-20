@@ -1,4 +1,6 @@
-const v8 = require('v8');
+//const v8 = require('v8');
+const { MessageChannel, receiveMessageOnPort } = require('worker_threads');
+const { port1: clonePort1, port2: clonePort2 } = new MessageChannel();
 const $ = require('../base');
 
 const {func_} = $;
@@ -204,7 +206,9 @@ func_(function merge(src, dst, ...funcs) {
 });
 
 func_(function clone(value) {
-  return v8.deserialize(v8.serialize(value));
+  //return v8.deserialize(v8.serialize(value));
+  clonePort1.postMessage(value);
+  return receiveMessageOnPort(clonePort2).message;
 });
 
 /*func_(function merge(src, dst) {

@@ -138,3 +138,19 @@ test('Graph: undirected unweighted branch', () => {
   expect(Array.from(gr.pathOn('A', 'H'))).toEqual(['A', 'B', 'C', 'E', 'F', 'G', 'H']);
   expect(Array.from(gr.pathOn('D', 'G'))).toEqual(['D', 'C', 'E', 'F', 'G']);
 });
+
+test('Graph: wikipedia', () => {
+  const gr = new $.Graph();
+  gr.link2(4, 5, 6);
+  gr.link2(6, 5, 9);
+  gr.link2(3, 6, 2);
+  gr.link2(3, 4, 11);
+  gr.link2(2, 4, 15);
+  gr.link2(2, 3, 10);
+  gr.link2(1, 6, 14);
+  gr.link2(1, 3, 9);
+  gr.link2(1, 2, 7);
+  expect(Array.from(gr.pathOn(1, 5))).toEqual([1, 3, 6, 5]);
+  expect(gr.shortestDist(1, 5)).toBe(20);
+  expect(gr.shortestSteps(1, 5)).toBe(3);
+});
