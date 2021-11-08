@@ -273,4 +273,26 @@ Iter.value_(function to(iter, Class, ...args) {
   return inst;
 });
 
+const appendResultFuncs = new Map([
+  [Object, Iter.appendObject.gen],
+  [Array, Iter.appendArray.gen],
+  [Set, Iter.appendSet.gen],
+  [Map, Iter.appendMap.gen],
+]);
+
+Iter.chain_(function appendResult(iter, to, ...args) {
+  return (appendResultFuncs.get($.getClass(to)) || Iter.appendObject.gen).call(this, iter, to, ...args);
+});
+
+const toResultFuncs = new Map([
+  [Object, Iter.toObject],
+  [Array, Iter.toArray],
+  [Set, Iter.toSet],
+  [Map, Iter.toMap],
+]);
+
+Iter.value_(function toResult(iter, to, ...args) {
+  return (toResultFuncs.get($.getClass(to)) || Iter.toObject).call(this, iter, to, ...args);
+});
+
 module.exports = Iter;

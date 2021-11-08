@@ -95,6 +95,12 @@ func_(function bindOnce(to, object, ...args) {
   return $._bind.call(this, $.echo, $.bindOnce__(to), object, ...args);
 });
 
+func_(function bound_(func) {
+  return function _bound(...args) {
+    return func.bind(this, ...args);
+  }
+});
+
 //TODO: bindJob in ClAs
 
 func_(function finished(stream, opts) {

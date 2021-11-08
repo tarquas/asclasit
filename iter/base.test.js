@@ -181,6 +181,32 @@ test('Iter_.ffwd: fast forward generic iterator beyond', () => {
   expect(Array.from(iter)).toEqual([]);
 });
 
+test('Iter_.partial: sequential iteration', () => {
+  const iter = new Iter([1, 2, 3, 4]);
+  const part = iter.partial();
+  let n = 2;
+  for (const item of part) if (!--n) break;
+  expect(Array.from(iter)).toEqual([3, 4]);
+});
+
+test('Iter_.partial: parallel iteration', () => {
+  const iter = new Iter([1, 2, 3, 4]);
+  const part = iter.partial();
+  expect(part.read()).toEqual(1);
+  expect(iter.read()).toEqual(2);
+  expect(part.read()).toEqual(3);
+  expect(iter.read()).toEqual(4);
+  expect(part.read()).toEqual($.eof);
+  expect(iter.read()).toEqual($.eof);
+});
+
+test('Iter_.init: initial set var', () => {
+  const iter = new Iter([1, 2, 3, 4]);
+  iter.init('a', 2).init('b', 3);
+  expect(iter.a).toBe(2);
+  expect(iter.b).toBe(3);
+});
+
 test('Iter_.get, .set: get/set wrapped iterator', () => {
   const iter = new Iter([1, 2]);
   expect(iter.get() !== iter).toBe(true);

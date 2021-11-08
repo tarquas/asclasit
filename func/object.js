@@ -70,6 +70,29 @@ func_(function defs(obj, ...walk) {
   return ctx;
 });
 
+func_(function defMap(map, key, type) {
+  let ex = map.get(key);
+  if (ex) return ex;
+  if (typeof type === 'function') ex = new type();
+  else if (typeof type === 'object') ex = Object.create(type);
+  else ex = type;
+  map.set(key, ex);
+  return ex;
+});
+
+func_(function defsMap(map, key, type) {
+  let ex = map.get(key);
+  if (ex) {
+    if (typeof type === 'function' && typeof ex === 'object' && ex instanceof type) return ex;
+    if (typeof type === 'object' && typeof ex === 'object' && Object.getPrototypeOf(ex) === type) return ex;
+  }
+  if (typeof type === 'function') ex = new type();
+  else if (typeof type === 'object') ex = Object.create(type);
+  else ex = type;
+  map.set(key, ex);
+  return ex;
+});
+
 func_(function unset(obj, ...walk) {
   const key = walk.pop();
   const ctx = walk.length ? $.in_(...walk)(obj) : obj;

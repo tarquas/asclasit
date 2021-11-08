@@ -24,9 +24,16 @@ test('$.accumulate: Object', () => {
 
 test('$.accumulate: Date', () => {
   const src = new Date('2020-02-01');
-  const acc = $.accumulate(src, new Date('2020-01-01'), 1000);
+  const acc = $.accumulate(src, '2020-01-01', 1000);
   expect(acc).toBe(src);
   expect(acc).toEqual(new Date('2020-01-01T00:00:01Z'));
+});
+
+test('$.accumulate: now Date', () => {
+  const src = new Date('2020-02-01');
+  const acc = $.accumulate(src, null, 1000);
+  expect(acc).toBe(src);
+  expect(acc.constructor).toBe(Date);
 });
 
 test('$.accumulate: other ctor', () => {

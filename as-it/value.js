@@ -284,4 +284,26 @@ AsIt.value_(function to(iter, Class, ...args) {
   return inst;
 });
 
+const appendResultFuncs = new Map([
+  [Object, AsIt.appendObject.gen],
+  [Array, AsIt.appendArray.gen],
+  [Set, AsIt.appendSet.gen],
+  [Map, AsIt.appendMap.gen],
+]);
+
+AsIt.chain_(function appendResult(iter, to, ...args) {
+  return (appendResultFuncs.get($.getClass(to)) || AsIt.appendObject.gen).call(this, iter, to, ...args);
+});
+
+const toResultFuncs = new Map([
+  [Object, AsIt.toObject],
+  [Array, AsIt.toArray],
+  [Set, AsIt.toSet],
+  [Map, AsIt.toMap],
+]);
+
+AsIt.value_(function toResult(iter, to, ...args) {
+  return (toResultFuncs.get($.getClass(to)) || AsIt.toObject).call(this, iter, to, ...args);
+});
+
 module.exports = AsIt;

@@ -351,3 +351,30 @@ test('Iter_.streams: partially pipe to duplex stream', async () => {
   expect(stream).toBe(cipher);
   expect(stream2).toBe(cipher);
 });
+
+class Custom {
+  constructor(config) { Object.assign(this, config); }
+}
+
+test('Iter_.appendResult: ', () => {
+  const iter = Iter.from([1, 2, 3, 4]);
+  const array = [];
+  const set = new Set();
+  const object = {};
+  const map = new Map();
+  const custom = new Custom();
+  iter.appendResult(array).appendResult(set).appendResult(object, 1).appendResult(map, 1).appendResult(custom, 1).exec();
+  expect(array).toEqual([1, 2, 3, 4]);
+  expect(Array.from(set)).toEqual([1, 2, 3, 4]);
+  expect(object).toEqual({1: 1, 2: 1, 3: 1, 4: 1});
+  expect(map).toEqual(new Map([[1, 1], [2, 1], [3, 1], [4, 1]]));
+  expect(custom).toEqual({1: 1, 2: 1, 3: 1, 4: 1});
+});
+
+test('Iter_.toResult: ', () => {
+  expect(Iter.from([1, 2, 3, 4]).toResult([])).toEqual([1, 2, 3, 4]);
+  expect(Iter.from([1, 2, 3, 4]).toResult(new Set())).toEqual(new Set([1, 2, 3, 4]));
+  expect(Iter.from([1, 2, 3, 4]).toResult($(), 1)).toEqual({1: 1, 2: 1, 3: 1, 4: 1});
+  expect(Iter.from([1, 2, 3, 4]).toResult(new Map(), 1)).toEqual(new Map([[1, 1], [2, 1], [3, 1], [4, 1]]));
+  expect(Iter.from([1, 2, 3, 4]).toResult(new Custom(), 1)).toEqual({1: 1, 2: 1, 3: 1, 4: 1});
+});

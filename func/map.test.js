@@ -24,6 +24,20 @@ test('$.anull: map null async', async () => {
   expect(await Promise.all(promises)).toEqual([null, null, null, null]);
 });
 
+test('$.ifNull_: call function if argument is nullish', () => {
+  const def = $.ifNull_(() => 5);
+  expect(def(undefined)).toBe(5);
+  expect(def(null)).toBe(5);
+  expect(def(3)).toBe(3);
+});
+
+test('$.defNull_: return default value if argument is nullish', () => {
+  const def = $.defNull_(5);
+  expect(def(undefined)).toBe(5);
+  expect(def(null)).toBe(5);
+  expect(def(3)).toBe(3);
+});
+
 test('$.not: map boolean not', () => {
   expect([1, undefined, 0, 'a', null, {a: 1}, [5]].map($.not)).toEqual([false, true, true, false, true, false, false]);
 });

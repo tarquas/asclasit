@@ -157,6 +157,21 @@ AsIt.value_(async function affwd(iter, count, value) {
   return last;
 });
 
+async function* asItPartial(iter) {
+  let cur;
+  while (!(cur = await iter.next()).done) yield cur.value;
+}
+
+AsIt.value_(function partial(iter) {
+  const partial = asItPartial(iter);
+  return new AsIt(partial);
+});
+
+AsIt_.init = function init(id, value) {
+  this[id] = value;
+  return this;
+};
+
 AsIt.chain_(async function* save(iter, id) {
   for await (const item of iter) {
     this[id] = item;

@@ -214,6 +214,60 @@ test('defs: value, key exists -- override', () => {
   expect(obj.a.x[0].z).toBe(5);
 });
 
+test('defMap: set sticky value', () => {
+  const m = new Map();
+  $.defMap(m, 'a', 1);
+  expect(m).toEqual(new Map([['a', 1]]));
+  $.defMap(m, 'a', 2);
+  expect(m).toEqual(new Map([['a', 1]]));
+});
+
+test('defsMap: redefine value', () => {
+  const m = new Map();
+  $.defsMap(m, 'a', 1);
+  expect(m).toEqual(new Map([['a', 1]]));
+  $.defsMap(m, 'a', 2);
+  expect(m).toEqual(new Map([['a', 2]]));
+});
+
+test('defMap: class', () => {
+  const m = new Map();
+  $.defMap(m, 'a', Array).push(1);
+  expect(m).toEqual(new Map([['a', [1]]]));
+  $.defMap(m, 'a', Array).push(2);
+  expect(m).toEqual(new Map([['a', [1, 2]]]));
+  expect($.defMap(m, 'a', Set) instanceof Array).toBe(true);
+});
+
+test('defsMap: class', () => {
+  const m = new Map();
+  $.defsMap(m, 'a', Array).push(1);
+  expect(m).toEqual(new Map([['a', [1]]]));
+  $.defsMap(m, 'a', Array).push(2);
+  expect(m).toEqual(new Map([['a', [1, 2]]]));
+  $.defsMap(m, 'a', Set).add(3);
+  expect(m).toEqual(new Map([['a', new Set([3])]]));
+});
+
+test('defMap: prototype', () => {
+  const m = new Map();
+  $.defMap(m, 'a', null).a = 1;
+  expect(m).toEqual(new Map([['a', {a: 1}]]));
+  $.defMap(m, 'a', null).b = 2;
+  expect(m).toEqual(new Map([['a', {a: 1, b: 2}]]));
+  expect(Object.getPrototypeOf($.defMap(m, 'a', Set))).toBe(null);
+});
+
+test('defsMap: prototype', () => {
+  const m = new Map();
+  $.defsMap(m, 'a', null).a = 1;
+  expect(m).toEqual(new Map([['a', {a: 1}]]));
+  $.defsMap(m, 'a', null).b = 2;
+  expect(m).toEqual(new Map([['a', {a: 1, b: 2}]]));
+  $.defsMap(m, 'a', Set).add(3);
+  expect(m).toEqual(new Map([['a', new Set([3])]]));
+});
+
 test('unset: delete object key in walk', () => {
   const obj = {a: {m: 4, x: [{z: {v: 7}}]}};
   const prev = $.unset(obj, 'a', 'x', 0, 'z');

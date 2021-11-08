@@ -132,6 +132,21 @@ Iter.value_(function ffwd(iter, count, value) {
   return last;
 });
 
+function* iterPartial(iter) {
+  let cur;
+  while (!(cur = iter.next()).done) yield cur.value;
+}
+
+Iter.value_(function partial(iter) {
+  const partial = iterPartial(iter);
+  return new Iter(partial);
+});
+
+Iter_.init = function init(id, value) {
+  this[id] = value;
+  return this;
+};
+
 Iter.chain_(function* save(iter, id) {
   for (const item of iter) {
     this[id] = item;

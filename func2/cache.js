@@ -76,20 +76,28 @@ func_(function cache_(size, mapper) {
 });
 
 function getChunkFromCache(func, chunk) {
-  const {cache} = func;
+  const {cache, type} = func;
+  const isArray = type === Array;
+  let res, toOut;
 
-  if (!cache.map) {
-    cache.map = new Map();
-    return {res: Array(chunk.length), need: new Set(chunk)};
+  if (!cache.map) cache.map = new Map();
+
+  const need = new Map();
+  const iter = Iter.entries(chunk instanceof Array ? Iter.getIter(chunk) : chunk);
+
+  if (isArray) {
+    iter.mapKey($.counter_(0));
+    res = chunk instanceof Array ? Array(chunk.length) : [];
+    toOut = Iter.toObject;
+  } else {
+    res = ($.accInit.get(type) || $)();
+    toOut = Iter.toResult;
   }
 
-  const res = Array(chunk.length);
-  const need = new Set();
-
-  for (const [idx, value] of chunk.entries()) {
+  for (const [key, value] of iter) {
     const cached = getFromCache(func, value);
-    if (cached) res[idx] = cached.res;
-    else need.add(value);
+    if (cached) toOut([[key, cached.res]], res);
+    else $.defMap(need, value, Set).add(key);
   }
 
   return {res, need};
@@ -103,9 +111,10 @@ function getChunkCacheFunc(mapper, desc) {
       const {res, need} = getChunkFromCache(func, chunk);
       if (!need.size) return res;
       const {cache} = func;
-      const mapped = await mapper.call(this, need, chunk, desc);
-      Iter.entries(chunk).filter(([, v]) => need.has(v)).mapValue(mapped).toObject(res);
-      Iter.from(mapped).call(([k, v]) => cache.map.set(k, v)).exec();
+      const mapped = await mapper.call(this, need.keys(), chunk, desc);
+      const iter = Iter.from(need).mapKey(mapped).maps(([k, v]) => Iter.entries(v).mapValue($._(k)));
+      if (func.type === Array) iter.toObject(res); else iter.toResult(res);
+      Iter.from(mapped).toMap(cache.map);
       checkOver(func);
       return res;
     };
@@ -114,9 +123,10 @@ function getChunkCacheFunc(mapper, desc) {
       const {res, need} = getChunkFromCache(func, chunk);
       if (!need.size) return res;
       const {cache} = func;
-      const mapped = mapper.call(this, need, chunk, desc);
-      Iter.entries(chunk).filter(([, v]) => need.has(v)).mapValue(mapped).toObject(res);
-      Iter.from(mapped).call(([k, v]) => cache.map.set(k, v)).exec();
+      const mapped = mapper.call(this, need.keys(), chunk, desc);
+      const iter = Iter.from(need).mapKey(mapped).maps(([k, v]) => Iter.entries(v).mapValue($._(k)));
+      if (func.type === Array) iter.toObject(res); else iter.toResult(res);
+      Iter.from(mapped).toMap(cache.map);
       checkOver(func);
       return res;
     };
@@ -157,19 +167,21 @@ function emulChunkMapper(mapper) {
   }
 }
 
-function toChunkCache(mapper, ctx) {
+function toChunkCache(type, mapper, ctx) {
   if (!mapper) mapper = emulChunkMapper(this.cacheMapper);
   const func = getChunkCacheFunc(mapper, {ctx});
+  func.type = type;
   func.cache = this.cache;
   func.dropCache = dropCache;
   return func;
 }
 
-func_(function cacheChunk_(size, mapper) {
+func_(function cacheChunk_(size, mapper, type) {
   if (typeof mapper !== 'function') throw new TypeError('mapper is not function');
   if (!Number.isFinite(size) || size <= 0) size = $.defaultCacheSize;
   const desc = {ctx: this};
   const func = getChunkCacheFunc(mapper, desc);
+  func.type = type;
   func.cache = {size, map: null};
   func.cacheMapper = mapper;
   func.dropCache = dropCache;

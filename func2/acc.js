@@ -31,9 +31,8 @@ func_(function accMap(to, from) {
 });
 
 func_(function accDate(to, from) {
-  const msec = parseInt(from);
-  if (Number.isNaN(msec)) to.setTime(from);
-  else to.setTime(to.getTime() + msec);
+  if (Number.isInteger(from)) to.setTime(to.getTime() + from);
+  else to.setTime(from == null ? new Date() : new Date(from));
   return to;
 });
 

@@ -34,7 +34,7 @@
         "--runInBand",
         "--logHeapUsage",
 
-        "func2/object."
+        "func2/cache."
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

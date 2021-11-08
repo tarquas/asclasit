@@ -28,6 +28,20 @@ func_(async function anull(value) {
   return null;
 });
 
+func_(function ifNull_(func) {
+  return function _ifNull(value, ...args) {
+    if (value == null) return func.call(this, value, ...args);
+    return value;
+  };
+});
+
+func_(function defNull_(def) {
+  return function _defNull(value) {
+    if (value == null) return def;
+    return value;
+  };
+});
+
 func_(function trueMap() {
   return true;
 }, 'true');
@@ -333,6 +347,16 @@ func_(function hasOwn_(where) {
   if (where == null) return $.null;
   if (hasProtos.has(Object.getPrototypeOf(where))) return value => where.has(value);
   return value => Object.hasOwnProperty.call(where, value);
+});
+
+func_(function mapper(item, ...args) {
+  if (typeof item === 'function') return item.call(this, ...args);
+
+  if (item instanceof Array && typeof item[1] === 'function') {
+    item[1] = item[1].call(this, item[0], ...args);
+  }
+
+  return item;
 });
 
 $.stop = Symbol('$.stop');

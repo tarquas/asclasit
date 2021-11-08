@@ -1,4 +1,4 @@
-const $ = require('../base');
+const $ = require('../func');
 const AsIt = require('./base');
 
 async function* asIt(iter) { yield* iter; }
@@ -209,6 +209,33 @@ test('AsIt_.affwd: async fast forward beyond', async () => {
   expect(await wrapped.affwd(10, true)).toEqual({done: true});
   expect(wrapped.cur).toEqual(null);
   expect(await asItArray(wrapped)).toEqual([]);
+});
+
+test('AsIt_.partial: sequential iteration', async () => {
+  const iter = new AsIt([1, 2, 3, 4]);
+  const part = iter.partial();
+  let n = 2;
+  for await (const item of part) if (!--n) break;
+  expect(await asItArray(iter)).toEqual([3, 4]);
+});
+
+test('AsIt_.partial: parallel iteration', async () => {
+  const iter = new AsIt(async function*() {for (let i = 0; i < 4; i++) {await $.delayMsec(50); yield i;}} ());
+  const part = iter.partial();
+  let r1 = [], r2 = [];
+  await Promise.all([
+    (async () => { for await (const item of part) r1.push(item); }) (),
+    (async () => { await $.delayMsec(25); for await (const item of iter) r2.push(item); }) (),
+  ]);
+  expect(r1).toEqual([0, 2]);
+  expect(r2).toEqual([1, 3]);
+});
+
+test('AsIt_.init: initial set var', async () => {
+  const iter = new AsIt([1, 2, 3, 4]);
+  iter.init('a', 2).init('b', 3);
+  expect(iter.a).toBe(2);
+  expect(iter.b).toBe(3);
 });
 
 test('AsIt_.get, .set: get/set wrapped iterator', async () => {

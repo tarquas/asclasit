@@ -45,6 +45,15 @@ test('$.promisifyOnce: promisify once by key', async () => {
   expect(prom1 === prom3).toBe(false);
 });
 
+test('$.bound_: bound function mapping', () => {
+  const res = [];
+  const binder = $.bound_((a, b, c, d) => res.push(a, b, c, d));
+  const bound = binder(1, 2);
+  expect(bound(3, 4)).toBe(4);
+  expect(bound(5, 6)).toBe(8);
+  expect(res).toEqual([1, 2, 3, 4, 1, 2, 5, 6]);
+});
+
 test('$.all: ', async () => {
   const all = await $.all([1, Promise.resolve(2)]);
   expect(all).toEqual([1, 2]);

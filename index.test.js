@@ -150,15 +150,29 @@ test('$.finished: stream.finished', async () => {
   await $.finished(stream);
 });
 
-test('Iter_.race: ', async () => {
-  const msec = $.AsIt.from([60, 40, 20]);
+test('Iter_.race: external mapping', async () => {
+  const msec = $.AsIt.from([240, 160, 200]);
 
   const arr = await msec.Iter.from(await msec.toArray()).map(async (msec) => {
     await $.delayMsec(msec);
     return msec;
-  }).concat(async () => { $.delayMsec(30); return 30; }).race(2).map($.inValue).toArray();
+  }).concat([async () => {
+    await $.delayMsec(1);
+    return 1;
+  }]).map($.mapper).race(2).map($.inValue).toArray();
 
-  expect(arr).toEqual([40, 20, 30, 60]);
+  expect(arr).toEqual([160, 240, 1, 200]);
+});
+
+test('Iter_.race: internal mapping', async () => {
+  const msec = $.Iter.from([240, 160, 200, 1]);
+
+  const arr = await msec.race(2, async (msec) => {
+    await $.delayMsec(msec);
+    return msec;
+  }).map($.inValue).toArray();
+
+  expect(arr).toEqual([160, 240, 1, 200]);
 });
 
 test('Iter_.map: _mappingFuncs', () => {
