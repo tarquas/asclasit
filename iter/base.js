@@ -1,7 +1,7 @@
 const it = require('../it');
 const Design = require('../design');
 
-const wrapped = Symbol('$.Iter.wrapped');
+const wrapped = Symbol('_.Iter.wrapped');
 
 const Iter = function(iter) {
   if (iter != null) this.set(iter);
@@ -139,7 +139,8 @@ function* iterPartial(iter) {
 
 Iter.value_(function partial(iter) {
   const partial = iterPartial(iter);
-  return new Iter(partial);
+  const Class = typeof this === 'function' ? this : this.constructor;
+  return new Class(partial);
 });
 
 Iter_.init = function init(id, value) {

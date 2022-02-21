@@ -46,9 +46,10 @@ Iter.chain_(function *unset(iter, to) {
 });
 
 Iter.chain_(function *omit(iter, to) {
-  for (const item of iter) {
-    delete to[item];
+  for (let item of iter) {
     yield item;
+    if (item instanceof Array) item = item[0];
+    delete to[item];
   }
 });
 
@@ -203,8 +204,15 @@ Iter.value_(function toXorMap(iter, map, value) {
 
 Iter.value_(function count(iter) {
   let c = 0;
-  for (const item of iter) c++;
+  for (const item of iter) ++c;
   return c;
+});
+
+Iter.chain_(function* countTo(iter, to, field = 'count') {
+  for (const item of iter) {
+    yield item;
+    ++to[field];
+  }
 });
 
 Iter.value_(function exec(iter) {
@@ -245,7 +253,7 @@ Iter.chain_(function* reduceTo(iter, func, def, out) {
 });
 
 Iter.value_(function reduce(iter, func, def, out = {}) {
-  const it = Iter.reduceTo.gen(iter, func, def, out);
+  const it = Iter.reduceTo.gen.call(this, iter, func, def, out);
   for (const item of it);
   return out.result;
 });

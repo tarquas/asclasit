@@ -67,6 +67,14 @@ test('Iter.fork: 1 fork', () => {
   expect(Array.from(src)).toEqual([]);
 });
 
+test('Iter.repeat: repeat iterable', () => {
+  expect(Array.from(Iter.repeat([1, 2, 3], 3))).toEqual([1, 2, 3, 1, 2, 3, 1, 2, 3]);
+});
+
+test('Iter.repeat: repeat characters', () => {
+  expect(Array.from(Iter.repeat('123', 3, true))).toEqual(['1', '2', '3', '1', '2', '3', '1', '2', '3']);
+});
+
 test('Iter.reverse: iterate backwards', () => {
   const src = [1, 2, 3, 4, 5];
   const rev = Iter.from(src).reverse();

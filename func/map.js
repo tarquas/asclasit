@@ -57,7 +57,13 @@ func_(function cond_(ifTrue, ifFalse) {
   };
 });
 
+$.stop = Symbol('_.stop');
+$.pass = Symbol('_.pass');
+
 $.chunkEnds = $.cond_(-1, 0);
+$.condSkip = $.cond_(false, $.pass);
+$.condTake = $.cond_(true, $.stop);
+$.condStop = $.cond_($.stop, true);
 
 func_(function isNullish(value) {
   return value == null;
@@ -335,6 +341,22 @@ func_(function _predicateFuncs(funcs) {
   return l;
 });
 
+func_(function cascadeFunc(funcs, v, ...sfx) {
+  for (const func of funcs) {
+    v = func.call(this, v, ...sfx);
+  }
+
+  return v;
+});
+
+func_(async function cascadeFuncAsync(funcs, v, ...sfx) {
+  for (const func of funcs) {
+    v = await func.call(this, v, ...sfx);
+  }
+
+  return v;
+});
+
 const hasProtos = new Set([Map.prototype, WeakMap.prototype, Set.prototype, WeakSet.prototype]);
 
 func_(function has_(where) {
@@ -358,8 +380,5 @@ func_(function mapper(item, ...args) {
 
   return item;
 });
-
-$.stop = Symbol('$.stop');
-$.pass = Symbol('$.pass');
 
 module.exports = $;

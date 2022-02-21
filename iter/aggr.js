@@ -47,7 +47,7 @@ Iter.chain_(function *recentGroup(iter, to, limit = Infinity, opts = {}) {
 Iter.value_(function toRecentGroup(iter, limit = Infinity, opts = {}) {
   if (typeof limit === 'object') { opts = limit; limit = opts.limit || Infinity; }
   if (!opts.to) opts.to = Object.create(null);
-  for (const item of Iter.recentGroup.gen(iter, opts.to, limit, opts));
+  for (const item of Iter.recentGroup.gen.call(this, iter, opts.to, limit, opts));
   return opts.to;
 });
 
@@ -92,7 +92,7 @@ Iter.chain_(function *orderGroup(iter, to, limit = Infinity, opts = {}) {
 Iter.value_(function toOrderGroup(iter, limit = Infinity, opts = {}) {
   if (typeof limit === 'object') { opts = limit; limit = opts.limit || Infinity; }
   if (!opts.to) opts.to = Object.create(null);
-  for (const item of Iter.orderGroup.gen(iter, opts.to, limit, opts));
+  for (const item of Iter.orderGroup.gen.call(this, iter, opts.to, limit, opts));
   return opts.to;
 });
 

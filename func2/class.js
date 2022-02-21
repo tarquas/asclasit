@@ -167,8 +167,6 @@ class $inst {
       this.#sleepTimer = null;
     }
 
-    this.#sleepTimer = null;
-
     outer: for (const o of Iter.reverse.gen(this.#protos)) {
       let retr = this.wakeRetries, tries = 1;
 
@@ -413,7 +411,7 @@ Object.assign($inst.$$, {
   wakeRetries: 3,
   wakeRetryDelay: 500,
 
-  pingInterval: null, //TODO:
+  keepAlive: null, //TODO:
   fatalErrors: [], //TODO: $_method_ -- idempotent method (retry on fatal error)
 
   sleepImmediate: false,

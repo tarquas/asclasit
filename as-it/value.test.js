@@ -114,10 +114,10 @@ test('AsIt_.appendObject: tee object from entries', async () => {
 });
 
 test('AsIt_.omit: omit from object', async () => {
-  const wrapped = new AsIt(['a', 'b', 'c'][Symbol.iterator]());
+  const wrapped = new AsIt(['a', 'b', ['c', 'd']][Symbol.iterator]());
   const to = {a: 5, d: 8, x: 1, c: 2};
   wrapped.omit(to);
-  expect(await asItArray(wrapped)).toEqual(['a', 'b', 'c']);
+  expect(await asItArray(wrapped)).toEqual(['a', 'b', ['c', 'd']]);
   expect(to).toEqual({d: 8, x: 1});
 });
 
@@ -241,6 +241,14 @@ test('AsIt_.toXorMap: xor to map from entries', async () => {
 test('AsIt_.count: count iterator items', async () => {
   const wrapped = new AsIt([2, 6, 7][Symbol.iterator]());
   expect(await wrapped.count()).toEqual(3);
+});
+
+test('AsIt_.countTo: count iterator items on field', async () => {
+  const result = {count: 0, next: 9};
+  const wrapped = new AsIt([2, 6, 7][Symbol.iterator]());
+  await wrapped.countTo(result).countTo(result, 'next').exec();
+  expect(result.count).toEqual(3);
+  expect(result.next).toEqual(12);
 });
 
 test('AsIt_.exec: execute iterator', async () => {

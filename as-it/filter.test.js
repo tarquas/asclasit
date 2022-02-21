@@ -1,5 +1,5 @@
 const AsIt = require('./filter');
-const $ = require('../func');
+const _ = require('../func');
 
 async function asItArray(iter) {
   const res = [];
@@ -27,37 +27,37 @@ test('AsIt_.filter: several functionals', async () => {
 
 test('AsIt_.dfilter: one arg', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.dfilter($.times_(5));
+  wrapped.dfilter(_.times_(5));
   expect(await asItArray(wrapped)).toEqual(['a', '', 1]);
 });
 
 test('AsIt_.dfilter: stop', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.dfilter(v => v != null ? true : $.stop);
+  wrapped.dfilter(v => v != null ? true : _.stop);
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0]);
 });
 
 test('AsIt_.dfilter: post stop', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.dfilter((v, a, d, p) => !p ? true : v != null ? true : $.stop);
+  wrapped.dfilter((v, a, d, p) => !p ? true : v != null ? true : _.stop);
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null]);
 });
 
 test('AsIt_.dfilter: pass', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.dfilter(v => v != null ? false : $.pass);
+  wrapped.dfilter(v => v != null ? false : _.pass);
   expect(await asItArray(wrapped)).toEqual([null, NaN, {x: 1}, [5, 1], false, 0n]);
 });
 
 test('AsIt_.dfilter: post pass', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.dfilter((v, a, d, p) => !p ? true : v != null ? true : $.pass);
+  wrapped.dfilter((v, a, d, p) => !p ? true : v != null ? true : _.pass);
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
 });
 
 test('AsIt_.dfilter: post pass multiple', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.dfilter($.echo, (v, a, d, p) => !p ? true : v != null ? true : $.pass);
+  wrapped.dfilter(_.echo, (v, a, d, p) => !p ? true : v != null ? true : _.pass);
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
 });
 
@@ -102,6 +102,20 @@ test('AsIt_.skip: skip first number of items', async () => {
   expect(await asItArray(wrapped)).toEqual([NaN, {x: 1}, [5, 1], false, 0n]);
 });
 
+test('AsIt_.skip: skip zero', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.skip(0);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
+});
+
+test('AsIt_.skip, AsIt_.take: paging', async () => {
+  const iter = AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
+  iter.return = () => ({done: true});
+  const wrapped = new AsIt(iter);
+  wrapped.skip(5).take(2);
+  expect(await asItArray(wrapped)).toEqual([NaN, {x: 1}]);
+});
+
 test('AsIt_.take: empty', async () => {
   const wrapped = new AsIt(AsIt.getIter([1, 2, 3, 4, 5, 4, 3, 2, 1]));
   wrapped.take();
@@ -120,14 +134,58 @@ test('AsIt_.take: multi arg', async () => {
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN]);
 });
 
+test('AsIt_.take: number', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.take(2);
+  expect(await asItArray(wrapped)).toEqual(['a', '']);
+});
+
+test('AsIt_.take: zero', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.take(0);
+  expect(await asItArray(wrapped)).toEqual([]);
+});
+
+test('AsIt_.takes: multi arg', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.takes(o => o && o.x, v => !v);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}]);
+});
+
+test('AsIt_.takes: number', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.takes(2);
+  expect(await asItArray(wrapped)).toEqual(['a', '']);
+});
+
+test('AsIt_.pfilter: takes', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.pfilter(2, _.condTake);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1]);
+});
+
+test('AsIt_.pfilter: takes, take', async () => {
+  const iter = AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
+  iter.return = () => ({done: true});
+  const wrapped = new AsIt(iter);
+  wrapped.pfilter(2, _.condTake).take(2);
+  expect(await asItArray(wrapped)).toEqual(['a', '']);
+});
+
+test('AsIt_.pfilter: pass', async () => {
+  const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
+  wrapped.pfilter(() => _.pass);
+  expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]);
+});
+
 test('AsIt_.stop: one arg', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.stop($.eq_(null));
+  wrapped.stop(_.eq_(null));
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0]);
 });
 
 test('AsIt_.stop: multi arg', async () => {
   const wrapped = new AsIt(AsIt.getIter(['a', '', 1, 0, null, NaN, {x: 1}, [5, 1], false, 0n]));
-  wrapped.stop($.times_(7), $.not);
+  wrapped.stop(_.times_(7), _.not);
   expect(await asItArray(wrapped)).toEqual(['a', '', 1, 0]);
 });

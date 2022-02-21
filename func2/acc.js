@@ -18,14 +18,14 @@ func_(function accArray(to, from) {
 
 func_(function accSet(to, from) {
   const iter = Iter.getIter(from);
-  if (iter) for (const item of iter) for (const item of from) to.add(item);
+  if (iter) for (const item of iter) to.add(item);
   else to.add(from);
   return to;
 });
 
 func_(function accMap(to, from) {
   const iter = Iter.getIter(from);
-  if (iter) for (const item of iter) for (const item of from) to.set(item, true);
+  if (iter) for (const item of iter) to.set(item, true);
   else to.set(from, true);
   return to;
 });

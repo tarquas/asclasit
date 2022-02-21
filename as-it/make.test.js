@@ -130,3 +130,11 @@ test('AsIt_.fork: 2 raw forks', async () => {
   expect(await asItArray(fork2)).toEqual([1, 2, 3]);
   expect(await asItArray(src)).toEqual([]);
 });
+
+test('AsIt.repeat: repeat iterable', async () => {
+  expect(await asItArray(AsIt.repeat([1, 2, 3], 3))).toEqual([1, 2, 3, 1, 2, 3, 1, 2, 3]);
+});
+
+test('AsIt.repeat: repeat characters', async () => {
+  expect(await asItArray(AsIt.repeat('123', 3, true))).toEqual(['1', '2', '3', '1', '2', '3', '1', '2', '3']);
+});

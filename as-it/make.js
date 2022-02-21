@@ -31,8 +31,12 @@ AsIt.chain_(AsIt.concat.gen, 'append');
 
 AsIt.chain_(async function* prepend(...args) {
   for (let i = args.length - 1; i >= 0; i--) {
-    yield* AsIt.from.gen(args[i]);
+    yield* AsIt.from.gen.call(this, args[i]);
   }
+});
+
+AsIt.make_(async function* repeat(from, times, strOk, ...args) {
+  while (times--) yield* AsIt.getIter(from, strOk, ...args);
 });
 
 class ForkBufferLimitExceededError extends Error { message = 'fork buffer limit exceeded'; }

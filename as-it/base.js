@@ -1,7 +1,7 @@
 const it = require('../it');
 const Design = require('../design');
 
-const wrapped = Symbol('$.AsIt.wrapped');
+const wrapped = Symbol('_.AsIt.wrapped');
 
 const AsIt = function(iter) {
   if (iter != null) this.set(iter);
@@ -164,7 +164,8 @@ async function* asItPartial(iter) {
 
 AsIt.value_(function partial(iter) {
   const partial = asItPartial(iter);
-  return new AsIt(partial);
+  const Class = typeof this === 'function' ? this : this.constructor;
+  return new Class(partial);
 });
 
 AsIt_.init = function init(id, value) {
@@ -172,14 +173,14 @@ AsIt_.init = function init(id, value) {
   return this;
 };
 
-AsIt.chain_(async function* save(iter, id) {
+AsIt.chain_(async function* save(iter, id = 'saved') {
   for await (const item of iter) {
     this[id] = item;
     yield item;
   }
 });
 
-AsIt.chain_(async function* load(iter, id) {
+AsIt.chain_(async function* load(iter, id = 'saved') {
   for await (const item of iter) {
     yield this[id];
   }

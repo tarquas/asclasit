@@ -86,7 +86,9 @@ test('AsIt_.maps: map multi and skip last', async () => {
 });
 
 test('AsIt_.maps: stop: several functions', async () => {
-  const wrapped = new AsIt(AsIt.getIter([4, 0, 8, 3, 1]));
+  const iter = AsIt.getIter([4, 0, 8, 3, 1]);
+  iter.return = () => ({done: true});
+  const wrapped = new AsIt(iter);
   wrapped.maps($.neg, v => v < -6 ? $.stop : [v, 0]);
   expect(await asItArray(wrapped)).toEqual([-4, 0, -0, 0]);
 });
@@ -110,7 +112,9 @@ test('AsIt_.mapTo: map to inwalk', async () => {
 });
 
 test('AsIt_.mapTo: stop: several functions', async () => {
-  const wrapped = new AsIt(AsIt.getIter([[4], [0], [8], [3], [1]]));
+  const iter = AsIt.getIter([[4], [0], [8], [3], [1]]);
+  iter.return = () => ({done: true});
+  const wrapped = new AsIt(iter);
   wrapped.mapTo(0, '0', $.neg, v => v < -6 ? $.stop : v);
   expect(await asItArray(wrapped)).toEqual([[-4], [-0]]);
 });

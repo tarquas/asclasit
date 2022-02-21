@@ -47,8 +47,12 @@ Iter.make_(function* range(from, to, step) {
   }
 });
 
+Iter.make_(function* repeat(from, times, strOk, ...args) {
+  while (times--) yield* Iter.getIter(from, strOk, ...args);
+});
+
 Iter.chain_(function* reverse(iter) {
-  if (!(iter instanceof Array)) iter = Array.from(iter);
+  if (!('length' in iter)) iter = Array.from(iter);
 
   for (let i = iter.length - 1; i >= 0; i--) {
     yield iter[i];

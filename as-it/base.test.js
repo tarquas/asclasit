@@ -221,7 +221,7 @@ test('AsIt_.partial: sequential iteration', async () => {
 
 test('AsIt_.partial: parallel iteration', async () => {
   const iter = new AsIt(async function*() {for (let i = 0; i < 4; i++) {await $.delayMsec(50); yield i;}} ());
-  const part = iter.partial();
+  const part = AsIt.partial(iter);
   let r1 = [], r2 = [];
   await Promise.all([
     (async () => { for await (const item of part) r1.push(item); }) (),

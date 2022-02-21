@@ -3,7 +3,7 @@ const Design = require('./design');
 const Deque = require('./algo/deque');
 const PriorityQueue = require('./algo/priority-queue');
 
-const symbol = Symbol('$');
+const life = Symbol('_.life');
 
 function $(...args) {
   if (this !== global && this instanceof $) return $.ctor.call(this, ...args);
@@ -19,7 +19,8 @@ $.prototype = Object.create(null);
 
 Design.$classApply($);
 
-$.symbol = symbol;
+$.symbol = $.life = life;
+$.keepAlive = Symbol('_.keepAlive');
 
 const func_ = function func_(func, name) {
   $[name || func.name] = func;

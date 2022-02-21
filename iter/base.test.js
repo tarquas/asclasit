@@ -191,7 +191,7 @@ test('Iter_.partial: sequential iteration', () => {
 
 test('Iter_.partial: parallel iteration', () => {
   const iter = new Iter([1, 2, 3, 4]);
-  const part = iter.partial();
+  const part = Iter.partial(iter);
   expect(part.read()).toEqual(1);
   expect(iter.read()).toEqual(2);
   expect(part.read()).toEqual(3);

@@ -107,10 +107,10 @@ test('Iter_.appendObject: tee object from entries', () => {
 });
 
 test('Iter_.omit: omit from object', () => {
-  const wrapped = new Iter(['a', 'b', 'c'][Symbol.iterator]());
+  const wrapped = new Iter(['a', 'b', ['c']][Symbol.iterator]());
   const to = {a: 5, d: 8, x: 1, c: 2};
   wrapped.omit(to);
-  expect(Array.from(wrapped)).toEqual(['a', 'b', 'c']);
+  expect(Array.from(wrapped)).toEqual(['a', 'b', ['c']]);
   expect(to).toEqual({d: 8, x: 1});
 });
 
@@ -232,6 +232,14 @@ test('Iter_.toXorMap: xor to map from entries', () => {
 test('Iter_.count: count iterator items', () => {
   const wrapped = new Iter([2, 6, 7][Symbol.iterator]());
   expect(wrapped.count()).toEqual(3);
+});
+
+test('Iter_.countTo: count iterator items on field', () => {
+  const result = {count: 0, next: 9};
+  const wrapped = new Iter([2, 6, 7][Symbol.iterator]());
+  wrapped.countTo(result).countTo(result, 'next').exec();
+  expect(result.count).toEqual(3);
+  expect(result.next).toEqual(12);
 });
 
 test('Iter_.exec: execute iterator', () => {

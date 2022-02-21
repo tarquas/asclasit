@@ -44,9 +44,10 @@ AsIt.chain_(async function *unset(iter, to) {
 });
 
 AsIt.chain_(async function *omit(iter, to) {
-  for await (const item of iter) {
-    delete to[item];
+  for await (let item of iter) {
     yield item;
+    if (item instanceof Array) item = item[0];
+    delete to[item];
   }
 });
 
@@ -199,8 +200,15 @@ AsIt.value_(async function toXorMap(iter, map, value) {
 
 AsIt.value_(async function count(iter) {
   let c = 0;
-  for await (const item of iter) c++;
+  for await (const item of iter) ++c;
   return c;
+});
+
+AsIt.chain_(async function* countTo(iter, to, field = 'count') {
+  for await (const item of iter) {
+    yield item;
+    ++to[field];
+  }
 });
 
 AsIt.value_(async function exec(iter) {
@@ -241,7 +249,7 @@ AsIt.chain_(async function* reduceTo(iter, func, def, out) {
 });
 
 AsIt.value_(async function reduce(iter, func, def, out = {}) {
-  const it = AsIt.reduceTo.gen(iter, func, def, out);
+  const it = AsIt.reduceTo.gen.call(this, iter, func, def, out);
   for await (const item of it);
   return out.result;
 });

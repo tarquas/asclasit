@@ -46,7 +46,7 @@ AsIt.chain_(async function *recentGroup(iter, to, limit = Infinity, opts = {}) {
 AsIt.value_(async function toRecentGroup(iter, limit = Infinity, opts = {}) {
   if (typeof limit === 'object') { opts = limit; limit = opts.limit || Infinity; }
   if (!opts.to) opts.to = Object.create(null);
-  for await (const item of AsIt.recentGroup.gen(iter, opts.to, limit, opts));
+  for await (const item of AsIt.recentGroup.gen.call(this, iter, opts.to, limit, opts));
   return opts.to;
 });
 
@@ -88,7 +88,7 @@ AsIt.chain_(async function *orderGroup(iter, to, limit = Infinity, opts = {}) {
 AsIt.value_(async function toOrderGroup(iter, limit = Infinity, opts = {}) {
   if (typeof limit === 'object') { opts = limit; limit = opts.limit || Infinity; }
   if (!opts.to) opts.to = Object.create(null);
-  for await (const item of AsIt.orderGroup.gen(iter, opts.to, limit, opts));
+  for await (const item of AsIt.orderGroup.gen.call(this, iter, opts.to, limit, opts));
   return opts.to;
 });
 

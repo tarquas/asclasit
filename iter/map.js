@@ -1,119 +1,106 @@
 const Iter = require('./make');
-const $ = require('../func/map');
+const _ = require('../func/map');
 
 Iter.chain_(function* map(iter, ...funcs) {
-  const l = $._mappingFuncs(funcs, false);
-  if (!l) return yield* iter;
+  const l = _._mappingFuncs(funcs, false);
+  if (!l) { yield* iter; return; }
 
+  let value, done;
+  const resFunc = l === 1 ? funcs[0] : _.cascadeFunc.bind(this, funcs);
   const desc = {iter, ctx: this};
   let idx = 0;
-  let pass = false;
 
-  if (l === 1) {
-    const func = funcs[0];
-
-    for (const item of iter) {
-      if (pass) { yield item; continue; }
-      const v = func.call(this, item, idx, desc, item);
-      if (v === $.stop) return;
-      if (v === $.pass) { pass = true; yield item; continue; }
-      yield v;
-      idx++;
+  try {
+    while ({value, done} = iter.next(), !done) {
+      const result = resFunc.call(this, value, idx, desc, value);
+      if (result === _.stop) return;
+      if (result === _.pass) { done = true; yield value; yield* iter; return; }
+      yield result;
+      ++idx;
     }
-  } else {
-    for (const item of iter) {
-      if (pass) { yield item; continue; }
-      let v = item;
-
-      for (const func of funcs) {
-        v = func.call(this, v, idx, desc, item);
-      }
-
-      if (v === $.stop) return;
-      if (v === $.pass) { pass = true; yield item; continue; }
-      yield v;
-      idx++;
-    }
+  } finally {
+    if (!done && iter.return) iter.return();
   }
 });
 
 Iter.chain_(function* maps(iter, ...funcs) {
-  const l = $._mappingFuncs(funcs, true);
-  if (!l) return yield* iter;
+  const l = _._mappingFuncs(funcs, true);
+  if (!l) { yield* iter; return; }
 
+  let value, done;
+  const resFunc = l === 1 ? funcs[0] : _.cascadeFunc.bind(this, funcs);
   const desc = {iter, ctx: this};
   let idx = 0;
-  let pass = false;
 
-  for (const item of iter) {
-    if (pass) { yield item; continue; }
-    let v = item;
+  try {
+    while ({value, done} = iter.next(), !done) {
+      const result = resFunc.call(this, value, idx, desc, value);
+      if (result === _.stop) return;
+      if (result === _.pass) { done = true; yield value; yield* iter; return; }
 
-    for (const func of funcs) {
-      v = func.call(this, v, idx, desc, item);
+      if (result != null) {
+        const it = Iter.getIter(result);
+        if (it) yield* it; else yield result;
+      }
+
+      ++idx;
     }
-
-    if (v === $.stop) return;
-    if (v === $.pass) { pass = true; yield item; continue; }
-    idx++;
-    if (v == null) continue;
-    const it = Iter.getIter(v);
-    if (it) yield* it; else yield v;
+  } finally {
+    if (!done && iter.return) iter.return();
   }
 });
 
 Iter.chain_(function* mapTo(iter, to, ...funcs) {
-  const l = $._mappingFuncs(funcs, false);
-  if (!l) return yield* iter;
+  const l = _._mappingFuncs(funcs, false);
+  if (!l) { yield* iter; return; }
 
   if (typeof to !== 'function') {
-    if (to instanceof Array) to = $.to_(...to);
-    else to = $.to_(to);
+    if (to instanceof Array) to = _.to_(...to);
+    else to = _.to_(to);
   }
 
+  let value, done;
+  const resFunc = l === 1 ? funcs[0] : _.cascadeFunc.bind(this, funcs);
   const desc = {iter, ctx: this};
   let idx = 0;
-  let pass = false;
 
-  for (const item of iter) {
-    if (pass) { yield item; continue; }
-    let v = item;
+  try {
+    while ({value, done} = iter.next(), !done) {
+      const result = resFunc.call(this, value, idx, desc, value);
+      if (result === _.stop) return;
+      if (result === _.pass) { done = true; yield value; yield* iter; return; }
 
-    for (const func of funcs) {
-      v = func.call(this, v, idx, desc, item);
+      const p = to.call(this, value, idx, desc, value);
+      if (p) p.ctx[p.key] = result;
+      yield value;
+      ++idx;
     }
-
-    if (v === $.stop) return;
-    if (v === $.pass) { pass = true; yield item; continue; }
-    const p = to.call(this, item, idx, desc, item);
-    if (p) p.ctx[p.key] = v;
-
-    yield item;
-    idx++;
+  } finally {
+    if (!done && iter.return) iter.return();
   }
 });
 
 Iter.chain_(function mapAt(iter, at, ...funcs) {
   let ato, ain;
-  if (at instanceof Array) { ato = $.to_(...at); ain = $.in_(...at); }
-  else { ato = $.to_(at); ain = $.in_(at); }
-  return Iter.mapTo.gen(iter, ato, ain, ...funcs);
+  if (at instanceof Array) { ato = _.to_(...at); ain = _.in_(...at); }
+  else { ato = _.to_(at); ain = _.in_(at); }
+  return Iter.mapTo.gen.call(this, iter, ato, ain, ...funcs);
 });
 
 Iter.chain_(function mapKey(iter, ...funcs) {
-  return Iter.mapAt.gen(iter, 0, ...funcs);
+  return Iter.mapAt.gen.call(this, iter, 0, ...funcs);
 });
 
 Iter.chain_(function mapValue(iter, ...funcs) {
-  return Iter.mapAt.gen(iter, 1, ...funcs);
+  return Iter.mapAt.gen.call(this, iter, 1, ...funcs);
 });
 
 Iter.chain_(function mapKeys(iter, ...funcs) {
-  return Iter.mapTo.gen(iter, 0, ...funcs);
+  return Iter.mapTo.gen.call(this, iter, 0, ...funcs);
 });
 
 Iter.chain_(function mapValues(iter, ...funcs) {
-  return Iter.mapTo.gen(iter, 1, ...funcs);
+  return Iter.mapTo.gen.call(this, iter, 1, ...funcs);
 });
 
 Iter.chain_(function* gen(iter, func, ...args) {

@@ -1,5 +1,5 @@
 const Iter = require('./map');
-const $ = require('../func');
+const _ = require('../func');
 
 test('Iter_.map: map iterator: echo', () => {
   const wrapped = new Iter(Iter.getIter([4, 0, 8, 3, 1]));
@@ -33,25 +33,25 @@ test('Iter_.map: map iterator: 1 function', () => {
 
 test('Iter_.map: stop: 1 function', () => {
   const wrapped = new Iter(Iter.getIter([4, 0, 8, 3, 1]));
-  wrapped.map(v => v > 6 ? $.stop : -v);
+  wrapped.map(v => v > 6 ? _.stop : -v);
   expect(Array.from(wrapped)).toEqual([-4, -0]);
 });
 
 test('Iter_.map: pass: 1 function', () => {
   const wrapped = new Iter(Iter.getIter([4, 0, 8, 3, 1]));
-  wrapped.map(v => v > 6 ? $.pass : -v);
+  wrapped.map(v => v > 6 ? _.pass : -v);
   expect(Array.from(wrapped)).toEqual([-4, -0, 8, 3, 1]);
 });
 
 test('Iter_.map: stop: several functions', () => {
   const wrapped = new Iter(Iter.getIter([4, 0, 8, 3, 1]));
-  wrapped.map($.neg, v => v < -6 ? $.stop : v);
+  wrapped.map(_.neg, v => v < -6 ? _.stop : v);
   expect(Array.from(wrapped)).toEqual([-4, -0]);
 });
 
 test('Iter_.map: pass: several functions', () => {
   const wrapped = new Iter(Iter.getIter([4, 0, 8, 3, 1]));
-  wrapped.map($.neg, v => v < -6 ? $.pass : v);
+  wrapped.map(_.neg, v => v < -6 ? _.pass : v);
   expect(Array.from(wrapped)).toEqual([-4, -0, 8, 3, 1]);
 });
 
@@ -98,14 +98,16 @@ test('Iter_.maps: map multi and skip last', () => {
 });
 
 test('Iter_.maps: stop: several functions', () => {
-  const wrapped = new Iter(Iter.getIter([4, 0, 8, 3, 1]));
-  wrapped.maps($.neg, v => v < -6 ? $.stop : [v, 0]);
+  const iter = Iter.getIter([4, 0, 8, 3, 1]);
+  iter.return = () => ({done: true});
+  const wrapped = new Iter(iter);
+  wrapped.maps(_.neg, v => v < -6 ? _.stop : [v, 0]);
   expect(Array.from(wrapped)).toEqual([-4, 0, -0, 0]);
 });
 
 test('Iter_.maps: pass: several functions', () => {
   const wrapped = new Iter(Iter.getIter([4, 0, 8, 3, 1]));
-  wrapped.maps($.neg, v => v < -6 ? $.pass : [v, 0]);
+  wrapped.maps(_.neg, v => v < -6 ? _.pass : [v, 0]);
   expect(Array.from(wrapped)).toEqual([-4, 0, -0, 0, 8, 3, 1]);
 });
 
@@ -122,14 +124,16 @@ test('Iter_.mapTo: map to inwalk', () => {
 });
 
 test('Iter_.mapTo: stop: several functions', () => {
-  const wrapped = new Iter(Iter.getIter([[4], [0], [8], [3], [1]]));
-  wrapped.mapTo(0, '0', $.neg, v => v < -6 ? $.stop : v);
+  const iter = Iter.getIter([[4], [0], [8], [3], [1]]);
+  iter.return = () => ({done: true});
+  const wrapped = new Iter(iter);
+  wrapped.mapTo(0, '0', _.neg, v => v < -6 ? _.stop : v);
   expect(Array.from(wrapped)).toEqual([[-4], [-0]]);
 });
 
 test('Iter_.mapTo: pass: several functions', () => {
   const wrapped = new Iter(Iter.getIter([[4], [0], [8], [3], [1]]));
-  wrapped.mapTo(0, '0', $.neg, v => v < -6 ? $.pass : v);
+  wrapped.mapTo(0, '0', _.neg, v => v < -6 ? _.pass : v);
   expect(Array.from(wrapped)).toEqual([[-4], [-0], [8], [3], [1]]);
 });
 
